@@ -1,0 +1,13 @@
+# OSX
+.DS_Store
+
+# Elm
+elm-stuff/
+
+# IntelliJ
+.idea
+local.properties
+*.iml
+
+# Visual Studio code
+.vscode

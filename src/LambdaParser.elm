@@ -190,3 +190,7 @@ tymap onvar c tyT =
                     TyAll tyX (walk (c + 1) tyT2)
     in
         walk c tyT
+
+
+
+-- ---------------------------

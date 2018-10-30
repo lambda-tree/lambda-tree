@@ -5,8 +5,40 @@ import Debug exposing (log)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Css exposing (..)
-import Css.Global exposing (global, body)
+import Css.Global exposing (global, body, selector)
 import Html.Styled as S exposing (Html, Attribute, styled, toUnstyled, Attribute, div)
+
+
+-- CSS Constants
+
+
+cmFont =
+    fontFamilies [ "cm" ]
+
+
+
+-- Text Constants
+
+
+alphaSmall =
+    "α"
+
+
+lambdaSmall =
+    "λ"
+
+
+lambdaBig =
+    "Λ"
+
+
+gammaBig =
+    "Γ"
+
+
+arrow =
+    "→"
+
 
 
 -- MAIN
@@ -48,10 +80,11 @@ update msg model =
 -- VIEW
 
 
-theme : { background : Color, secondary : Color, text : Color }
+theme : { background : Color, secondary : Color, text : Color, clear : Color }
 theme =
     { background = rgb 240 240 240
     , text = hex "000000"
+    , clear = rgba 0 0 0 0
     , secondary = rgb 250 240 230
     }
 
@@ -67,8 +100,8 @@ background =
 lambdaExprInput value onInput =
     styled S.input
         [ color <| theme.text
-        , fontSize <| rem 1
-        , fontFamilies [ "Courier New" ]
+        , fontSize <| rem 1.3
+        , cmFont
         , width <| pct 100
         , marginLeft <| rem 1
         ]
@@ -77,18 +110,21 @@ lambdaExprInput value onInput =
 
 
 lambdaExprText value =
-    styled S.div
+    styled S.button
         [ color <| theme.text
-        , fontSize <| rem 1
-        , fontFamilies [ "Courier New" ]
+        , backgroundColor <| theme.clear
+        , fontSize <| rem 1.3
+        , cmFont
         , marginLeft <| rem 1
+        , borderWidth <| px 1
+        , borderRadius <| rem 0.4
         ]
         []
-        [ S.button [] [ S.text value ] ]
+        [ S.text value ]
 
 
 impliesText =
-    styled S.div [ fontFamilies [ "Arial" ], marginLeft <| rem 1 ] [] [ S.text " ⊢" ]
+    styled S.div [ cmFont, marginLeft <| rem 1 ] [] [ S.text " ⊢" ]
 
 
 initialExprInput =
@@ -109,6 +145,18 @@ sampleFormula =
 view : Model -> Html Msg
 view model =
     div []
-        [ global [ body [ height <| pct 100, backgroundColor <| theme.background ] ]
+        [ global
+            [ body [ height <| pct 100, backgroundColor <| theme.background ]
+            , selector "@font-face"
+                [ property "src" "url(resources/fonts/cmunrm.ttf)"
+                , fontStyle normal
+                , cmFont
+                ]
+            , selector "@font-face"
+                [ property "src" "url(resources/fonts/cmunti.ttf)"
+                , fontStyle italic
+                , cmFont
+                ]
+            ]
         , initialCell
         ]

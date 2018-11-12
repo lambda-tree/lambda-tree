@@ -5,18 +5,18 @@ import Set
 import Char
 
 
-type LTerm
-    = LTmVar String
-    | LTmAbs String LTy LTerm
-    | LTmApp LTerm LTerm
-    | LTmTAbs String LTerm
-    | LTmTApp LTerm LTy
+type Term
+    = TmVar String
+    | TmAbs String Ty Term
+    | TmApp Term Term
+    | TmTAbs String Term
+    | TmTApp Term Ty
 
 
-type LTy
-    = LTyVar String
-    | LTyArr LTy LTy
-    | LTyAll String LTy
+type Ty
+    = TyVar String
+    | TyArr Ty Ty
+    | TyAll String Ty
 
 
 keywords =
@@ -41,9 +41,9 @@ typeVar =
         }
 
 
-termAbs : Parser LTerm
+termAbs : Parser Term
 termAbs =
-    succeed LTmAbs
+    succeed TmAbs
         |. keyword "lambda"
         |. spaces
         |= termVar
@@ -62,16 +62,16 @@ termAbs =
 -- Type expr
 
 
-typeExpr : Parser LTy
+typeExpr : Parser Ty
 typeExpr =
     typeSubExpr
         |> andThen (typeExprHelp [])
 
 
-typeSubExpr : Parser LTy
+typeSubExpr : Parser Ty
 typeSubExpr =
     oneOf
-        [ succeed LTyAll
+        [ succeed TyAll
             |. keyword "forall"
             |. spaces
             |= typeVar
@@ -79,13 +79,16 @@ typeSubExpr =
             |. symbol "."
             |. spaces
             |= lazy (\_ -> typeExpr)
-        , map LTyVar typeVar
+        , succeed identity
+            |= map TyVar typeVar
+            |. spaces
         , succeed identity
             |. symbol "("
             |. spaces
             |= lazy (\_ -> typeExpr)
             |. spaces
             |. symbol ")"
+            |. spaces
         ]
 
 
@@ -94,18 +97,16 @@ type TypeOperator
 
 
 
--- try to remove the 2 backtrackables??
--- they're there to backtrack in e.g. lambda termVar1 : TypeVar1 . termVar1
+-- typeSubExpr consumes spaces at the end so that it doesn't need to start with `spaces` which cause problem in `oneOf`
 -- if parser encounters '.' it should not consider it as an operator but it should end consuming
 -- inspired by https://github.com/elm/parser/blob/master/examples/Math.elm
 
 
-typeExprHelp : List ( LTy, TypeOperator ) -> LTy -> Parser LTy
+typeExprHelp : List ( Ty, TypeOperator ) -> Ty -> Parser Ty
 typeExprHelp revOps expr =
     oneOf
         [ succeed Tuple.pair
-            |. backtrackable spaces
-            |= backtrackable operator
+            |= operator
             |. spaces
             |= typeSubExpr
             |> andThen (\( op, newExpr ) -> typeExprHelp (( expr, op ) :: revOps) newExpr)
@@ -116,30 +117,29 @@ typeExprHelp revOps expr =
 operator : Parser TypeOperator
 operator =
     oneOf
-        [ map (\_ -> ArrOp) (symbol "->")
-        ]
+        [ map (\_ -> ArrOp) (symbol "->") ]
 
 
-finalize : List ( LTy, TypeOperator ) -> LTy -> LTy
+finalize : List ( Ty, TypeOperator ) -> Ty -> Ty
 finalize revOps finalExpr =
     case revOps of
         [] ->
             finalExpr
 
         ( expr, ArrOp ) :: otherRevOps ->
-            finalize otherRevOps (LTyArr expr finalExpr)
+            finalize otherRevOps (TyArr expr finalExpr)
 
 
 
 -- -------------------
 
 
-lambdaTermParser : Parser LTerm
+lambdaTermParser : Parser Term
 lambdaTermParser =
     succeed identity
         |. spaces
         |= (oneOf
-                [ map LTmVar termVar
+                [ map TmVar termVar
                 , termAbs
                 ]
            )

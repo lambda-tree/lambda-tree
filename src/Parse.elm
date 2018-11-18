@@ -174,12 +174,7 @@ termExpr =
     succeed identity
         |. spaces
         |= termSubExpr
-        |> andThen
-            (\subExpr ->
-                succeed identity
-                    |= appExprHelp [ Term subExpr ]
-                    |> andThen checkIfCorrectApp
-            )
+        |> andThen (\subExpr -> appExprHelp subExpr)
 
 
 {-| Term sub expression
@@ -214,8 +209,8 @@ termTyAppSubExpr =
         |. symbol "]"
 
 
-appExprHelp : List Expr -> Parser Expr
-appExprHelp revOps =
+appExprHelp : Term -> Parser Term
+appExprHelp term =
     succeed identity
         |. spaces
         |= oneOf
@@ -224,38 +219,16 @@ appExprHelp revOps =
                     [ map Term termSubExpr
                     , map Ty termTyAppSubExpr
                     ]
-                |> andThen (\op -> appExprHelp (op :: revOps))
-            , lazy
-                (\_ ->
-                    succeed identity
-                        |= checkIfNoOperands (appExprFinalize revOps)
-                        |> andThen checkIfNoOperands
-                )
+                |> andThen (\expr -> appExprHelp (applyApp term expr))
+            , lazy (\_ -> succeed term)
             ]
 
 
-appExprFinalize : List Expr -> Maybe (Maybe Expr)
-appExprFinalize revOps =
-    let
-        fun expr acc =
-            case ( expr, acc ) of
-                ( Just (Term t1), Just (Term t2) ) ->
-                    Just <| Term <| TmApp t2 t1
-
-                ( Just (Ty t1), Just (Term t2) ) ->
-                    Just <| Term <| TmTApp t2 t1
-
-                otherwise ->
-                    Nothing
-    in
-        List.Extra.foldr1 fun (List.map Just revOps)
-
-
-checkIfCorrectApp : Expr -> Parser Term
-checkIfCorrectApp expr =
+applyApp : Term -> Expr -> Term
+applyApp term expr =
     case expr of
-        Term t ->
-            succeed t
+        Term tm ->
+            TmApp term tm
 
-        otherwise ->
-            problem "wrong function application"
+        Ty ty ->
+            TmTApp term ty

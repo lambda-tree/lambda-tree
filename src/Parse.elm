@@ -3,6 +3,12 @@ module Parse exposing (..)
 import Parser exposing (..)
 import Set
 import Char
+import List.Extra
+
+
+type Expr
+    = Term Term
+    | Ty Ty
 
 
 type Term
@@ -41,6 +47,8 @@ typeVar =
         }
 
 
+{-| Abstraction
+-}
 termAbs : Parser Term
 termAbs =
     succeed TmAbs
@@ -54,20 +62,36 @@ termAbs =
         |. spaces
         |. symbol "."
         |. spaces
-        |= lazy (\_ -> lambdaTermParser)
+        |= lazy (\_ -> termExpr)
+
+
+{-| Type abstraction
+-}
+typeAbs : Parser Term
+typeAbs =
+    succeed TmTAbs
+        |. keyword "Lambda"
         |. spaces
+        |= typeVar
+        |. spaces
+        |. symbol "."
+        |. spaces
+        |= lazy (\_ -> termExpr)
 
 
-
--- Type expr
-
-
+{-| Type expression
+-}
 typeExpr : Parser Ty
 typeExpr =
-    typeSubExpr
-        |> andThen (typeExprHelp [])
+    succeed identity
+        |. spaces
+        |= typeSubExpr
+        |> andThen (\subExpr -> arrowExprHelp [ subExpr ])
 
 
+{-| Type sub expression
+TODO: Mark brackets with new value constructor?
+-}
 typeSubExpr : Parser Ty
 typeSubExpr =
     oneOf
@@ -92,55 +116,146 @@ typeSubExpr =
         ]
 
 
-type TypeOperator
-    = ArrOp
+
+--
 
 
+{-| Arrow expression helper
 
--- typeSubExpr consumes spaces at the end so that it doesn't need to start with `spaces` which cause problem in `oneOf`
--- if parser encounters '.' it should not consider it as an operator but it should end consuming
--- inspired by https://github.com/elm/parser/blob/master/examples/Math.elm
+typeSubExpr consumes spaces at the end so that `arrowExprHelp` doesn't need to start with `spaces` that cause
+problem in `oneOf`.
+If parser encounters '.' it should not consider it as an operator but it should end consuming.
+Inspired by <https://github.com/elm/parser/blob/master/examples/Math.elm>
 
+`typeExprFinalize` is inside `lazy` so that it's not evaluated every time `arrowExprHelp` is called
+(even when the 1st case of `oneOf` succeeds).
 
-typeExprHelp : List ( Ty, TypeOperator ) -> Ty -> Parser Ty
-typeExprHelp revOps expr =
+-}
+arrowExprHelp : List Ty -> Parser Ty
+arrowExprHelp revOps =
     oneOf
-        [ succeed Tuple.pair
-            |= operator
+        [ succeed identity
+            |. symbol "->"
             |. spaces
             |= typeSubExpr
-            |> andThen (\( op, newExpr ) -> typeExprHelp (( expr, op ) :: revOps) newExpr)
-        , lazy (\_ -> succeed (finalize revOps expr))
+            |> andThen (\op -> arrowExprHelp (op :: revOps))
+        , lazy (\_ -> checkIfNoOperands <| arrowExprFinalize revOps)
         ]
 
 
-operator : Parser TypeOperator
-operator =
-    oneOf
-        [ map (\_ -> ArrOp) (symbol "->") ]
+{-| Applies operator on the reversed list of operands
+
+Results in an expr. associated from right
+
+-}
+arrowExprFinalize : List Ty -> Maybe Ty
+arrowExprFinalize revOps =
+    List.Extra.foldl1 (\expr acc -> TyArr expr acc) revOps
 
 
-finalize : List ( Ty, TypeOperator ) -> Ty -> Ty
-finalize revOps finalExpr =
-    case revOps of
-        [] ->
-            finalExpr
+checkIfNoOperands : Maybe a -> Parser a
+checkIfNoOperands maybeResult =
+    case maybeResult of
+        Just result ->
+            succeed result
 
-        ( expr, ArrOp ) :: otherRevOps ->
-            finalize otherRevOps (TyArr expr finalExpr)
-
-
-
--- -------------------
+        Nothing ->
+            problem ("operator has no operands")
 
 
-lambdaTermParser : Parser Term
-lambdaTermParser =
+
+-- ----------------
+
+
+{-| Term expression
+-}
+termExpr : Parser Term
+termExpr =
     succeed identity
         |. spaces
-        |= (oneOf
-                [ map TmVar termVar
-                , termAbs
-                ]
-           )
+        |= termSubExpr
+        |> andThen
+            (\subExpr ->
+                succeed identity
+                    |= appExprHelp [ Term subExpr ]
+                    |> andThen checkIfCorrectApp
+            )
+
+
+{-| Term sub expression
+TODO: Mark brackets with new value constructor?
+-}
+termSubExpr : Parser Term
+termSubExpr =
+    oneOf
+        [ map TmVar termVar
+        , termAbs
+        , typeAbs
+        , succeed identity
+            |. symbol "("
+            |. spaces
+            |= lazy (\_ -> termExpr)
+            |. spaces
+            |. symbol ")"
+            |. spaces
+        ]
+
+
+{-| Term sub expression
+TODO: Mark brackets with new value constructor?
+-}
+termTyAppSubExpr : Parser Ty
+termTyAppSubExpr =
+    succeed identity
+        |. symbol "["
         |. spaces
+        |= typeExpr
+        |. spaces
+        |. symbol "]"
+
+
+appExprHelp : List Expr -> Parser Expr
+appExprHelp revOps =
+    succeed identity
+        |. spaces
+        |= oneOf
+            [ succeed identity
+                |= oneOf
+                    [ map Term termSubExpr
+                    , map Ty termTyAppSubExpr
+                    ]
+                |> andThen (\op -> appExprHelp (op :: revOps))
+            , lazy
+                (\_ ->
+                    succeed identity
+                        |= checkIfNoOperands (appExprFinalize revOps)
+                        |> andThen checkIfNoOperands
+                )
+            ]
+
+
+appExprFinalize : List Expr -> Maybe (Maybe Expr)
+appExprFinalize revOps =
+    let
+        fun expr acc =
+            case ( expr, acc ) of
+                ( Just (Term t1), Just (Term t2) ) ->
+                    Just <| Term <| TmApp t2 t1
+
+                ( Just (Ty t1), Just (Term t2) ) ->
+                    Just <| Term <| TmTApp t2 t1
+
+                otherwise ->
+                    Nothing
+    in
+        List.Extra.foldr1 fun (List.map Just revOps)
+
+
+checkIfCorrectApp : Expr -> Parser Term
+checkIfCorrectApp expr =
+    case expr of
+        Term t ->
+            succeed t
+
+        otherwise ->
+            problem "wrong function application"

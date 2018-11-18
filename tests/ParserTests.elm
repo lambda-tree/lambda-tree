@@ -95,13 +95,65 @@ termExprTest =
                                     (TmVar "termVar1")
                                 )
                         )
+        , test "should parse type application" <|
+            \_ ->
+                Parser.run termExpr "termVar1 [TypeVar1]"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmTApp
+                                (TmVar "termVar1")
+                                (TyVar "TypeVar1")
+                        )
+        , test "should parse multiple type applications" <|
+            \_ ->
+                Parser.run termExpr "termVar1 [TypeVar1] [TypeVar2]"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmTApp
+                                (TmTApp
+                                    (TmVar "termVar1")
+                                    (TyVar "TypeVar1")
+                                )
+                                (TyVar "TypeVar2")
+                        )
+        , test "should parse multiple type applications with spaces" <|
+            \_ ->
+                Parser.run termExpr "  termVar1  [  TypeVar1  ]  [  TypeVar2  ]  "
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmTApp
+                                (TmTApp
+                                    (TmVar "termVar1")
+                                    (TyVar "TypeVar1")
+                                )
+                                (TyVar "TypeVar2")
+                        )
+        , test "should parse type applications with type abstraction and term application" <|
+            \_ ->
+                Parser.run termExpr "(Lambda TypeVar1. lambda termVar1: TypeVar1. termVar1 termVar1) [TermVar1]"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmTApp
+                                (TmTAbs
+                                    "TypeVar1"
+                                    (TmAbs
+                                        "termVar1"
+                                        (TyVar "TypeVar1")
+                                        (TmApp
+                                            (TmVar "termVar1")
+                                            (TmVar "termVar1")
+                                        )
+                                    )
+                                )
+                                (TyVar "TermVar1")
+                        )
         ]
 
 
 termVarTest : Test
 termVarTest =
     describe "termVar"
-        [ test "should parse term variable correctly" <|
+        [ test "should parse term variable" <|
             \_ ->
                 Parser.run termVar "termVar1"
                     |> Expect.equal (Result.Ok <| "termVar1")

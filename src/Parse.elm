@@ -6,11 +6,6 @@ import Char
 import List.Extra
 
 
-type Expr
-    = Term Term
-    | Ty Ty
-
-
 type Term
     = TmVar String
     | TmAbs String Ty Term
@@ -174,7 +169,7 @@ termExpr =
     succeed identity
         |. spaces
         |= termSubExpr
-        |> andThen (\subExpr -> appExprHelp subExpr)
+        |> andThen appExprHelp
 
 
 {-| Term sub expression
@@ -196,8 +191,7 @@ termSubExpr =
         ]
 
 
-{-| Term sub expression
-TODO: Mark brackets with new value constructor?
+{-| Type application sub expression
 -}
 termTyAppSubExpr : Parser Ty
 termTyAppSubExpr =
@@ -214,21 +208,10 @@ appExprHelp term =
     succeed identity
         |. spaces
         |= oneOf
-            [ succeed identity
-                |= oneOf
-                    [ map Term termSubExpr
-                    , map Ty termTyAppSubExpr
-                    ]
-                |> andThen (\expr -> appExprHelp (applyApp term expr))
+            [ oneOf
+                [ map (TmApp term) termSubExpr
+                , map (TmTApp term) termTyAppSubExpr
+                ]
+                |> andThen appExprHelp
             , lazy (\_ -> succeed term)
             ]
-
-
-applyApp : Term -> Expr -> Term
-applyApp term expr =
-    case expr of
-        Term tm ->
-            TmApp term tm
-
-        Ty ty ->
-            TmTApp term ty

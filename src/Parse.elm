@@ -8,7 +8,7 @@ import List.Extra
 
 type Term
     = TmVar String
-    | TmAbs String Ty Term
+    | TmAbs String (Maybe Ty) Term
     | TmApp Term Term
     | TmTAbs String Term
     | TmTApp Term Ty
@@ -21,6 +21,8 @@ type Ty
     | TyAll String Ty
 
 
+{-| Reserved keywords
+-}
 keywords =
     [ "Lambda", "lambda", "let", "Let", "in", "In", "forall", "Forall", "forAll", "ForAll" ]
 
@@ -127,13 +129,22 @@ termAbs =
         |. spaces
         |= termVar
         |. spaces
-        |. symbol ":"
-        |. spaces
-        |= typeExpr
+        |= maybeTypeAnnotation
         |. spaces
         |. symbol "."
         |. spaces
         |= lazy (\_ -> termExpr)
+
+
+maybeTypeAnnotation : Parser (Maybe Ty)
+maybeTypeAnnotation =
+    oneOf
+        [ succeed Just
+            |. symbol ":"
+            |. spaces
+            |= typeExpr
+        , succeed Nothing
+        ]
 
 
 {-| Type abstraction

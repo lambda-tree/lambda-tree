@@ -67,7 +67,7 @@ termExprTest =
                         (Result.Ok <|
                             TmApp
                                 (TmVar "termVar1")
-                                (TmAbs "x" (TyVar "X") (TmVar "x"))
+                                (TmAbs "x" (Just <| TyVar "X") (TmVar "x"))
                         )
         , test "should parse abstraction of application" <|
             \_ ->
@@ -75,7 +75,7 @@ termExprTest =
                     |> Expect.equal
                         (Result.Ok <|
                             TmAbs "x"
-                                (TyVar "X")
+                                (Just <| TyVar "X")
                                 (TmApp
                                     (TmVar "termVar1")
                                     (TmVar "x")
@@ -138,7 +138,7 @@ termExprTest =
                                     "TypeVar1"
                                     (TmAbs
                                         "termVar1"
-                                        (TyVar "TypeVar1")
+                                        (Just <| TyVar "TypeVar1")
                                         (TmApp
                                             (TmVar "termVar1")
                                             (TmVar "termVar1")
@@ -178,13 +178,14 @@ termExprTest =
                                     "X"
                                     (TmAbs
                                         "x"
-                                        (TyAll
-                                            "X"
-                                            (TyVar "X")
+                                        (Just <|
+                                            TyAll
+                                                "X"
+                                                (TyVar "X")
                                         )
                                         (TmAbs
                                             "y"
-                                            (TyVar "X")
+                                            (Just <| TyVar "X")
                                             (TmApp
                                                 (TmVar "x")
                                                 (TmVar "y")
@@ -287,16 +288,28 @@ termAbsTest =
         [ test "should parse term abstraction" <|
             \_ ->
                 Parser.run termAbs "lambda termVar1 : TypeVar1 . termVar1"
-                    |> Expect.equal (Result.Ok <| TmAbs "termVar1" (TyVar "TypeVar1") (TmVar "termVar1"))
+                    |> Expect.equal (Result.Ok <| TmAbs "termVar1" (Just <| TyVar "TypeVar1") (TmVar "termVar1"))
         , test "should parse multiple term abstractions" <|
             \_ ->
                 Parser.run termAbs "lambda termVar1 : TypeVar1 . lambda termVar2 : TypeVar2 . termVar1"
                     |> Expect.equal
                         (Result.Ok <|
                             TmAbs "termVar1"
-                                (TyVar "TypeVar1")
+                                (Just <| TyVar "TypeVar1")
                                 (TmAbs "termVar2"
-                                    (TyVar "TypeVar2")
+                                    (Just <| TyVar "TypeVar2")
+                                    (TmVar "termVar1")
+                                )
+                        )
+        , test "should parse multiple term abstractions without type annotations" <|
+            \_ ->
+                Parser.run termAbs "lambda termVar1 . lambda termVar2 . termVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmAbs "termVar1"
+                                Nothing
+                                (TmAbs "termVar2"
+                                    Nothing
                                     (TmVar "termVar1")
                                 )
                         )

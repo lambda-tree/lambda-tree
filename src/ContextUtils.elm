@@ -2,6 +2,7 @@ module ContextUtils exposing (..)
 
 import Context exposing (..)
 import Lambda exposing (..)
+import List.Extra
 
 
 emptycontext : Context
@@ -60,6 +61,26 @@ index2name fi ctx x =
 
                 _ :: rest ->
                     index2name fi rest x
+
+
+getbinding : Context -> Int -> Maybe Binding
+getbinding ctx x =
+    case x of
+        0 ->
+            case ctx of
+                [] ->
+                    Nothing
+
+                ( _, y ) :: rest ->
+                    Just y
+
+        n ->
+            case ctx of
+                [] ->
+                    Nothing
+
+                _ :: rest ->
+                    getbinding rest x
 
 
 name2index : Info -> Context -> String -> Maybe Int

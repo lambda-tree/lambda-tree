@@ -201,6 +201,37 @@ termExprTest =
                                     )
                                 )
                         )
+        , test "should parse multiple if-then-else expressions" <|
+            \_ ->
+                Parser.run termExpr "if termVar1 then termVar2 else if termVar3 then termVar4 else termVar5"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmIf
+                                (TmVar "termVar1")
+                                (TmVar "termVar2")
+                                (TmIf
+                                    (TmVar "termVar3")
+                                    (TmVar "termVar4")
+                                    (TmVar "termVar5")
+                                )
+                        )
+        , test "should parse multiple if-then-else expressions with spaces" <|
+            \_ ->
+                Parser.run termExpr
+                    ("  if  termVar1  then  termVar2  else "
+                        ++ " if   termVar3   then   termVar4   else   termVar5  "
+                    )
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmIf
+                                (TmVar "termVar1")
+                                (TmVar "termVar2")
+                                (TmIf
+                                    (TmVar "termVar3")
+                                    (TmVar "termVar4")
+                                    (TmVar "termVar5")
+                                )
+                        )
         ]
 
 
@@ -348,6 +379,50 @@ letExprTest =
                                 "termVar1"
                                 (TmVar "termVar2")
                                 (TmVar "termVar1")
+                        )
+        , test "should parse multiple let expressions" <|
+            \_ ->
+                Parser.run letExpr "let termVar1 = termVar2 in let termVar3 = termVar1 in termVar3"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmLet
+                                "termVar1"
+                                (TmVar "termVar2")
+                                (TmLet
+                                    "termVar3"
+                                    (TmVar "termVar1")
+                                    (TmVar "termVar3")
+                                )
+                        )
+        ]
+
+
+ifExprTest : Test
+ifExprTest =
+    describe "ifExpr"
+        [ test "should parse if-then-else expression" <|
+            \_ ->
+                Parser.run ifExpr "if termVar1 then termVar2 else termVar3"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmIf
+                                (TmVar "termVar1")
+                                (TmVar "termVar2")
+                                (TmVar "termVar3")
+                        )
+        , test "should parse multiple if-then-else expressions" <|
+            \_ ->
+                Parser.run ifExpr "if termVar1 then termVar2 else if termVar3 then termVar4 else termVar5"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmIf
+                                (TmVar "termVar1")
+                                (TmVar "termVar2")
+                                (TmIf
+                                    (TmVar "termVar3")
+                                    (TmVar "termVar4")
+                                    (TmVar "termVar5")
+                                )
                         )
         ]
 

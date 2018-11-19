@@ -10,6 +10,7 @@ type Term
     = TmVar String
     | TmAbs String (Maybe Ty) Term
     | TmApp Term Term
+    | TmIf Term Term Term
     | TmTAbs String Term
     | TmTApp Term Ty
     | TmLet String Term Term
@@ -25,6 +26,7 @@ type Ty
 -}
 keywords =
     [ "Lambda", "lambda", "let", "Let", "in", "In", "forall", "Forall", "forAll", "ForAll" ]
+        ++ [ "if", "If", "then", "Then", "else", "Else" ]
 
 
 symbols =
@@ -33,6 +35,24 @@ symbols =
     , forAll = "∀"
     , arrow = "→"
     }
+
+
+preprocess : String -> String
+preprocess =
+    String.replace "\\" symbols.lambda
+        >> String.replace "lambda " symbols.lambda
+        >> String.replace "Lambda " symbols.capitalLambda
+        >> String.replace "^" symbols.capitalLambda
+        >> String.replace "Let " "let "
+        >> String.replace "In " "in "
+        >> String.replace "forall " symbols.forAll
+        >> String.replace "forAll " symbols.forAll
+        >> String.replace "Forall " symbols.forAll
+        >> String.replace "ForAll " symbols.forAll
+        >> String.replace "->" symbols.arrow
+        >> String.replace "If " "if "
+        >> String.replace "Then " "then "
+        >> String.replace "Else " "else "
 
 
 termAbsLambdaSymbol : Parser ()
@@ -87,19 +107,28 @@ inSymbol =
         ]
 
 
-preprocess : String -> String
-preprocess =
-    String.replace "\\" symbols.lambda
-        >> String.replace "lambda " symbols.lambda
-        >> String.replace "Lambda " symbols.capitalLambda
-        >> String.replace "^" symbols.capitalLambda
-        >> String.replace "Let " "let "
-        >> String.replace "In " "in "
-        >> String.replace "forall " symbols.forAll
-        >> String.replace "forAll " symbols.forAll
-        >> String.replace "Forall " symbols.forAll
-        >> String.replace "ForAll " symbols.forAll
-        >> String.replace "->" symbols.arrow
+ifSymbol : Parser ()
+ifSymbol =
+    oneOf
+        [ keyword "if"
+        , keyword "If"
+        ]
+
+
+thenSymbol : Parser ()
+thenSymbol =
+    oneOf
+        [ keyword "then"
+        , keyword "Then"
+        ]
+
+
+elseSymbol : Parser ()
+elseSymbol =
+    oneOf
+        [ keyword "else"
+        , keyword "Else"
+        ]
 
 
 termVar : Parser String
@@ -259,6 +288,7 @@ termSubExpr =
         , termAbs
         , typeAbs
         , letExpr
+        , ifExpr
         , succeed identity
             |. symbol "("
             |. spaces
@@ -308,4 +338,22 @@ letExpr =
         |= lazy (\_ -> termExpr)
         |. spaces
         |. inSymbol
+        |= lazy (\_ -> termExpr)
+
+
+{-| If-Then-Else expression
+-}
+ifExpr : Parser Term
+ifExpr =
+    succeed TmIf
+        |. ifSymbol
+        |. spaces
+        |= lazy (\_ -> termExpr)
+        |. spaces
+        |. thenSymbol
+        |. spaces
+        |= lazy (\_ -> termExpr)
+        |. spaces
+        |. elseSymbol
+        |. spaces
         |= lazy (\_ -> termExpr)

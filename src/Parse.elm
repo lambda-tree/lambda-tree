@@ -12,6 +12,7 @@ type Term
     | TmApp Term Term
     | TmTAbs String Term
     | TmTApp Term Ty
+    | TmLet String Term Term
 
 
 type Ty
@@ -21,7 +22,82 @@ type Ty
 
 
 keywords =
-    [ "Lambda", "lambda", "let", "=", "in", "[", "]", "->", "forall", "Forall", ".", "(", ")", ":" ]
+    [ "Lambda", "lambda", "let", "Let", "in", "In", "forall", "Forall", "forAll", "ForAll" ]
+
+
+symbols =
+    { lambda = "λ"
+    , capitalLambda = "Λ"
+    , forAll = "∀"
+    , arrow = "→"
+    }
+
+
+termAbsLambdaSymbol : Parser ()
+termAbsLambdaSymbol =
+    oneOf
+        [ symbol symbols.lambda
+        , keyword "lambda"
+        , symbol "\\"
+        ]
+
+
+typeAbsLambdaSymbol : Parser ()
+typeAbsLambdaSymbol =
+    oneOf
+        [ symbol symbols.capitalLambda
+        , keyword "Lambda"
+        ]
+
+
+forAllSymbol : Parser ()
+forAllSymbol =
+    oneOf
+        [ symbol symbols.forAll
+        , keyword "forall"
+        , keyword "forAll"
+        , keyword "Forall"
+        , keyword "ForAll"
+        ]
+
+
+arrowSymbol : Parser ()
+arrowSymbol =
+    oneOf
+        [ symbol symbols.arrow
+        , symbol "->"
+        ]
+
+
+letSymbol : Parser ()
+letSymbol =
+    oneOf
+        [ keyword "let"
+        , keyword "Let"
+        ]
+
+
+inSymbol : Parser ()
+inSymbol =
+    oneOf
+        [ keyword "in"
+        , keyword "In"
+        ]
+
+
+preprocess : String -> String
+preprocess =
+    String.replace "\\" symbols.lambda
+        >> String.replace "lambda " symbols.lambda
+        >> String.replace "Lambda " symbols.capitalLambda
+        >> String.replace "^" symbols.capitalLambda
+        >> String.replace "Let " "let "
+        >> String.replace "In " "in "
+        >> String.replace "forall " symbols.forAll
+        >> String.replace "forAll " symbols.forAll
+        >> String.replace "Forall " symbols.forAll
+        >> String.replace "ForAll " symbols.forAll
+        >> String.replace "->" symbols.arrow
 
 
 termVar : Parser String
@@ -47,7 +123,7 @@ typeVar =
 termAbs : Parser Term
 termAbs =
     succeed TmAbs
-        |. keyword "lambda"
+        |. termAbsLambdaSymbol
         |. spaces
         |= termVar
         |. spaces
@@ -65,7 +141,7 @@ termAbs =
 typeAbs : Parser Term
 typeAbs =
     succeed TmTAbs
-        |. keyword "Lambda"
+        |. typeAbsLambdaSymbol
         |. spaces
         |= typeVar
         |. spaces
@@ -91,7 +167,7 @@ typeSubExpr : Parser Ty
 typeSubExpr =
     oneOf
         [ succeed TyAll
-            |. keyword "forall"
+            |. forAllSymbol
             |. spaces
             |= typeVar
             |. spaces
@@ -111,26 +187,21 @@ typeSubExpr =
         ]
 
 
-
---
-
-
 {-| Arrow expression helper
 
-typeSubExpr consumes spaces at the end so that `arrowExprHelp` doesn't need to start with `spaces` that cause
+typeSubExpr consumes spaces at the end of sub expression so that `arrowExprHelp` doesn't need to start with `spaces`. Consuming spaces at beginning of oneOf that cause
 problem in `oneOf`.
 If parser encounters '.' it should not consider it as an operator but it should end consuming.
 Inspired by <https://github.com/elm/parser/blob/master/examples/Math.elm>
 
-`typeExprFinalize` is inside `lazy` so that it's not evaluated every time `arrowExprHelp` is called
-(even when the 1st case of `oneOf` succeeds).
+`arrowExprFinalize` is inside `lazy` so that it's not evaluated every time `arrowExprHelp` is called
 
 -}
 arrowExprHelp : List Ty -> Parser Ty
 arrowExprHelp revOps =
     oneOf
         [ succeed identity
-            |. symbol "->"
+            |. arrowSymbol
             |. spaces
             |= typeSubExpr
             |> andThen (\op -> arrowExprHelp (op :: revOps))
@@ -158,10 +229,6 @@ checkIfNoOperands maybeResult =
             problem ("operator has no operands")
 
 
-
--- ----------------
-
-
 {-| Term expression
 -}
 termExpr : Parser Term
@@ -173,7 +240,6 @@ termExpr =
 
 
 {-| Term sub expression
-TODO: Mark brackets with new value constructor?
 -}
 termSubExpr : Parser Term
 termSubExpr =
@@ -181,6 +247,7 @@ termSubExpr =
         [ map TmVar termVar
         , termAbs
         , typeAbs
+        , letExpr
         , succeed identity
             |. symbol "("
             |. spaces
@@ -213,5 +280,21 @@ appExprHelp term =
                 , map (TmTApp term) termTyAppSubExpr
                 ]
                 |> andThen appExprHelp
-            , lazy (\_ -> succeed term)
+            , succeed term
             ]
+
+
+{-| Let expressions
+-}
+letExpr : Parser Term
+letExpr =
+    succeed TmLet
+        |. letSymbol
+        |. spaces
+        |= termVar
+        |. spaces
+        |. symbol "="
+        |= lazy (\_ -> termExpr)
+        |. spaces
+        |. inSymbol
+        |= lazy (\_ -> termExpr)

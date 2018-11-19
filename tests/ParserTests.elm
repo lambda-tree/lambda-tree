@@ -147,6 +147,59 @@ termExprTest =
                                 )
                                 (TyVar "TermVar1")
                         )
+        , test "should parse let expression" <|
+            \_ ->
+                Parser.run termExpr "let termVar1=termVar2 in termVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmLet
+                                "termVar1"
+                                (TmVar "termVar2")
+                                (TmVar "termVar1")
+                        )
+        , test "should parse let expression with spaces" <|
+            \_ ->
+                Parser.run termExpr "   let  termVar1  =  termVar2  in  termVar1   "
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmLet
+                                "termVar1"
+                                (TmVar "termVar2")
+                                (TmVar "termVar1")
+                        )
+        , test "should parse preprocessed complex expression with symbols" <|
+            \_ ->
+                Parser.run termExpr (preprocess "Let x = ^X. \\x: Forall X. X. \\y: X. x y in x [Bool -> Bool]")
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmLet
+                                "x"
+                                (TmTAbs
+                                    "X"
+                                    (TmAbs
+                                        "x"
+                                        (TyAll
+                                            "X"
+                                            (TyVar "X")
+                                        )
+                                        (TmAbs
+                                            "y"
+                                            (TyVar "X")
+                                            (TmApp
+                                                (TmVar "x")
+                                                (TmVar "y")
+                                            )
+                                        )
+                                    )
+                                )
+                                (TmTApp
+                                    (TmVar "x")
+                                    (TyArr
+                                        (TyVar "Bool")
+                                        (TyVar "Bool")
+                                    )
+                                )
+                        )
         ]
 
 
@@ -267,4 +320,30 @@ typeAbsTest =
                                     (TmVar "termVar1")
                                 )
                         )
+        ]
+
+
+letExprTest : Test
+letExprTest =
+    describe "letExpr"
+        [ test "should parse let expression" <|
+            \_ ->
+                Parser.run letExpr "let termVar1 = termVar2 in termVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TmLet
+                                "termVar1"
+                                (TmVar "termVar2")
+                                (TmVar "termVar1")
+                        )
+        ]
+
+
+preprocessTest : Test
+preprocessTest =
+    describe "preprocess"
+        [ test "should parse let expression" <|
+            \_ ->
+                preprocess "Let x = ^X. \\x: Forall X. X. \\y: X. x y In x [Bool -> Bool]"
+                    |> Expect.equal "let x = ΛX. λx: ∀X. X. λy: X. x y in x [Bool → Bool]"
         ]

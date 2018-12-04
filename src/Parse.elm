@@ -383,8 +383,9 @@ binding =
 -}
 typeContext : Parser TyContext
 typeContext =
-    map TyContext <|
-        sequence
+    succeed TyContext
+        |. spaces
+        |= sequence
             { start = ""
             , separator = ","
             , end = ""
@@ -392,3 +393,4 @@ typeContext =
             , item = binding
             , trailing = Optional
             }
+        |. spaces

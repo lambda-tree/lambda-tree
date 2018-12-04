@@ -20,6 +20,13 @@ addbinding ctx x bind =
     ( x, bind ) :: ctx
 
 
+
+--getbinding : Context -> Int -> Maybe Binding
+--getbinding ctx x =
+--    List.Extra.getAt (ctxlength ctx - x) ctx
+--
+
+
 addname : Context -> String -> Context
 addname ctx x =
     addbinding ctx x NameBind

@@ -22,6 +22,15 @@ type Ty
     | TyAll String Ty
 
 
+type Binding
+    = VarBind String (Maybe Ty)
+    | TyVarBind String
+
+
+type TyContext
+    = TyContext (List Binding)
+
+
 {-| Reserved keywords
 -}
 keywords =
@@ -357,3 +366,29 @@ ifExpr =
         |. elseSymbol
         |. spaces
         |= lazy (\_ -> termExpr)
+
+
+binding : Parser Binding
+binding =
+    oneOf
+        [ succeed VarBind
+            |= termVar
+            |. spaces
+            |= maybeTypeAnnotation
+        , map TyVarBind typeVar
+        ]
+
+
+{-| List of context bindings expression
+-}
+typeContext : Parser TyContext
+typeContext =
+    map TyContext <|
+        sequence
+            { start = ""
+            , separator = ","
+            , end = ""
+            , spaces = spaces
+            , item = binding
+            , trailing = Optional
+            }

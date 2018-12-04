@@ -435,3 +435,37 @@ preprocessTest =
                 preprocess "Let x = ^X. \\x: Forall X. X. \\y: X. x y In x [Bool -> Bool]"
                     |> Expect.equal "let x = ΛX. λx: ∀X. X. λy: X. x y in x [Bool → Bool]"
         ]
+
+
+typeContextTest : Test
+typeContextTest =
+    describe "typeContext"
+        [ test "should parse empty typeContext" <|
+            \_ ->
+                Parser.run typeContext ""
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext []
+                        )
+        , test "should parse single element name bind typeContext" <|
+            \_ ->
+                Parser.run typeContext "termVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext [ VarBind "termVar1" Nothing ]
+                        )
+        , test "should parse single element var type bind typeContext" <|
+            \_ ->
+                Parser.run typeContext "termVar1: Bool"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext [ VarBind "termVar1" (Just <| TyVar "Bool") ]
+                        )
+        , test "should parse single element type var typeContext" <|
+            \_ ->
+                Parser.run typeContext "TermVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext [ TyVarBind "TermVar1" ]
+                        )
+        ]

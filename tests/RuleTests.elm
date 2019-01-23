@@ -8,16 +8,6 @@ import Rule exposing (..)
 import Context exposing (..)
 
 
-exampleTest : Test
-exampleTest =
-    describe "exampleTest"
-        [ test "exampleTest1" <|
-            \_ ->
-                True
-                    |> Expect.equal True
-        ]
-
-
 checkRuleTest : Test
 checkRuleTest =
     describe "checkRule"

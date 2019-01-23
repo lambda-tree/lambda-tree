@@ -1,9 +1,10 @@
 module Lambda exposing (..)
+
 {-| -}
 
 
 {-| Type of term
-`TyVar`(de Bruijn index, context length) - type variable use
+`TyVar`(de Bruijn index - indexing from 0, context length) - type variable use
 `TyArr`(from type, to type) - function type
 `TyAll`(variable name, in type) - universal quantification
 -}
@@ -39,4 +40,3 @@ type Binding
     = NameBind
     | VarBind Ty
     | TyVarBind
-

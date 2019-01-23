@@ -1,7 +1,6 @@
 module LambdaUtilsTests exposing (..)
 
 import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
 import Test exposing (..)
 import Lambda exposing (..)
 import LambdaUtils exposing (..)
@@ -39,6 +38,7 @@ typeShiftAboveTest =
                 typeShiftAbove (-1) 0 (TyAll "alpha" (TyArr (TyVar 1 1) (TyVar 1 1)))
                     |> Expect.equal (TyAll "alpha" (TyArr (TyVar 0 0) (TyVar 0 0)))
         ]
+
 
 tytermSubstTopTest : Test
 tytermSubstTopTest =
@@ -119,6 +119,7 @@ termShiftAboveTest =
                             (TmVar I 1 7)
                         )
         ]
+
 
 termSubstTest : Test
 termSubstTest =

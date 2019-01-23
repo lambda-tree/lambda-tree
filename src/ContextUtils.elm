@@ -2,7 +2,8 @@ module ContextUtils exposing (..)
 
 import Context exposing (..)
 import Lambda exposing (..)
-import List.Extra
+import List.Extra exposing (find, findIndex)
+import Maybe.Extra exposing (isJust)
 
 
 emptycontext : Context
@@ -20,11 +21,11 @@ addbinding ctx x bind =
     ( x, bind ) :: ctx
 
 
-
---getbinding : Context -> Int -> Maybe Binding
---getbinding ctx x =
---    List.Extra.getAt (ctxlength ctx - x) ctx
---
+addbindingTup : Context -> ( String, Binding ) -> Context
+addbindingTup ctx tup =
+    case tup of
+        ( x, bind ) ->
+            addbinding ctx x bind
 
 
 addname : Context -> String -> Context
@@ -34,12 +35,9 @@ addname ctx x =
 
 isnamebound : Context -> String -> Bool
 isnamebound ctx x =
-    case ctx of
-        [] ->
-            False
-
-        ( y, _ ) :: rest ->
-            y == x || isnamebound rest x
+    ctx
+        |> find (Tuple.first >> (==) x)
+        |> isJust
 
 
 pickfreshname : Context -> String -> ( Context, String )
@@ -52,52 +50,19 @@ pickfreshname ctx x =
 
 index2name : Info -> Context -> Int -> Maybe String
 index2name fi ctx x =
-    case x of
-        0 ->
-            case ctx of
-                [] ->
-                    Nothing
-
-                ( y, _ ) :: rest ->
-                    Just y
-
-        n ->
-            case ctx of
-                [] ->
-                    Nothing
-
-                _ :: rest ->
-                    index2name fi rest x
+    ctx
+        |> List.Extra.getAt x
+        |> Maybe.map Tuple.first
 
 
 getbinding : Context -> Int -> Maybe Binding
 getbinding ctx x =
-    case x of
-        0 ->
-            case ctx of
-                [] ->
-                    Nothing
-
-                ( _, y ) :: rest ->
-                    Just y
-
-        n ->
-            case ctx of
-                [] ->
-                    Nothing
-
-                _ :: rest ->
-                    getbinding rest x
+    ctx
+        |> List.Extra.getAt x
+        |> Maybe.map Tuple.second
 
 
 name2index : Info -> Context -> String -> Maybe Int
 name2index fi ctx x =
-    case ctx of
-        [] ->
-            Nothing
-
-        ( y, _ ) :: rest ->
-            if y == x then
-                Just 0
-            else
-                Maybe.map ((+) 1) (name2index fi rest x)
+    ctx
+        |> findIndex (Tuple.first >> (==) x)

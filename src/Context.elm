@@ -1,6 +1,11 @@
 module Context exposing (..)
 
-import List
 import Lambda exposing (..)
 
-type alias Context = List (String, Binding)
+
+type alias Context =
+    List ContextObject
+
+
+type alias ContextObject =
+    ( String, Binding )

@@ -14,7 +14,7 @@ fromParseContextTest =
         [ test "test empty context" <|
             \_ ->
                 fromParseContext (P.TyContext [])
-                    |> Expect.equal []
+                    |> Expect.equal (Right [])
         , test "test non empty context" <|
             \_ ->
                 fromParseContext
@@ -24,9 +24,11 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        [ ( "x", L.NameBind )
-                        , ( "X", L.TyVarBind )
-                        ]
+                        (Right
+                            [ ( "x", L.NameBind )
+                            , ( "X", L.TyVarBind )
+                            ]
+                        )
         , test "test non empty context with type variable reference" <|
             \_ ->
                 fromParseContext
@@ -36,9 +38,11 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        [ ( "x", L.VarBind (L.TyVar 0 1) )
-                        , ( "X", L.TyVarBind )
-                        ]
+                        (Right
+                            [ ( "x", L.VarBind (L.TyVar 0 1) )
+                            , ( "X", L.TyVarBind )
+                            ]
+                        )
         , test "test non empty context with type" <|
             \_ ->
                 fromParseContext
@@ -48,9 +52,11 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        [ ( "x", L.VarBind (L.TyAll "Z" (L.TyVar 0 2)) )
-                        , ( "X", L.TyVarBind )
-                        ]
+                        (Right
+                            [ ( "x", L.VarBind (L.TyAll "Z" (L.TyVar 0 2)) )
+                            , ( "X", L.TyVarBind )
+                            ]
+                        )
         , test "test non empty context with type variable to context" <|
             \_ ->
                 fromParseContext
@@ -60,9 +66,11 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        [ ( "x", L.VarBind (L.TyAll "Z" (L.TyVar 1 2)) )
-                        , ( "X", L.TyVarBind )
-                        ]
+                        (Right
+                            [ ( "x", L.VarBind (L.TyAll "Z" (L.TyVar 1 2)) )
+                            , ( "X", L.TyVarBind )
+                            ]
+                        )
         , test "test non empty context with multiple type vars" <|
             \_ ->
                 fromParseContext
@@ -72,9 +80,11 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        [ ( "x", L.VarBind (L.TyAll "Z" <| L.TyAll "A" <| L.TyAll "B" <| L.TyVar 2 4) )
-                        , ( "X", L.TyVarBind )
-                        ]
+                        (Right
+                            [ ( "x", L.VarBind (L.TyAll "Z" <| L.TyAll "A" <| L.TyAll "B" <| L.TyVar 2 4) )
+                            , ( "X", L.TyVarBind )
+                            ]
+                        )
         , test "test non empty context with non existent type" <|
             \_ ->
                 fromParseContext
@@ -85,9 +95,7 @@ fromParseContextTest =
                     )
                     |> Expect.equal
                         -- TODO: Should fail with error!
-                        [ ( "x", L.NameBind )
-                        , ( "X", L.TyVarBind )
-                        ]
+                        (Left <| IndexNotFound "Nonexistent")
         ]
 
 
@@ -184,4 +192,40 @@ fromParseTypeTest =
                     ]
                     (P.TyAll "TypeVar3" (P.TyVar "TypeVar999"))
                     |> Expect.equal (Left <| IndexNotFound "TypeVar999")
+        ]
+
+
+fromParseTermTest : Test
+fromParseTermTest =
+    describe "fromParseTerm"
+        [ test "should return variable if found in context" <|
+            \_ ->
+                fromParseTerm
+                    [ ( "termVar1", L.NameBind )
+                    , ( "TypeVar1", L.TyVarBind )
+                    , ( "termVar2", L.NameBind )
+                    , ( "termVar3", L.NameBind )
+                    , ( "termVar4", L.NameBind )
+                    , ( "termVar5", L.NameBind )
+                    ]
+                    (P.TmVar "termVar2")
+                    |> Expect.equal (Right <| L.TmVar L.I 2 6)
+        , test "should return error if variable not found in empty context" <|
+            \_ ->
+                fromParseTerm
+                    []
+                    (P.TmVar "termVar2")
+                    |> Expect.equal (Left <| IndexNotFound "termVar2")
+        , test "should consider the expression's 'added' variable to the context in context length and deBruijn index" <|
+            \_ ->
+                fromParseTerm
+                    [ ( "termVar1", L.NameBind )
+                    , ( "TypeVar1", L.TyVarBind )
+                    , ( "termVar2", L.NameBind )
+                    , ( "termVar3", L.NameBind )
+                    , ( "termVar4", L.NameBind )
+                    , ( "TypeVar2", L.TyVarBind )
+                    ]
+                    (P.TmAbs "termVar5" (Just <| P.TyVar "TypeVar2") (P.TmVar "termVar5"))
+                    |> Expect.equal (Right <| L.TmAbs L.I "termVar5" (L.TyVar 5 6) (L.TmVar L.I 0 7))
         ]

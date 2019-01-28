@@ -198,7 +198,7 @@ fromParseTypeTest =
 fromParseTermTest : Test
 fromParseTermTest =
     describe "fromParseTerm"
-        [ test "should return variable if found in context" <|
+        [ test "TmVar should return variable if found in context" <|
             \_ ->
                 fromParseTerm
                     [ ( "termVar1", L.NameBind )
@@ -210,13 +210,13 @@ fromParseTermTest =
                     ]
                     (P.TmVar "termVar2")
                     |> Expect.equal (Right <| L.TmVar L.I 2 6)
-        , test "should return error if variable not found in empty context" <|
+        , test "TmVar should return error if variable not found in empty context" <|
             \_ ->
                 fromParseTerm
                     []
                     (P.TmVar "termVar2")
                     |> Expect.equal (Left <| IndexNotFound "termVar2")
-        , test "should consider the expression's 'added' variable to the context in context length and deBruijn index" <|
+        , test "TmAbs should consider the expression's 'added' variable to the context in context length and deBruijn index" <|
             \_ ->
                 fromParseTerm
                     [ ( "termVar1", L.NameBind )
@@ -228,4 +228,63 @@ fromParseTermTest =
                     ]
                     (P.TmAbs "termVar5" (Just <| P.TyVar "TypeVar2") (P.TmVar "termVar5"))
                     |> Expect.equal (Right <| L.TmAbs L.I "termVar5" (L.TyVar 5 6) (L.TmVar L.I 0 7))
+        , test "TmApp should transform term application" <|
+            \_ ->
+                fromParseTerm
+                    [ ( "termVar1", L.NameBind )
+                    , ( "TypeVar1", L.TyVarBind )
+                    , ( "termVar2", L.NameBind )
+                    , ( "termVar3", L.NameBind )
+                    , ( "termVar4", L.NameBind )
+                    , ( "TypeVar2", L.TyVarBind )
+                    ]
+                    (P.TmApp
+                        (P.TmAbs "termVar5" (Just <| P.TyVar "TypeVar2") (P.TmVar "termVar5"))
+                        (P.TmVar "termVar2")
+                    )
+                    |> Expect.equal
+                        (Right <|
+                            L.TmApp L.I
+                                (L.TmAbs L.I "termVar5" (L.TyVar 5 6) (L.TmVar L.I 0 7))
+                                (L.TmVar L.I 2 6)
+                        )
+        , test "TmTAbs should transform type abstraction" <|
+            \_ ->
+                fromParseTerm
+                    [ ( "termVar1", L.NameBind )
+                    , ( "TypeVar1", L.TyVarBind )
+                    , ( "termVar2", L.NameBind )
+                    , ( "termVar3", L.NameBind )
+                    , ( "termVar4", L.NameBind )
+                    , ( "TypeVar2", L.TyVarBind )
+                    ]
+                    (P.TmTAbs "TypeVar5" <| P.TmAbs "termVar5" (Just <| P.TyVar "TypeVar5") (P.TmVar "termVar5"))
+                    |> Expect.equal
+                        (Right <|
+                            L.TmTAbs L.I "TypeVar5" <|
+                                L.TmAbs L.I "termVar5" (L.TyVar 0 7) (L.TmVar L.I 0 8)
+                        )
+        , test "TmTApp should transform type application" <|
+            \_ ->
+                fromParseTerm
+                    [ ( "termVar1", L.NameBind )
+                    , ( "TypeVar1", L.TyVarBind )
+                    , ( "termVar2", L.NameBind )
+                    , ( "termVar3", L.NameBind )
+                    , ( "termVar4", L.NameBind )
+                    , ( "TypeVar2", L.TyVarBind )
+                    ]
+                    (P.TmTApp
+                        (P.TmTAbs "TypeVar5" <| P.TmAbs "termVar5" (Just <| P.TyVar "TypeVar5") (P.TmVar "termVar5"))
+                        (P.TyArr (P.TyVar "TypeVar1") (P.TyVar "TypeVar2"))
+                    )
+                    |> Expect.equal
+                        (Right <|
+                            L.TmTApp L.I
+                                (L.TmTAbs L.I
+                                    "TypeVar5"
+                                    (L.TmAbs L.I "termVar5" (L.TyVar 0 7) (L.TmVar L.I 0 8))
+                                )
+                                (L.TyArr (L.TyVar 1 6) (L.TyVar 5 6))
+                        )
         ]

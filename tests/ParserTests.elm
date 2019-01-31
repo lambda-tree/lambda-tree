@@ -441,30 +441,188 @@ typeContextTest =
     describe "typeContext"
         [ test "should parse empty typeContext" <|
             \_ ->
-                Parser.run typeContext ""
+                parseCtx ""
                     |> Expect.equal
                         (Result.Ok <|
                             TyContext []
                         )
         , test "should parse single element name bind typeContext" <|
             \_ ->
-                Parser.run typeContext "termVar1"
+                parseCtx "termVar1"
                     |> Expect.equal
                         (Result.Ok <|
                             TyContext [ VarBind "termVar1" Nothing ]
                         )
         , test "should parse single element var type bind typeContext" <|
             \_ ->
-                Parser.run typeContext "termVar1: Bool"
+                parseCtx "termVar1: Bool"
                     |> Expect.equal
                         (Result.Ok <|
                             TyContext [ VarBind "termVar1" (Just <| TyVar "Bool") ]
                         )
-        , test "should parse single element type var typeContext" <|
+        , test "should parse single element var type bind with complex type" <|
             \_ ->
-                Parser.run typeContext "TermVar1"
+                parseCtx "termVar1: forall TypeVar1. forall TypeVar2. TypeVar1 -> (TypeVar1 -> TypeVar2) -> TypeVar2"
                     |> Expect.equal
                         (Result.Ok <|
-                            TyContext [ TyVarBind "TermVar1" ]
+                            TyContext
+                                [ VarBind "termVar1"
+                                    (Just <|
+                                        TyAll "TypeVar1"
+                                            (TyAll "TypeVar2"
+                                                (TyArr
+                                                    (TyVar "TypeVar1")
+                                                    (TyArr
+                                                        (TyArr
+                                                            (TyVar "TypeVar1")
+                                                            (TyVar "TypeVar2")
+                                                        )
+                                                        (TyVar "TypeVar2")
+                                                    )
+                                                )
+                                            )
+                                    )
+                                ]
+                        )
+        , test "should parse single element type var typeContext" <|
+            \_ ->
+                parseCtx "TypeVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext [ TyVarBind "TypeVar1" ]
+                        )
+        , test "should parse mixed type & term vars" <|
+            \_ ->
+                parseCtx "TypeVar1, termVar1, TypeVar2, termVar2: TypeVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext
+                                [ TyVarBind "TypeVar1"
+                                , VarBind "termVar1" Nothing
+                                , TyVarBind "TypeVar2"
+                                , VarBind "termVar2" (Just <| TyVar "TypeVar1")
+                                ]
+                        )
+        ]
+
+
+parseTermTest : Test
+parseTermTest =
+    describe "parseTerm"
+        [ test "should parse term variable" <|
+            \_ ->
+                parseTerm "termVar1"
+                    |> Expect.equal (Result.Ok <| TmVar "termVar1")
+        , test "should parse term variableWith white space" <|
+            \_ ->
+                parseTerm "  termVar1  "
+                    |> Expect.equal (Result.Ok <| TmVar "termVar1")
+        , test "should parse term application" <|
+            \_ ->
+                parseTerm "termVar1 termVar2"
+                    |> Expect.equal (Result.Ok <| TmApp (TmVar "termVar1") (TmVar "termVar2"))
+        , test "should parse term application with spaces" <|
+            \_ ->
+                parseTerm "  termVar1  termVar2  "
+                    |> Expect.equal (Result.Ok <| TmApp (TmVar "termVar1") (TmVar "termVar2"))
+        , test "should parse term application with brackets" <|
+            \_ ->
+                parseTerm "(termVar1 termVar2)"
+                    |> Expect.equal (Result.Ok <| TmApp (TmVar "termVar1") (TmVar "termVar2"))
+        ]
+
+
+parseTypeTest : Test
+parseTypeTest =
+    describe "parseType"
+        [ test "should parse type variable" <|
+            \_ ->
+                parseType "TypeVar1"
+                    |> Expect.equal (Result.Ok <| TyVar "TypeVar1")
+        , test "should parse type arrow" <|
+            \_ ->
+                parseType "(TypeVar1 -> TypeVar2)"
+                    |> Expect.equal (Result.Ok <| TyArr (TyVar "TypeVar1") (TyVar "TypeVar2"))
+        , test "should parse type arrow without brackets" <|
+            \_ ->
+                parseType "TypeVar1 -> TypeVar2"
+                    |> Expect.equal (Result.Ok <| TyArr (TyVar "TypeVar1") (TyVar "TypeVar2"))
+        , test "should parse multiple type arrows" <|
+            \_ ->
+                parseType "TypeVar1 -> TypeVar2 -> TypeVar3"
+                    |> Expect.equal (Result.Ok <| TyArr (TyVar "TypeVar1") (TyArr (TyVar "TypeVar2") (TyVar "TypeVar3")))
+        , test "should parse type generalization" <|
+            \_ ->
+                parseType "(forall TypeVar1. TypeVar1)"
+                    |> Expect.equal (Result.Ok <| TyAll "TypeVar1" (TyVar "TypeVar1"))
+        ]
+
+
+parseCtxTest : Test
+parseCtxTest =
+    describe "parseCtx"
+        [ test "should parse empty typeContext" <|
+            \_ ->
+                parseCtx ""
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext []
+                        )
+        , test "should parse single element name bind typeContext" <|
+            \_ ->
+                parseCtx "termVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext [ VarBind "termVar1" Nothing ]
+                        )
+        , test "should parse single element var type bind typeContext" <|
+            \_ ->
+                parseCtx "termVar1: Bool"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext [ VarBind "termVar1" (Just <| TyVar "Bool") ]
+                        )
+        , test "should parse single element var type bind with complex type" <|
+            \_ ->
+                parseCtx "termVar1: forall TypeVar1. forall TypeVar2. TypeVar1 -> (TypeVar1 -> TypeVar2) -> TypeVar2"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext
+                                [ VarBind "termVar1"
+                                    (Just <|
+                                        TyAll "TypeVar1"
+                                            (TyAll "TypeVar2"
+                                                (TyArr
+                                                    (TyVar "TypeVar1")
+                                                    (TyArr
+                                                        (TyArr
+                                                            (TyVar "TypeVar1")
+                                                            (TyVar "TypeVar2")
+                                                        )
+                                                        (TyVar "TypeVar2")
+                                                    )
+                                                )
+                                            )
+                                    )
+                                ]
+                        )
+        , test "should parse single element type var typeContext" <|
+            \_ ->
+                parseCtx "TypeVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext [ TyVarBind "TypeVar1" ]
+                        )
+        , test "should parse mixed type & term vars" <|
+            \_ ->
+                parseCtx "TypeVar1, termVar1, TypeVar2, termVar2: TypeVar1"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyContext
+                                [ TyVarBind "TypeVar1"
+                                , VarBind "termVar1" Nothing
+                                , TyVarBind "TypeVar2"
+                                , VarBind "termVar2" (Just <| TyVar "TypeVar1")
+                                ]
                         )
         ]

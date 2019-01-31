@@ -394,3 +394,18 @@ typeContext =
             , trailing = Optional
             }
         |. spaces
+
+
+parseTerm : String -> Result (List Parser.DeadEnd) Term
+parseTerm text =
+    run termExpr text
+
+
+parseType : String -> Result (List Parser.DeadEnd) Ty
+parseType text =
+    run typeExpr text
+
+
+parseCtx : String -> Result (List Parser.DeadEnd) TyContext
+parseCtx text =
+    run typeContext text

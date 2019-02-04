@@ -1,9 +1,9 @@
-module LambdaUtilsTests exposing (..)
+module Lambda.ExpressionUtilsTests exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Lambda exposing (..)
-import LambdaUtils exposing (..)
+import Lambda.Expression exposing (..)
+import Lambda.ExpressionUtils exposing (..)
 
 
 {-| forall a. a -> a

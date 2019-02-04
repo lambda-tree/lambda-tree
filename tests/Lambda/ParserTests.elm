@@ -1,10 +1,10 @@
-module ParserTests exposing (..)
+module Lambda.ParserTests exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Parser
 import Result
-import Parse exposing (..)
+import Lambda.Parse exposing (..)
 
 
 termExprTest : Test

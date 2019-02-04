@@ -1,11 +1,9 @@
-module ContextUtilsTests exposing (..)
+module Lambda.ContextUtilsTests exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import ParseTransform exposing (..)
-import Context exposing (..)
-import ContextUtils exposing (..)
-import Lambda exposing (..)
+import Lambda.ContextUtils exposing (..)
+import Lambda.Expression exposing (..)
 
 
 ctxlengthTest : Test

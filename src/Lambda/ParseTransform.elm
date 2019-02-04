@@ -1,9 +1,9 @@
-module ParseTransform exposing (..)
+module Lambda.ParseTransform exposing (..)
 
-import Parse as P
-import Lambda exposing (..)
-import Context exposing (..)
-import ContextUtils exposing (..)
+import Lambda.Parse as P
+import Lambda.Expression exposing (..)
+import Lambda.Context exposing (..)
+import Lambda.ContextUtils exposing (..)
 import Either exposing (Either(..))
 
 

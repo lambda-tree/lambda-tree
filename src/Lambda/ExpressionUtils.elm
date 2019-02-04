@@ -1,7 +1,8 @@
-module LambdaUtils exposing (..)
+module Lambda.ExpressionUtils exposing (..)
 
-import Lambda exposing (..)
-import Context exposing (..)
+import Lambda.Expression exposing (..)
+import Lambda.Context exposing (..)
+
 
 {-| Shift indices by `d` if idx is greater than `c` in term `t`
 -}

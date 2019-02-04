@@ -1,11 +1,11 @@
-module ParseIntegrationTests exposing (..)
+module Lambda.ParseIntegrationTests exposing (..)
 
 import Either exposing (Either(..))
 import Expect exposing (Expectation)
 import Test exposing (..)
-import ParseTransform exposing (..)
-import Parse as P
-import Lambda as L
+import Lambda.ParseTransform exposing (..)
+import Lambda.Parse as P
+import Lambda.Expression as L
 
 
 transformTextExprTest : Test

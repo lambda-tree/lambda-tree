@@ -1,28 +1,35 @@
-module Rule exposing (..)
+module Lambda.Rule exposing (..)
 
-import Lambda exposing (..)
+import Lambda.Expression exposing (..)
 import Maybe exposing (..)
-import Context exposing (..)
-import ContextUtils exposing (..)
+import Lambda.Context exposing (..)
+import Lambda.ContextUtils exposing (..)
 
 
 type TyRule
-    = TVar
+    = TVar {
         -- bottom
-        Context
+       bottomCtx: Context,
         -- term
-        Term
+        bottomTerm: Term,
         --
-        Ty
+        bottomTy: Ty,
         -- top
         -- ctx
-        Context
+        impliesCtx: Context,
         -- t
-        Term
+        impliesTerm: Term,
         -- ty
-        Ty
+        impliesTy: Ty,
         -- the type ascription part -- ctx |- t: ty iff ...
         (Maybe TyRule)
+} | TAbs {
+    stm: TypeStatement,
+    implStm: TypeStatement,
+}
+
+type alias TypeStatement = { ctx: Context, term: Term, ty: Ty }
+type alias ContainmentStatement = { ctx: Context, variable: Term }
 
 
 

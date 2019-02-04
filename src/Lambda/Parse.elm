@@ -1,4 +1,4 @@
-module Parse exposing (..)
+module Lambda.Parse exposing (..)
 
 import Parser exposing (..)
 import Set

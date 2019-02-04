@@ -1,6 +1,6 @@
-module Context exposing (..)
+module Lambda.Context exposing (..)
 
-import Lambda exposing (..)
+import Lambda.Expression exposing (..)
 
 
 type alias Context =

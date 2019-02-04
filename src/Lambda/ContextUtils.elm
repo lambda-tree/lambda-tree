@@ -1,7 +1,7 @@
-module ContextUtils exposing (..)
+module Lambda.ContextUtils exposing (..)
 
-import Context exposing (..)
-import Lambda exposing (..)
+import Lambda.Context exposing (..)
+import Lambda.Expression exposing (..)
 import List.Extra exposing (find, findIndex)
 import Maybe.Extra exposing (isJust)
 

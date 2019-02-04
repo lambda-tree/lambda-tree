@@ -3,12 +3,12 @@ module View.Lambda.ProofCell exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Css exposing (..)
 import Message exposing (Msg)
-import Model exposing (ModelContent, TextKind(..))
+import Model exposing (TextKind(..))
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
 
 
-proofCell : ModelContent -> (TextKind -> String -> Msg) -> S.Html Msg
+proofCell : { a | ctx : String, term : String, ty : String } -> (TextKind -> String -> Msg) -> S.Html Msg
 proofCell content msgCreator =
     S.div
         []

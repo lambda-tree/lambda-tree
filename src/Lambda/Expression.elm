@@ -27,6 +27,7 @@ type Term
     = TmVar Info Int Int
     | TmAbs Info String Ty Term
     | TmApp Info Term Term
+    | TmIf Info Term Term Term
     | TmTAbs Info String Term
     | TmTApp Info Term Ty
 

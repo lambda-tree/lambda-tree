@@ -23,7 +23,6 @@ drawTree tree =
                         [ if List.length children == 0 then
                             S.div []
                                 [ ruleSelector <| RuleSelectedMsg path
-                                , S.button [ E.onClick <| AddMsg path ] [ S.text "Add" ]
                                 , S.button [ E.onClick <| RemoveMsg path ] [ S.text "Remove" ]
                                 ]
                           else

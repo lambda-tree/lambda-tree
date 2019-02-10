@@ -63,7 +63,15 @@ fromParseType ctx ty =
                     Right <| TyVar index (ctxlength ctx)
 
                 Nothing ->
-                    Left (IndexNotFound name)
+                    case name of
+                        "Bool" ->
+                            Right <| TyName "Bool"
+
+                        "Int" ->
+                            Right <| TyName "Int"
+
+                        _ ->
+                            Left <| IndexNotFound name
 
         P.TyArr ty1 ty2 ->
             fromParseType ctx ty1
@@ -123,7 +131,17 @@ fromParseTerm ctx t =
                     )
 
         P.TmIf t1 t2 t3 ->
-            Left <| NotImplemented "If-Then-Else"
+            fromParseTerm ctx t1
+                |> Either.andThenRight
+                    (\t1t ->
+                        fromParseTerm ctx t2
+                            |> Either.andThenRight
+                                (\t2t ->
+                                    fromParseTerm ctx t3
+                                        |> Either.andThenRight
+                                            (\t3t -> Right <| TmIf I t1t t2t t3t)
+                                )
+                    )
 
         P.TmLet name t1 t2 ->
             Left <| NotImplemented "Let"

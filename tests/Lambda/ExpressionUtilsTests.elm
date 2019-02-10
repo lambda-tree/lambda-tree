@@ -4,6 +4,7 @@ import Expect exposing (Expectation)
 import Test exposing (..)
 import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (..)
+import Lambda.ContextUtils exposing (..)
 
 
 {-| forall a. a -> a
@@ -145,4 +146,93 @@ termSubstTest =
                             )
                             (TmVar I 1 7)
                         )
+        ]
+
+
+equalTypesTest : Test
+equalTypesTest =
+    describe "equalTypes"
+        [ test "Should be true if type names are same" <|
+            \_ ->
+                equalTypes emptycontext (TyName "Bool") emptycontext (TyName "Bool")
+                    |> Expect.equal
+                        True
+        , test "Should be false if type names are not same" <|
+            \_ ->
+                equalTypes emptycontext (TyName "Bool") emptycontext (TyName "Int")
+                    |> Expect.equal
+                        False
+        , test "Should be true if forall names are same" <|
+            \_ ->
+                equalTypes emptycontext (TyAll "x" <| TyName "Bool") emptycontext (TyAll "x" <| TyName "Bool")
+                    |> Expect.equal
+                        True
+        , test "Should be true even if forall names are not same" <|
+            \_ ->
+                equalTypes emptycontext (TyAll "x" <| TyName "Bool") emptycontext (TyAll "y" <| TyName "Bool")
+                    |> Expect.equal
+                        True
+        , test "Should be true if both TyArr types are same" <|
+            \_ ->
+                equalTypes
+                    emptycontext
+                    (TyArr (TyName "Bool") (TyName "Int"))
+                    emptycontext
+                    (TyArr (TyName "Bool") (TyName "Int"))
+                    |> Expect.equal
+                        True
+        , test "Should be false if left TyArr type is different" <|
+            \_ ->
+                equalTypes
+                    emptycontext
+                    (TyArr (TyName "Int") (TyName "Int"))
+                    emptycontext
+                    (TyArr (TyName "Bool") (TyName "Int"))
+                    |> Expect.equal
+                        False
+        , test "Should be false if right TyArr type is different" <|
+            \_ ->
+                equalTypes
+                    emptycontext
+                    (TyArr (TyName "Bool") (TyName "Bool"))
+                    emptycontext
+                    (TyArr (TyName "Bool") (TyName "Int"))
+                    |> Expect.equal
+                        False
+        , test "Should be true if ctxts and vars are same and variables exist" <|
+            \_ ->
+                equalTypes
+                    [ ( "x", TyVarBind ) ]
+                    (TyVar 0 1)
+                    [ ( "x", TyVarBind ) ]
+                    (TyVar 0 1)
+                    |> Expect.equal
+                        True
+        , test "Should be false if variables don't exist" <|
+            \_ ->
+                equalTypes
+                    emptycontext
+                    (TyVar 0 1)
+                    emptycontext
+                    (TyVar 0 1)
+                    |> Expect.equal
+                        False
+        , test "Should be true if ctxt var names are different" <|
+            \_ ->
+                equalTypes
+                    [ ( "x", TyVarBind ) ]
+                    (TyVar 0 1)
+                    [ ( "y", TyVarBind ) ]
+                    (TyVar 0 1)
+                    |> Expect.equal
+                        True
+        , test "Should be true if variables are referencing from different positions of context" <|
+            \_ ->
+                equalTypes
+                    [ ( "x", VarBind (TyVar 0 1) ), ( "x", TyVarBind ) ]
+                    (TyVar 1 2)
+                    [ ( "x", VarBind (TyVar 0 1) ), ( "x", TyVarBind ) ]
+                    (TyVar 0 1)
+                    |> Expect.equal
+                        True
         ]

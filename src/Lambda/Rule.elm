@@ -2,6 +2,7 @@ module Lambda.Rule exposing (..)
 
 import Either
 import Lambda.Expression exposing (..)
+import Lambda.ExpressionUtils exposing (equalTypes, equalTypesExact)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Maybe exposing (..)
 import Lambda.Context exposing (..)
@@ -13,21 +14,8 @@ import Result
 
 
 type TyRule
-    = TVar
-        { -- bottom
-          bottomCtx : Context
-        , -- term
-          bottomTerm : Term
-        , --
-          bottomTy : Ty
-        , -- top
-          -- ctx
-          topCtx : Context
-        , -- t
-          topTerm : Term
-        , -- ty
-          topTy : Ty
-        }
+    = TVar { bottom : TypeStatement, top : TypeStatement }
+    | TIf { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement, top3 : TypeStatement }
 
 
 type alias TypeStatement =
@@ -38,51 +26,43 @@ type alias ContainmentStatement =
     { ctx : Context, variable : Term }
 
 
-
---
---  RuleIf (If t1.. t2.. t3..)
---  rule1 rule2 rule3
---
---  RuleIf term typeT
---      rule1 rule2 rule3
---
---
---
---  RuleIf (RuleIfBottom t ty) (RuleIfTop rule1 rule2 rule3)
---
---  RuleIf (RuleIfBottom (If (\\0) (\\1) (\\0)) ty) (RuleIfTop rule1 rule2 rule3)
---      if rule1.ty === Bool && rule2.ty === ty && rule3.ty === ty
---
---
---
---  Rule ruleType RuleBottom RuleTop
---  Rule RuleIf
---  RuleBottom = RuleBottom term type
---  RuleTop = [Rule]
---
---
---  checkRule ctx rule =
---      case rule of
---          (TermIf t1 t2 t3) ty
-
-
 checkRule : TyRule -> Bool
 checkRule rule =
     case rule of
-        TVar { bottomCtx, bottomTerm, bottomTy, topCtx, topTerm, topTy } ->
-            bottomCtx
-                == Debug.log "topCtx" topCtx
-                && Debug.log "bottomTerm" bottomTerm
-                == Debug.log "topTerm" topTerm
-                && Debug.log "bottomTy" bottomTy
-                == Debug.log "topTy" topTy
-                && (case topTerm of
+        TVar { bottom, top } ->
+            bottom.ctx
+                == Debug.log "topCtx" top.ctx
+                && Debug.log "bottomTerm" bottom.term
+                == Debug.log "topTerm" top.term
+                && Debug.log "bottomTy" bottom.ty
+                == Debug.log "topTy" top.ty
+                && (case bottom.term of
                         TmVar _ x _ ->
-                            Debug.log "getbinding topCtx x::" (getbinding topCtx x) == Debug.log "Just VarBind::" (Just (VarBind bottomTy))
+                            case getbinding top.ctx x of
+                                Just (VarBind ty1) ->
+                                    -- Doesn't need to be exact equal type since contexts must be identical
+                                    equalTypes top.ctx ty1 bottom.ctx bottom.ty
+
+                                _ ->
+                                    False
 
                         _ ->
                             False
                    )
+
+        TIf { bottom, top1, top2, top3 } ->
+            case bottom.term of
+                TmIf _ t1 t2 t3 ->
+                    List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx, top3.ctx ]
+                        && (top1.term == t1)
+                        && equalTypes top1.ctx top1.ty bottom.ctx (TyName "Bool")
+                        && (top2.term == t2)
+                        && equalTypes top2.ctx top2.ty bottom.ctx bottom.ty
+                        && (top3.term == t3)
+                        && equalTypes top3.ctx top3.ty bottom.ctx bottom.ty
+
+                _ ->
+                    False
 
 
 getCtxTermTy : String -> String -> String -> Result String ( Context, Term, Ty )
@@ -121,9 +101,9 @@ getCtxTermTy ctx term ty =
 tryRule : TreeModel -> String
 tryRule t =
     case t of
-        Node { ctx, term, ty, rule } [ child ] ->
-            case rule of
-                Model.TVar ->
+        Node { ctx, term, ty, rule } children ->
+            case ( rule, children ) of
+                ( Model.TVar, [ child ] ) ->
                     case child of
                         Node childC _ ->
                             let
@@ -142,12 +122,16 @@ tryRule t =
                                                         Result.Ok <|
                                                             checkRule
                                                                 (TVar
-                                                                    { bottomCtx = c1
-                                                                    , bottomTerm = tm1
-                                                                    , bottomTy = ty1
-                                                                    , topCtx = c2
-                                                                    , topTerm = tm2
-                                                                    , topTy = ty2
+                                                                    { bottom =
+                                                                        { ctx = c1
+                                                                        , term = tm1
+                                                                        , ty = ty1
+                                                                        }
+                                                                    , top =
+                                                                        { ctx = c2
+                                                                        , term = tm2
+                                                                        , ty = ty2
+                                                                        }
                                                                     }
                                                                 )
                                                     )
@@ -159,12 +143,77 @@ tryRule t =
 
                                             Ok checks ->
                                                 if checks then
-                                                    "OOOOOKKKKK"
+                                                    "OK"
                                                 else
-                                                    "Nooooo!"
+                                                    "NOK"
+
+                ( Model.TIf, [ child1, child2, child3 ] ) ->
+                    case ( child1, child2, child3 ) of
+                        ( Node childC1 _, Node childC2 _, Node childC3 _ ) ->
+                            let
+                                bottom =
+                                    getCtxTermTy ctx term ty
+
+                                top1 =
+                                    getCtxTermTy childC1.ctx childC1.term childC1.ty
+
+                                top2 =
+                                    getCtxTermTy childC2.ctx childC2.term childC2.ty
+
+                                top3 =
+                                    getCtxTermTy childC3.ctx childC3.term childC3.ty
+                            in
+                                bottom
+                                    |> Result.andThen
+                                        (\( c1, tm1, ty1 ) ->
+                                            top1
+                                                |> Result.andThen
+                                                    (\( ctxC1, tmC1, tyC1 ) ->
+                                                        top2
+                                                            |> Result.andThen
+                                                                (\( ctxC2, tmC2, tyC2 ) ->
+                                                                    top3
+                                                                        |> Result.andThen
+                                                                            (\( ctxC3, tmC3, tyC3 ) ->
+                                                                                Result.Ok <|
+                                                                                    checkRule
+                                                                                        (TIf
+                                                                                            { bottom =
+                                                                                                { ctx = c1
+                                                                                                , term = tm1
+                                                                                                , ty = ty1
+                                                                                                }
+                                                                                            , top1 =
+                                                                                                { ctx = ctxC1
+                                                                                                , term = tmC1
+                                                                                                , ty = tyC1
+                                                                                                }
+                                                                                            , top2 =
+                                                                                                { ctx = ctxC2
+                                                                                                , term = tmC2
+                                                                                                , ty = tyC2
+                                                                                                }
+                                                                                            , top3 =
+                                                                                                { ctx = ctxC3
+                                                                                                , term = tmC3
+                                                                                                , ty = tyC3
+                                                                                                }
+                                                                                            }
+                                                                                        )
+                                                                            )
+                                                                )
+                                                    )
+                                        )
+                                    |> \r ->
+                                        case r of
+                                            Err text ->
+                                                text
+
+                                            Ok checks ->
+                                                if checks then
+                                                    "OK"
+                                                else
+                                                    "NOK"
 
                 _ ->
-                    "Blah"
-
-        _ ->
-            "Doesn't have 1 child"
+                    ""

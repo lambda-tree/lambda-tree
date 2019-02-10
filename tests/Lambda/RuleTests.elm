@@ -33,12 +33,26 @@ checkRuleTest =
             \_ ->
                 checkRule
                     (TVar
-                        { bottomCtx = [ ( "x", VarBind (TyName "Bool") ) ]
-                        , bottomTerm = (TmVar I 0 1)
-                        , bottomTy = (TyName "Bool")
-                        , topCtx = [ ( "x", VarBind (TyName "Bool") ) ]
-                        , topTerm = (TmVar I 0 1)
-                        , topTy = (TyName "Bool")
+                        { bottom =
+                            { ctx =
+                                [ ( "x"
+                                  , VarBind
+                                        (TyName "Bool")
+                                  )
+                                ]
+                            , term = (TmVar I 0 1)
+                            , ty = (TyName "Bool")
+                            }
+                        , top =
+                            { ctx =
+                                [ ( "x"
+                                  , VarBind
+                                        (TyName "Bool")
+                                  )
+                                ]
+                            , term = (TmVar I 0 1)
+                            , ty = (TyName "Bool")
+                            }
                         }
                     )
                     |> Expect.equal True

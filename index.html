@@ -3904,6 +3904,136 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 
 
 
+// STRINGS
+
+
+var _Parser_isSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var smallLength = smallString.length;
+	var isGood = offset + smallLength <= bigString.length;
+
+	for (var i = 0; isGood && i < smallLength; )
+	{
+		var code = bigString.charCodeAt(offset);
+		isGood =
+			smallString[i++] === bigString[offset++]
+			&& (
+				code === 0x000A /* \n */
+					? ( row++, col=1 )
+					: ( col++, (code & 0xF800) === 0xD800 ? smallString[i++] === bigString[offset++] : 1 )
+			)
+	}
+
+	return _Utils_Tuple3(isGood ? offset : -1, row, col);
+});
+
+
+
+// CHARS
+
+
+var _Parser_isSubChar = F3(function(predicate, offset, string)
+{
+	return (
+		string.length <= offset
+			? -1
+			:
+		(string.charCodeAt(offset) & 0xF800) === 0xD800
+			? (predicate(_Utils_chr(string.substr(offset, 2))) ? offset + 2 : -1)
+			:
+		(predicate(_Utils_chr(string[offset]))
+			? ((string[offset] === '\n') ? -2 : (offset + 1))
+			: -1
+		)
+	);
+});
+
+
+var _Parser_isAsciiCode = F3(function(code, offset, string)
+{
+	return string.charCodeAt(offset) === code;
+});
+
+
+
+// NUMBERS
+
+
+var _Parser_chompBase10 = F2(function(offset, string)
+{
+	for (; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (code < 0x30 || 0x39 < code)
+		{
+			return offset;
+		}
+	}
+	return offset;
+});
+
+
+var _Parser_consumeBase = F3(function(base, offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var digit = string.charCodeAt(offset) - 0x30;
+		if (digit < 0 || base <= digit) break;
+		total = base * total + digit;
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+var _Parser_consumeBase16 = F2(function(offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (0x30 <= code && code <= 0x39)
+		{
+			total = 16 * total + code - 0x30;
+		}
+		else if (0x41 <= code && code <= 0x46)
+		{
+			total = 16 * total + code - 55;
+		}
+		else if (0x61 <= code && code <= 0x66)
+		{
+			total = 16 * total + code - 87;
+		}
+		else
+		{
+			break;
+		}
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+
+// FIND STRING
+
+
+var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var newOffset = bigString.indexOf(smallString, offset);
+	var target = newOffset < 0 ? bigString.length : newOffset + smallString.length;
+
+	while (offset < target)
+	{
+		var code = bigString.charCodeAt(offset++);
+		code === 0x000A /* \n */
+			? ( col=1, row++ )
+			: ( col++, (code & 0xF800) === 0xD800 && offset++ )
+	}
+
+	return _Utils_Tuple3(newOffset, row, col);
+});
+
+
+
+
 // ELEMENT
 
 
@@ -5003,9 +5133,6 @@ var author$project$Update$update = F2(
 var author$project$Message$ClickedMsg = {$: 'ClickedMsg'};
 var author$project$Message$ZoomIn = {$: 'ZoomIn'};
 var author$project$Message$ZoomOut = {$: 'ZoomOut'};
-var author$project$Message$AddMsg = function (a) {
-	return {$: 'AddMsg', a: a};
-};
 var author$project$Message$RemoveMsg = function (a) {
 	return {$: 'RemoveMsg', a: a};
 };
@@ -5017,9 +5144,6 @@ var author$project$Message$TextChangedMsg = F3(
 	function (a, b, c) {
 		return {$: 'TextChangedMsg', a: a, b: b, c: c};
 	});
-var author$project$Model$getTreeViewData = function (t) {
-	return t;
-};
 var author$project$Model$CtxKind = {$: 'CtxKind'};
 var author$project$Model$TermKind = {$: 'TermKind'};
 var author$project$Model$TyKind = {$: 'TyKind'};
@@ -7640,50 +7764,2145 @@ var rtfeldman$elm_css$Css$minHeight = rtfeldman$elm_css$Css$prop1('min-height');
 var rtfeldman$elm_css$Css$PxUnits = {$: 'PxUnits'};
 var rtfeldman$elm_css$Css$px = A2(rtfeldman$elm_css$Css$Internal$lengthConverter, rtfeldman$elm_css$Css$PxUnits, 'px');
 var rtfeldman$elm_css$Css$stretch = rtfeldman$elm_css$Css$prop1('stretch');
-var author$project$View$Lambda$Tree$hairline = function (rule) {
-	return A4(
-		rtfeldman$elm_css$Html$Styled$styled,
-		rtfeldman$elm_css$Html$Styled$div,
-		_List_fromArray(
-			[
-				rtfeldman$elm_css$Css$displayFlex,
-				rtfeldman$elm_css$Css$justifyContent(rtfeldman$elm_css$Css$stretch),
-				rtfeldman$elm_css$Css$alignItems(rtfeldman$elm_css$Css$center)
-			]),
-		_List_Nil,
-		_List_fromArray(
-			[
-				A4(
-				rtfeldman$elm_css$Html$Styled$styled,
-				rtfeldman$elm_css$Html$Styled$div,
+var author$project$View$Lambda$Tree$hairline = F2(
+	function (rule, text) {
+		return A4(
+			rtfeldman$elm_css$Html$Styled$styled,
+			rtfeldman$elm_css$Html$Styled$div,
+			_List_fromArray(
+				[
+					rtfeldman$elm_css$Css$displayFlex,
+					rtfeldman$elm_css$Css$justifyContent(rtfeldman$elm_css$Css$stretch),
+					rtfeldman$elm_css$Css$alignItems(rtfeldman$elm_css$Css$center)
+				]),
+			_List_Nil,
+			_List_fromArray(
+				[
+					A4(
+					rtfeldman$elm_css$Html$Styled$styled,
+					rtfeldman$elm_css$Html$Styled$div,
+					_List_fromArray(
+						[
+							rtfeldman$elm_css$Css$height(
+							rtfeldman$elm_css$Css$px(1)),
+							rtfeldman$elm_css$Css$minHeight(
+							rtfeldman$elm_css$Css$px(1)),
+							rtfeldman$elm_css$Css$backgroundColor(author$project$View$Theme$theme.darkLine),
+							rtfeldman$elm_css$Css$flex(rtfeldman$elm_css$Css$auto)
+						]),
+					_List_Nil,
+					_List_Nil),
+					A4(
+					rtfeldman$elm_css$Html$Styled$styled,
+					rtfeldman$elm_css$Html$Styled$div,
+					_List_fromArray(
+						[
+							A2(
+							rtfeldman$elm_css$Css$margin2,
+							rtfeldman$elm_css$Css$rem(0),
+							rtfeldman$elm_css$Css$rem(1))
+						]),
+					_List_Nil,
+					_List_fromArray(
+						[
+							rtfeldman$elm_css$Html$Styled$text(
+							elm$core$Debug$toString(rule) + (' | ' + text))
+						]))
+				]));
+	});
+var author$project$Lambda$Rule$TIf = function (a) {
+	return {$: 'TIf', a: a};
+};
+var author$project$Lambda$Rule$TVar = function (a) {
+	return {$: 'TVar', a: a};
+};
+var elm$core$Tuple$second = function (_n0) {
+	var y = _n0.b;
+	return y;
+};
+var elm_community$list_extra$List$Extra$getAt = F2(
+	function (idx, xs) {
+		return (idx < 0) ? elm$core$Maybe$Nothing : elm$core$List$head(
+			A2(elm$core$List$drop, idx, xs));
+	});
+var author$project$Lambda$ContextUtils$getbinding = F2(
+	function (ctx, x) {
+		return A2(
+			elm$core$Maybe$map,
+			elm$core$Tuple$second,
+			A2(elm_community$list_extra$List$Extra$getAt, x, ctx));
+	});
+var author$project$Lambda$Expression$TyName = function (a) {
+	return {$: 'TyName', a: a};
+};
+var author$project$Lambda$ContextUtils$addbinding = F3(
+	function (ctx, x, bind) {
+		return A2(
+			elm$core$List$cons,
+			_Utils_Tuple2(x, bind),
+			ctx);
+	});
+var author$project$Lambda$ContextUtils$ctxlength = function (ctx) {
+	return elm$core$List$length(ctx);
+};
+var author$project$Lambda$Expression$TyVarBind = {$: 'TyVarBind'};
+var author$project$Lambda$ExpressionUtils$equalTypes = F4(
+	function (ctx1, ty1, ctx2, ty2) {
+		equalTypes:
+		while (true) {
+			var _n0 = _Utils_Tuple2(ty1, ty2);
+			_n0$4:
+			while (true) {
+				switch (_n0.a.$) {
+					case 'TyName':
+						if (_n0.b.$ === 'TyName') {
+							var s1 = _n0.a.a;
+							var s2 = _n0.b.a;
+							return _Utils_eq(s1, s2);
+						} else {
+							break _n0$4;
+						}
+					case 'TyAll':
+						if (_n0.b.$ === 'TyAll') {
+							var _n1 = _n0.a;
+							var s1 = _n1.a;
+							var ty11 = _n1.b;
+							var _n2 = _n0.b;
+							var s2 = _n2.a;
+							var ty21 = _n2.b;
+							var $temp$ctx1 = A3(author$project$Lambda$ContextUtils$addbinding, ctx1, s1, author$project$Lambda$Expression$TyVarBind),
+								$temp$ty1 = ty11,
+								$temp$ctx2 = A3(author$project$Lambda$ContextUtils$addbinding, ctx2, s2, author$project$Lambda$Expression$TyVarBind),
+								$temp$ty2 = ty21;
+							ctx1 = $temp$ctx1;
+							ty1 = $temp$ty1;
+							ctx2 = $temp$ctx2;
+							ty2 = $temp$ty2;
+							continue equalTypes;
+						} else {
+							break _n0$4;
+						}
+					case 'TyArr':
+						if (_n0.b.$ === 'TyArr') {
+							var _n3 = _n0.a;
+							var ty11 = _n3.a;
+							var ty12 = _n3.b;
+							var _n4 = _n0.b;
+							var ty21 = _n4.a;
+							var ty22 = _n4.b;
+							return A4(author$project$Lambda$ExpressionUtils$equalTypes, ctx1, ty11, ctx2, ty21) && A4(author$project$Lambda$ExpressionUtils$equalTypes, ctx1, ty12, ctx2, ty22);
+						} else {
+							break _n0$4;
+						}
+					default:
+						if (_n0.b.$ === 'TyVar') {
+							var _n5 = _n0.a;
+							var i1 = _n5.a;
+							var l1 = _n5.b;
+							var _n6 = _n0.b;
+							var i2 = _n6.a;
+							var l2 = _n6.b;
+							var _n7 = _Utils_Tuple2(
+								A2(
+									author$project$Lambda$ContextUtils$getbinding,
+									ctx1,
+									i1 + (author$project$Lambda$ContextUtils$ctxlength(ctx1) - l1)),
+								A2(
+									author$project$Lambda$ContextUtils$getbinding,
+									ctx2,
+									i2 + (author$project$Lambda$ContextUtils$ctxlength(ctx2) - l2)));
+							if ((((_n7.a.$ === 'Just') && (_n7.a.a.$ === 'TyVarBind')) && (_n7.b.$ === 'Just')) && (_n7.b.a.$ === 'TyVarBind')) {
+								var _n8 = _n7.a.a;
+								var _n9 = _n7.b.a;
+								return _Utils_eq(l2 - l1, i2 - i1);
+							} else {
+								return false;
+							}
+						} else {
+							break _n0$4;
+						}
+				}
+			}
+			return false;
+		}
+	});
+var author$project$Lambda$Rule$checkRule = function (rule) {
+	if (rule.$ === 'TVar') {
+		var bottom = rule.a.bottom;
+		var top = rule.a.top;
+		return _Utils_eq(
+			bottom.ctx,
+			A2(elm$core$Debug$log, 'topCtx', top.ctx)) && (_Utils_eq(
+			A2(elm$core$Debug$log, 'bottomTerm', bottom.term),
+			A2(elm$core$Debug$log, 'topTerm', top.term)) && (_Utils_eq(
+			A2(elm$core$Debug$log, 'bottomTy', bottom.ty),
+			A2(elm$core$Debug$log, 'topTy', top.ty)) && function () {
+			var _n1 = bottom.term;
+			if (_n1.$ === 'TmVar') {
+				var x = _n1.b;
+				var _n2 = A2(author$project$Lambda$ContextUtils$getbinding, top.ctx, x);
+				if ((_n2.$ === 'Just') && (_n2.a.$ === 'VarBind')) {
+					var ty1 = _n2.a.a;
+					return A4(author$project$Lambda$ExpressionUtils$equalTypes, top.ctx, ty1, bottom.ctx, bottom.ty);
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}()));
+	} else {
+		var bottom = rule.a.bottom;
+		var top1 = rule.a.top1;
+		var top2 = rule.a.top2;
+		var top3 = rule.a.top3;
+		var _n3 = bottom.term;
+		if (_n3.$ === 'TmIf') {
+			var t1 = _n3.b;
+			var t2 = _n3.c;
+			var t3 = _n3.d;
+			return A2(
+				elm$core$List$all,
+				elm$core$Basics$eq(bottom.ctx),
 				_List_fromArray(
-					[
-						rtfeldman$elm_css$Css$height(
-						rtfeldman$elm_css$Css$px(1)),
-						rtfeldman$elm_css$Css$minHeight(
-						rtfeldman$elm_css$Css$px(1)),
-						rtfeldman$elm_css$Css$backgroundColor(author$project$View$Theme$theme.darkLine),
-						rtfeldman$elm_css$Css$flex(rtfeldman$elm_css$Css$auto)
-					]),
-				_List_Nil,
-				_List_Nil),
-				A4(
-				rtfeldman$elm_css$Html$Styled$styled,
-				rtfeldman$elm_css$Html$Styled$div,
+					[top1.ctx, top2.ctx, top3.ctx])) && (_Utils_eq(top1.term, t1) && (A4(
+				author$project$Lambda$ExpressionUtils$equalTypes,
+				top1.ctx,
+				top1.ty,
+				bottom.ctx,
+				author$project$Lambda$Expression$TyName('Bool')) && (_Utils_eq(top2.term, t2) && (A4(author$project$Lambda$ExpressionUtils$equalTypes, top2.ctx, top2.ty, bottom.ctx, bottom.ty) && (_Utils_eq(top3.term, t3) && A4(author$project$Lambda$ExpressionUtils$equalTypes, top3.ctx, top3.ty, bottom.ctx, bottom.ty))))));
+		} else {
+			return false;
+		}
+	}
+};
+var author$project$Lambda$Parse$TyContext = function (a) {
+	return {$: 'TyContext', a: a};
+};
+var author$project$Lambda$Parse$TyVarBind = function (a) {
+	return {$: 'TyVarBind', a: a};
+};
+var author$project$Lambda$Parse$VarBind = F2(
+	function (a, b) {
+		return {$: 'VarBind', a: a, b: b};
+	});
+var author$project$Lambda$Parse$TyAll = F2(
+	function (a, b) {
+		return {$: 'TyAll', a: a, b: b};
+	});
+var author$project$Lambda$Parse$TyVar = function (a) {
+	return {$: 'TyVar', a: a};
+};
+var author$project$Lambda$Parse$TyArr = F2(
+	function (a, b) {
+		return {$: 'TyArr', a: a, b: b};
+	});
+var elm_community$list_extra$List$Extra$foldl1 = F2(
+	function (func, list) {
+		if (!list.b) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var x = list.a;
+			var xs = list.b;
+			return elm$core$Maybe$Just(
+				A3(elm$core$List$foldl, func, x, xs));
+		}
+	});
+var author$project$Lambda$Parse$arrowExprFinalize = function (revOps) {
+	return A2(
+		elm_community$list_extra$List$Extra$foldl1,
+		F2(
+			function (expr, acc) {
+				return A2(author$project$Lambda$Parse$TyArr, expr, acc);
+			}),
+		revOps);
+};
+var elm$parser$Parser$Advanced$Empty = {$: 'Empty'};
+var elm$parser$Parser$Advanced$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var elm$parser$Parser$Advanced$Append = F2(
+	function (a, b) {
+		return {$: 'Append', a: a, b: b};
+	});
+var elm$parser$Parser$Advanced$Bad = F2(
+	function (a, b) {
+		return {$: 'Bad', a: a, b: b};
+	});
+var elm$parser$Parser$Advanced$oneOfHelp = F3(
+	function (s0, bag, parsers) {
+		oneOfHelp:
+		while (true) {
+			if (!parsers.b) {
+				return A2(elm$parser$Parser$Advanced$Bad, false, bag);
+			} else {
+				var parse = parsers.a.a;
+				var remainingParsers = parsers.b;
+				var _n1 = parse(s0);
+				if (_n1.$ === 'Good') {
+					var step = _n1;
+					return step;
+				} else {
+					var step = _n1;
+					var p = step.a;
+					var x = step.b;
+					if (p) {
+						return step;
+					} else {
+						var $temp$s0 = s0,
+							$temp$bag = A2(elm$parser$Parser$Advanced$Append, bag, x),
+							$temp$parsers = remainingParsers;
+						s0 = $temp$s0;
+						bag = $temp$bag;
+						parsers = $temp$parsers;
+						continue oneOfHelp;
+					}
+				}
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$oneOf = function (parsers) {
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3(elm$parser$Parser$Advanced$oneOfHelp, s, elm$parser$Parser$Advanced$Empty, parsers);
+		});
+};
+var elm$parser$Parser$oneOf = elm$parser$Parser$Advanced$oneOf;
+var elm$parser$Parser$ExpectingSymbol = function (a) {
+	return {$: 'ExpectingSymbol', a: a};
+};
+var elm$parser$Parser$Advanced$Token = F2(
+	function (a, b) {
+		return {$: 'Token', a: a, b: b};
+	});
+var elm$parser$Parser$Advanced$Good = F3(
+	function (a, b, c) {
+		return {$: 'Good', a: a, b: b, c: c};
+	});
+var elm$parser$Parser$Advanced$AddRight = F2(
+	function (a, b) {
+		return {$: 'AddRight', a: a, b: b};
+	});
+var elm$parser$Parser$Advanced$DeadEnd = F4(
+	function (row, col, problem, contextStack) {
+		return {col: col, contextStack: contextStack, problem: problem, row: row};
+	});
+var elm$parser$Parser$Advanced$fromState = F2(
+	function (s, x) {
+		return A2(
+			elm$parser$Parser$Advanced$AddRight,
+			elm$parser$Parser$Advanced$Empty,
+			A4(elm$parser$Parser$Advanced$DeadEnd, s.row, s.col, x, s.context));
+	});
+var elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
+var elm$parser$Parser$Advanced$token = function (_n0) {
+	var str = _n0.a;
+	var expecting = _n0.b;
+	var progress = !elm$core$String$isEmpty(str);
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.offset, s.row, s.col, s.src);
+			var newOffset = _n1.a;
+			var newRow = _n1.b;
+			var newCol = _n1.c;
+			return _Utils_eq(newOffset, -1) ? A2(
+				elm$parser$Parser$Advanced$Bad,
+				false,
+				A2(elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+				elm$parser$Parser$Advanced$Good,
+				progress,
+				_Utils_Tuple0,
+				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
+		});
+};
+var elm$parser$Parser$Advanced$symbol = elm$parser$Parser$Advanced$token;
+var elm$parser$Parser$symbol = function (str) {
+	return elm$parser$Parser$Advanced$symbol(
+		A2(
+			elm$parser$Parser$Advanced$Token,
+			str,
+			elm$parser$Parser$ExpectingSymbol(str)));
+};
+var author$project$Lambda$Parse$arrowSymbol = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			elm$parser$Parser$symbol(author$project$Lambda$Parse$symbols.arrow),
+			elm$parser$Parser$symbol('->')
+		]));
+var elm$parser$Parser$Problem = function (a) {
+	return {$: 'Problem', a: a};
+};
+var elm$parser$Parser$Advanced$problem = function (x) {
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A2(
+				elm$parser$Parser$Advanced$Bad,
+				false,
+				A2(elm$parser$Parser$Advanced$fromState, s, x));
+		});
+};
+var elm$parser$Parser$problem = function (msg) {
+	return elm$parser$Parser$Advanced$problem(
+		elm$parser$Parser$Problem(msg));
+};
+var elm$parser$Parser$Advanced$succeed = function (a) {
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3(elm$parser$Parser$Advanced$Good, false, a, s);
+		});
+};
+var elm$parser$Parser$succeed = elm$parser$Parser$Advanced$succeed;
+var author$project$Lambda$Parse$checkIfNoOperands = function (maybeResult) {
+	if (maybeResult.$ === 'Just') {
+		var result = maybeResult.a;
+		return elm$parser$Parser$succeed(result);
+	} else {
+		return elm$parser$Parser$problem('operator has no operands');
+	}
+};
+var elm$parser$Parser$ExpectingKeyword = function (a) {
+	return {$: 'ExpectingKeyword', a: a};
+};
+var elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
+var elm$parser$Parser$Advanced$keyword = function (_n0) {
+	var kwd = _n0.a;
+	var expecting = _n0.b;
+	var progress = !elm$core$String$isEmpty(kwd);
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _n1 = A5(elm$parser$Parser$Advanced$isSubString, kwd, s.offset, s.row, s.col, s.src);
+			var newOffset = _n1.a;
+			var newRow = _n1.b;
+			var newCol = _n1.c;
+			return (_Utils_eq(newOffset, -1) || (0 <= A3(
+				elm$parser$Parser$Advanced$isSubChar,
+				function (c) {
+					return elm$core$Char$isAlphaNum(c) || _Utils_eq(
+						c,
+						_Utils_chr('_'));
+				},
+				newOffset,
+				s.src))) ? A2(
+				elm$parser$Parser$Advanced$Bad,
+				false,
+				A2(elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+				elm$parser$Parser$Advanced$Good,
+				progress,
+				_Utils_Tuple0,
+				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
+		});
+};
+var elm$parser$Parser$keyword = function (kwd) {
+	return elm$parser$Parser$Advanced$keyword(
+		A2(
+			elm$parser$Parser$Advanced$Token,
+			kwd,
+			elm$parser$Parser$ExpectingKeyword(kwd)));
+};
+var author$project$Lambda$Parse$forAllSymbol = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			elm$parser$Parser$symbol(author$project$Lambda$Parse$symbols.forAll),
+			elm$parser$Parser$keyword('forall'),
+			elm$parser$Parser$keyword('forAll'),
+			elm$parser$Parser$keyword('Forall'),
+			elm$parser$Parser$keyword('ForAll')
+		]));
+var author$project$Lambda$Parse$keywords = _Utils_ap(
+	_List_fromArray(
+		['Lambda', 'lambda', 'let', 'Let', 'in', 'In', 'forall', 'Forall', 'forAll', 'ForAll']),
+	_List_fromArray(
+		['if', 'If', 'then', 'Then', 'else', 'Else']));
+var elm$core$Set$Set_elm_builtin = function (a) {
+	return {$: 'Set_elm_builtin', a: a};
+};
+var elm$core$Set$empty = elm$core$Set$Set_elm_builtin(elm$core$Dict$empty);
+var elm$core$Set$insert = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return elm$core$Set$Set_elm_builtin(
+			A3(elm$core$Dict$insert, key, _Utils_Tuple0, dict));
+	});
+var elm$core$Set$fromList = function (list) {
+	return A3(elm$core$List$foldl, elm$core$Set$insert, elm$core$Set$empty, list);
+};
+var elm$parser$Parser$ExpectingVariable = {$: 'ExpectingVariable'};
+var elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _n1 = A2(elm$core$Basics$compare, targetKey, key);
+				switch (_n1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _n0 = A2(elm$core$Dict$get, key, dict);
+		if (_n0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var elm$core$Set$member = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return A2(elm$core$Dict$member, key, dict);
+	});
+var elm$core$String$slice = _String_slice;
+var elm$parser$Parser$Advanced$varHelp = F7(
+	function (isGood, offset, row, col, src, indent, context) {
+		varHelp:
+		while (true) {
+			var newOffset = A3(elm$parser$Parser$Advanced$isSubChar, isGood, offset, src);
+			if (_Utils_eq(newOffset, -1)) {
+				return {col: col, context: context, indent: indent, offset: offset, row: row, src: src};
+			} else {
+				if (_Utils_eq(newOffset, -2)) {
+					var $temp$isGood = isGood,
+						$temp$offset = offset + 1,
+						$temp$row = row + 1,
+						$temp$col = 1,
+						$temp$src = src,
+						$temp$indent = indent,
+						$temp$context = context;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					src = $temp$src;
+					indent = $temp$indent;
+					context = $temp$context;
+					continue varHelp;
+				} else {
+					var $temp$isGood = isGood,
+						$temp$offset = newOffset,
+						$temp$row = row,
+						$temp$col = col + 1,
+						$temp$src = src,
+						$temp$indent = indent,
+						$temp$context = context;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					src = $temp$src;
+					indent = $temp$indent;
+					context = $temp$context;
+					continue varHelp;
+				}
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$variable = function (i) {
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var firstOffset = A3(elm$parser$Parser$Advanced$isSubChar, i.start, s.offset, s.src);
+			if (_Utils_eq(firstOffset, -1)) {
+				return A2(
+					elm$parser$Parser$Advanced$Bad,
+					false,
+					A2(elm$parser$Parser$Advanced$fromState, s, i.expecting));
+			} else {
+				var s1 = _Utils_eq(firstOffset, -2) ? A7(elm$parser$Parser$Advanced$varHelp, i.inner, s.offset + 1, s.row + 1, 1, s.src, s.indent, s.context) : A7(elm$parser$Parser$Advanced$varHelp, i.inner, firstOffset, s.row, s.col + 1, s.src, s.indent, s.context);
+				var name = A3(elm$core$String$slice, s.offset, s1.offset, s.src);
+				return A2(elm$core$Set$member, name, i.reserved) ? A2(
+					elm$parser$Parser$Advanced$Bad,
+					false,
+					A2(elm$parser$Parser$Advanced$fromState, s, i.expecting)) : A3(elm$parser$Parser$Advanced$Good, true, name, s1);
+			}
+		});
+};
+var elm$parser$Parser$variable = function (i) {
+	return elm$parser$Parser$Advanced$variable(
+		{expecting: elm$parser$Parser$ExpectingVariable, inner: i.inner, reserved: i.reserved, start: i.start});
+};
+var author$project$Lambda$Parse$typeVar = elm$parser$Parser$variable(
+	{
+		inner: function (c) {
+			return elm$core$Char$isAlphaNum(c) || _Utils_eq(
+				c,
+				_Utils_chr('_'));
+		},
+		reserved: elm$core$Set$fromList(author$project$Lambda$Parse$keywords),
+		start: elm$core$Char$isUpper
+	});
+var elm$parser$Parser$Advanced$andThen = F2(
+	function (callback, _n0) {
+		var parseA = _n0.a;
+		return elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _n1 = parseA(s0);
+				if (_n1.$ === 'Bad') {
+					var p = _n1.a;
+					var x = _n1.b;
+					return A2(elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p1 = _n1.a;
+					var a = _n1.b;
+					var s1 = _n1.c;
+					var _n2 = callback(a);
+					var parseB = _n2.a;
+					var _n3 = parseB(s1);
+					if (_n3.$ === 'Bad') {
+						var p2 = _n3.a;
+						var x = _n3.b;
+						return A2(elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _n3.a;
+						var b = _n3.b;
+						var s2 = _n3.c;
+						return A3(elm$parser$Parser$Advanced$Good, p1 || p2, b, s2);
+					}
+				}
+			});
+	});
+var elm$parser$Parser$andThen = elm$parser$Parser$Advanced$andThen;
+var elm$core$Basics$always = F2(
+	function (a, _n0) {
+		return a;
+	});
+var elm$parser$Parser$Advanced$map2 = F3(
+	function (func, _n0, _n1) {
+		var parseA = _n0.a;
+		var parseB = _n1.a;
+		return elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _n2 = parseA(s0);
+				if (_n2.$ === 'Bad') {
+					var p = _n2.a;
+					var x = _n2.b;
+					return A2(elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p1 = _n2.a;
+					var a = _n2.b;
+					var s1 = _n2.c;
+					var _n3 = parseB(s1);
+					if (_n3.$ === 'Bad') {
+						var p2 = _n3.a;
+						var x = _n3.b;
+						return A2(elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _n3.a;
+						var b = _n3.b;
+						var s2 = _n3.c;
+						return A3(
+							elm$parser$Parser$Advanced$Good,
+							p1 || p2,
+							A2(func, a, b),
+							s2);
+					}
+				}
+			});
+	});
+var elm$parser$Parser$Advanced$ignorer = F2(
+	function (keepParser, ignoreParser) {
+		return A3(elm$parser$Parser$Advanced$map2, elm$core$Basics$always, keepParser, ignoreParser);
+	});
+var elm$parser$Parser$ignorer = elm$parser$Parser$Advanced$ignorer;
+var elm$parser$Parser$Advanced$keeper = F2(
+	function (parseFunc, parseArg) {
+		return A3(elm$parser$Parser$Advanced$map2, elm$core$Basics$apL, parseFunc, parseArg);
+	});
+var elm$parser$Parser$keeper = elm$parser$Parser$Advanced$keeper;
+var elm$parser$Parser$Advanced$lazy = function (thunk) {
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _n0 = thunk(_Utils_Tuple0);
+			var parse = _n0.a;
+			return parse(s);
+		});
+};
+var elm$parser$Parser$lazy = elm$parser$Parser$Advanced$lazy;
+var elm$parser$Parser$Advanced$map = F2(
+	function (func, _n0) {
+		var parse = _n0.a;
+		return elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _n1 = parse(s0);
+				if (_n1.$ === 'Good') {
+					var p = _n1.a;
+					var a = _n1.b;
+					var s1 = _n1.c;
+					return A3(
+						elm$parser$Parser$Advanced$Good,
+						p,
+						func(a),
+						s1);
+				} else {
+					var p = _n1.a;
+					var x = _n1.b;
+					return A2(elm$parser$Parser$Advanced$Bad, p, x);
+				}
+			});
+	});
+var elm$parser$Parser$map = elm$parser$Parser$Advanced$map;
+var elm$parser$Parser$Advanced$chompWhileHelp = F5(
+	function (isGood, offset, row, col, s0) {
+		chompWhileHelp:
+		while (true) {
+			var newOffset = A3(elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.src);
+			if (_Utils_eq(newOffset, -1)) {
+				return A3(
+					elm$parser$Parser$Advanced$Good,
+					_Utils_cmp(s0.offset, offset) < 0,
+					_Utils_Tuple0,
+					{col: col, context: s0.context, indent: s0.indent, offset: offset, row: row, src: s0.src});
+			} else {
+				if (_Utils_eq(newOffset, -2)) {
+					var $temp$isGood = isGood,
+						$temp$offset = offset + 1,
+						$temp$row = row + 1,
+						$temp$col = 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				} else {
+					var $temp$isGood = isGood,
+						$temp$offset = newOffset,
+						$temp$row = row,
+						$temp$col = col + 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				}
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$chompWhile = function (isGood) {
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A5(elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.offset, s.row, s.col, s);
+		});
+};
+var elm$parser$Parser$Advanced$spaces = elm$parser$Parser$Advanced$chompWhile(
+	function (c) {
+		return _Utils_eq(
+			c,
+			_Utils_chr(' ')) || (_Utils_eq(
+			c,
+			_Utils_chr('\n')) || _Utils_eq(
+			c,
+			_Utils_chr('\r')));
+	});
+var elm$parser$Parser$spaces = elm$parser$Parser$Advanced$spaces;
+var author$project$Lambda$Parse$arrowExprHelp = function (revOps) {
+	return elm$parser$Parser$oneOf(
+		_List_fromArray(
+			[
+				A2(
+				elm$parser$Parser$andThen,
+				function (op) {
+					return author$project$Lambda$Parse$arrowExprHelp(
+						A2(elm$core$List$cons, op, revOps));
+				},
+				A2(
+					elm$parser$Parser$keeper,
+					A2(
+						elm$parser$Parser$ignorer,
+						A2(
+							elm$parser$Parser$ignorer,
+							elm$parser$Parser$succeed(elm$core$Basics$identity),
+							author$project$Lambda$Parse$arrowSymbol),
+						elm$parser$Parser$spaces),
+					author$project$Lambda$Parse$cyclic$typeSubExpr())),
+				elm$parser$Parser$lazy(
+				function (_n2) {
+					return author$project$Lambda$Parse$checkIfNoOperands(
+						author$project$Lambda$Parse$arrowExprFinalize(revOps));
+				})
+			]));
+};
+function author$project$Lambda$Parse$cyclic$typeExpr() {
+	return A2(
+		elm$parser$Parser$andThen,
+		function (subExpr) {
+			return author$project$Lambda$Parse$arrowExprHelp(
+				_List_fromArray(
+					[subExpr]));
+		},
+		A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$ignorer,
+				elm$parser$Parser$succeed(elm$core$Basics$identity),
+				elm$parser$Parser$spaces),
+			author$project$Lambda$Parse$cyclic$typeSubExpr()));
+}
+function author$project$Lambda$Parse$cyclic$typeSubExpr() {
+	return elm$parser$Parser$oneOf(
+		_List_fromArray(
+			[
+				A2(
+				elm$parser$Parser$keeper,
+				A2(
+					elm$parser$Parser$keeper,
+					A2(
+						elm$parser$Parser$ignorer,
+						A2(
+							elm$parser$Parser$ignorer,
+							elm$parser$Parser$succeed(author$project$Lambda$Parse$TyAll),
+							author$project$Lambda$Parse$forAllSymbol),
+						elm$parser$Parser$spaces),
+					A2(
+						elm$parser$Parser$ignorer,
+						A2(
+							elm$parser$Parser$ignorer,
+							A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$typeVar, elm$parser$Parser$spaces),
+							elm$parser$Parser$symbol('.')),
+						elm$parser$Parser$spaces)),
+				elm$parser$Parser$lazy(
+					function (_n0) {
+						return author$project$Lambda$Parse$cyclic$typeExpr();
+					})),
+				A2(
+				elm$parser$Parser$keeper,
+				elm$parser$Parser$succeed(elm$core$Basics$identity),
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(elm$parser$Parser$map, author$project$Lambda$Parse$TyVar, author$project$Lambda$Parse$typeVar),
+					elm$parser$Parser$spaces)),
+				A2(
+				elm$parser$Parser$keeper,
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						elm$parser$Parser$succeed(elm$core$Basics$identity),
+						elm$parser$Parser$symbol('(')),
+					elm$parser$Parser$spaces),
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						A2(
+							elm$parser$Parser$ignorer,
+							elm$parser$Parser$lazy(
+								function (_n1) {
+									return author$project$Lambda$Parse$cyclic$typeExpr();
+								}),
+							elm$parser$Parser$spaces),
+						elm$parser$Parser$symbol(')')),
+					elm$parser$Parser$spaces))
+			]));
+}
+try {
+	var author$project$Lambda$Parse$typeExpr = author$project$Lambda$Parse$cyclic$typeExpr();
+	author$project$Lambda$Parse$cyclic$typeExpr = function () {
+		return author$project$Lambda$Parse$typeExpr;
+	};
+	var author$project$Lambda$Parse$typeSubExpr = author$project$Lambda$Parse$cyclic$typeSubExpr();
+	author$project$Lambda$Parse$cyclic$typeSubExpr = function () {
+		return author$project$Lambda$Parse$typeSubExpr;
+	};
+} catch ($) {
+throw 'Some top-level definitions from `Lambda.Parse` are causing infinite recursion:\n\n  ┌─────┐\n  │    arrowExprHelp\n  │     ↓\n  │    typeExpr\n  │     ↓\n  │    typeSubExpr\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.0/halting-problem to learn how to fix it!';}
+var author$project$Lambda$Parse$maybeTypeAnnotation = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$ignorer,
+				A2(
+					elm$parser$Parser$ignorer,
+					elm$parser$Parser$succeed(elm$core$Maybe$Just),
+					elm$parser$Parser$symbol(':')),
+				elm$parser$Parser$spaces),
+			author$project$Lambda$Parse$typeExpr),
+			elm$parser$Parser$succeed(elm$core$Maybe$Nothing)
+		]));
+var author$project$Lambda$Parse$termVar = elm$parser$Parser$variable(
+	{
+		inner: function (c) {
+			return elm$core$Char$isAlphaNum(c) || _Utils_eq(
+				c,
+				_Utils_chr('_'));
+		},
+		reserved: elm$core$Set$fromList(author$project$Lambda$Parse$keywords),
+		start: elm$core$Char$isLower
+	});
+var author$project$Lambda$Parse$binding = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$keeper,
+				elm$parser$Parser$succeed(author$project$Lambda$Parse$VarBind),
+				A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$termVar, elm$parser$Parser$spaces)),
+			author$project$Lambda$Parse$maybeTypeAnnotation),
+			A2(elm$parser$Parser$map, author$project$Lambda$Parse$TyVarBind, author$project$Lambda$Parse$typeVar)
+		]));
+var elm$parser$Parser$Optional = {$: 'Optional'};
+var elm$parser$Parser$Advanced$Forbidden = {$: 'Forbidden'};
+var elm$parser$Parser$Advanced$Mandatory = {$: 'Mandatory'};
+var elm$parser$Parser$Advanced$Optional = {$: 'Optional'};
+var elm$parser$Parser$toAdvancedTrailing = function (trailing) {
+	switch (trailing.$) {
+		case 'Forbidden':
+			return elm$parser$Parser$Advanced$Forbidden;
+		case 'Optional':
+			return elm$parser$Parser$Advanced$Optional;
+		default:
+			return elm$parser$Parser$Advanced$Mandatory;
+	}
+};
+var elm$parser$Parser$Expecting = function (a) {
+	return {$: 'Expecting', a: a};
+};
+var elm$parser$Parser$toToken = function (str) {
+	return A2(
+		elm$parser$Parser$Advanced$Token,
+		str,
+		elm$parser$Parser$Expecting(str));
+};
+var elm$parser$Parser$Advanced$loopHelp = F4(
+	function (p, state, callback, s0) {
+		loopHelp:
+		while (true) {
+			var _n0 = callback(state);
+			var parse = _n0.a;
+			var _n1 = parse(s0);
+			if (_n1.$ === 'Good') {
+				var p1 = _n1.a;
+				var step = _n1.b;
+				var s1 = _n1.c;
+				if (step.$ === 'Loop') {
+					var newState = step.a;
+					var $temp$p = p || p1,
+						$temp$state = newState,
+						$temp$callback = callback,
+						$temp$s0 = s1;
+					p = $temp$p;
+					state = $temp$state;
+					callback = $temp$callback;
+					s0 = $temp$s0;
+					continue loopHelp;
+				} else {
+					var result = step.a;
+					return A3(elm$parser$Parser$Advanced$Good, p || p1, result, s1);
+				}
+			} else {
+				var p1 = _n1.a;
+				var x = _n1.b;
+				return A2(elm$parser$Parser$Advanced$Bad, p || p1, x);
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$loop = F2(
+	function (state, callback) {
+		return elm$parser$Parser$Advanced$Parser(
+			function (s) {
+				return A4(elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
+			});
+	});
+var elm$parser$Parser$Advanced$Done = function (a) {
+	return {$: 'Done', a: a};
+};
+var elm$parser$Parser$Advanced$Loop = function (a) {
+	return {$: 'Loop', a: a};
+};
+var elm$parser$Parser$Advanced$revAlways = F2(
+	function (_n0, b) {
+		return b;
+	});
+var elm$parser$Parser$Advanced$skip = F2(
+	function (iParser, kParser) {
+		return A3(elm$parser$Parser$Advanced$map2, elm$parser$Parser$Advanced$revAlways, iParser, kParser);
+	});
+var elm$parser$Parser$Advanced$sequenceEndForbidden = F5(
+	function (ender, ws, parseItem, sep, revItems) {
+		var chompRest = function (item) {
+			return A5(
+				elm$parser$Parser$Advanced$sequenceEndForbidden,
+				ender,
+				ws,
+				parseItem,
+				sep,
+				A2(elm$core$List$cons, item, revItems));
+		};
+		return A2(
+			elm$parser$Parser$Advanced$skip,
+			ws,
+			elm$parser$Parser$Advanced$oneOf(
 				_List_fromArray(
 					[
 						A2(
-						rtfeldman$elm_css$Css$margin2,
-						rtfeldman$elm_css$Css$rem(0),
-						rtfeldman$elm_css$Css$rem(1))
-					]),
-				_List_Nil,
+						elm$parser$Parser$Advanced$skip,
+						sep,
+						A2(
+							elm$parser$Parser$Advanced$skip,
+							ws,
+							A2(
+								elm$parser$Parser$Advanced$map,
+								function (item) {
+									return elm$parser$Parser$Advanced$Loop(
+										A2(elm$core$List$cons, item, revItems));
+								},
+								parseItem))),
+						A2(
+						elm$parser$Parser$Advanced$map,
+						function (_n0) {
+							return elm$parser$Parser$Advanced$Done(
+								elm$core$List$reverse(revItems));
+						},
+						ender)
+					])));
+	});
+var elm$parser$Parser$Advanced$sequenceEndMandatory = F4(
+	function (ws, parseItem, sep, revItems) {
+		return elm$parser$Parser$Advanced$oneOf(
+			_List_fromArray(
+				[
+					A2(
+					elm$parser$Parser$Advanced$map,
+					function (item) {
+						return elm$parser$Parser$Advanced$Loop(
+							A2(elm$core$List$cons, item, revItems));
+					},
+					A2(
+						elm$parser$Parser$Advanced$ignorer,
+						parseItem,
+						A2(
+							elm$parser$Parser$Advanced$ignorer,
+							ws,
+							A2(elm$parser$Parser$Advanced$ignorer, sep, ws)))),
+					A2(
+					elm$parser$Parser$Advanced$map,
+					function (_n0) {
+						return elm$parser$Parser$Advanced$Done(
+							elm$core$List$reverse(revItems));
+					},
+					elm$parser$Parser$Advanced$succeed(_Utils_Tuple0))
+				]));
+	});
+var elm$parser$Parser$Advanced$sequenceEndOptional = F5(
+	function (ender, ws, parseItem, sep, revItems) {
+		var parseEnd = A2(
+			elm$parser$Parser$Advanced$map,
+			function (_n0) {
+				return elm$parser$Parser$Advanced$Done(
+					elm$core$List$reverse(revItems));
+			},
+			ender);
+		return A2(
+			elm$parser$Parser$Advanced$skip,
+			ws,
+			elm$parser$Parser$Advanced$oneOf(
 				_List_fromArray(
 					[
-						rtfeldman$elm_css$Html$Styled$text(
-						elm$core$Debug$toString(rule))
-					]))
+						A2(
+						elm$parser$Parser$Advanced$skip,
+						sep,
+						A2(
+							elm$parser$Parser$Advanced$skip,
+							ws,
+							elm$parser$Parser$Advanced$oneOf(
+								_List_fromArray(
+									[
+										A2(
+										elm$parser$Parser$Advanced$map,
+										function (item) {
+											return elm$parser$Parser$Advanced$Loop(
+												A2(elm$core$List$cons, item, revItems));
+										},
+										parseItem),
+										parseEnd
+									])))),
+						parseEnd
+					])));
+	});
+var elm$parser$Parser$Advanced$sequenceEnd = F5(
+	function (ender, ws, parseItem, sep, trailing) {
+		var chompRest = function (item) {
+			switch (trailing.$) {
+				case 'Forbidden':
+					return A2(
+						elm$parser$Parser$Advanced$loop,
+						_List_fromArray(
+							[item]),
+						A4(elm$parser$Parser$Advanced$sequenceEndForbidden, ender, ws, parseItem, sep));
+				case 'Optional':
+					return A2(
+						elm$parser$Parser$Advanced$loop,
+						_List_fromArray(
+							[item]),
+						A4(elm$parser$Parser$Advanced$sequenceEndOptional, ender, ws, parseItem, sep));
+				default:
+					return A2(
+						elm$parser$Parser$Advanced$ignorer,
+						A2(
+							elm$parser$Parser$Advanced$skip,
+							ws,
+							A2(
+								elm$parser$Parser$Advanced$skip,
+								sep,
+								A2(
+									elm$parser$Parser$Advanced$skip,
+									ws,
+									A2(
+										elm$parser$Parser$Advanced$loop,
+										_List_fromArray(
+											[item]),
+										A3(elm$parser$Parser$Advanced$sequenceEndMandatory, ws, parseItem, sep))))),
+						ender);
+			}
+		};
+		return elm$parser$Parser$Advanced$oneOf(
+			_List_fromArray(
+				[
+					A2(elm$parser$Parser$Advanced$andThen, chompRest, parseItem),
+					A2(
+					elm$parser$Parser$Advanced$map,
+					function (_n0) {
+						return _List_Nil;
+					},
+					ender)
+				]));
+	});
+var elm$parser$Parser$Advanced$sequence = function (i) {
+	return A2(
+		elm$parser$Parser$Advanced$skip,
+		elm$parser$Parser$Advanced$token(i.start),
+		A2(
+			elm$parser$Parser$Advanced$skip,
+			i.spaces,
+			A5(
+				elm$parser$Parser$Advanced$sequenceEnd,
+				elm$parser$Parser$Advanced$token(i.end),
+				i.spaces,
+				i.item,
+				elm$parser$Parser$Advanced$token(i.separator),
+				i.trailing)));
+};
+var elm$parser$Parser$sequence = function (i) {
+	return elm$parser$Parser$Advanced$sequence(
+		{
+			end: elm$parser$Parser$toToken(i.end),
+			item: i.item,
+			separator: elm$parser$Parser$toToken(i.separator),
+			spaces: i.spaces,
+			start: elm$parser$Parser$toToken(i.start),
+			trailing: elm$parser$Parser$toAdvancedTrailing(i.trailing)
+		});
+};
+var author$project$Lambda$Parse$typeContext = A2(
+	elm$parser$Parser$keeper,
+	A2(
+		elm$parser$Parser$ignorer,
+		elm$parser$Parser$succeed(author$project$Lambda$Parse$TyContext),
+		elm$parser$Parser$spaces),
+	A2(
+		elm$parser$Parser$ignorer,
+		elm$parser$Parser$sequence(
+			{end: '', item: author$project$Lambda$Parse$binding, separator: ',', spaces: elm$parser$Parser$spaces, start: '', trailing: elm$parser$Parser$Optional}),
+		elm$parser$Parser$spaces));
+var elm$parser$Parser$DeadEnd = F3(
+	function (row, col, problem) {
+		return {col: col, problem: problem, row: row};
+	});
+var elm$parser$Parser$problemToDeadEnd = function (p) {
+	return A3(elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
+};
+var elm$parser$Parser$Advanced$bagToList = F2(
+	function (bag, list) {
+		bagToList:
+		while (true) {
+			switch (bag.$) {
+				case 'Empty':
+					return list;
+				case 'AddRight':
+					var bag1 = bag.a;
+					var x = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2(elm$core$List$cons, x, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+				default:
+					var bag1 = bag.a;
+					var bag2 = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2(elm$parser$Parser$Advanced$bagToList, bag2, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$run = F2(
+	function (_n0, src) {
+		var parse = _n0.a;
+		var _n1 = parse(
+			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
+		if (_n1.$ === 'Good') {
+			var value = _n1.b;
+			return elm$core$Result$Ok(value);
+		} else {
+			var bag = _n1.b;
+			return elm$core$Result$Err(
+				A2(elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
+		}
+	});
+var elm$parser$Parser$run = F2(
+	function (parser, source) {
+		var _n0 = A2(elm$parser$Parser$Advanced$run, parser, source);
+		if (_n0.$ === 'Ok') {
+			var a = _n0.a;
+			return elm$core$Result$Ok(a);
+		} else {
+			var problems = _n0.a;
+			return elm$core$Result$Err(
+				A2(elm$core$List$map, elm$parser$Parser$problemToDeadEnd, problems));
+		}
+	});
+var author$project$Lambda$Parse$parseCtx = function (text) {
+	return A2(elm$parser$Parser$run, author$project$Lambda$Parse$typeContext, text);
+};
+var author$project$Lambda$Parse$TmAbs = F3(
+	function (a, b, c) {
+		return {$: 'TmAbs', a: a, b: b, c: c};
+	});
+var author$project$Lambda$Parse$TmApp = F2(
+	function (a, b) {
+		return {$: 'TmApp', a: a, b: b};
+	});
+var author$project$Lambda$Parse$TmIf = F3(
+	function (a, b, c) {
+		return {$: 'TmIf', a: a, b: b, c: c};
+	});
+var author$project$Lambda$Parse$TmLet = F3(
+	function (a, b, c) {
+		return {$: 'TmLet', a: a, b: b, c: c};
+	});
+var author$project$Lambda$Parse$TmTAbs = F2(
+	function (a, b) {
+		return {$: 'TmTAbs', a: a, b: b};
+	});
+var author$project$Lambda$Parse$TmTApp = F2(
+	function (a, b) {
+		return {$: 'TmTApp', a: a, b: b};
+	});
+var author$project$Lambda$Parse$TmVar = function (a) {
+	return {$: 'TmVar', a: a};
+};
+var author$project$Lambda$Parse$elseSymbol = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			elm$parser$Parser$keyword('else'),
+			elm$parser$Parser$keyword('Else')
+		]));
+var author$project$Lambda$Parse$ifSymbol = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			elm$parser$Parser$keyword('if'),
+			elm$parser$Parser$keyword('If')
+		]));
+var author$project$Lambda$Parse$inSymbol = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			elm$parser$Parser$keyword('in'),
+			elm$parser$Parser$keyword('In')
+		]));
+var author$project$Lambda$Parse$letSymbol = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			elm$parser$Parser$keyword('let'),
+			elm$parser$Parser$keyword('Let')
+		]));
+var author$project$Lambda$Parse$termAbsLambdaSymbol = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			elm$parser$Parser$symbol(author$project$Lambda$Parse$symbols.lambda),
+			elm$parser$Parser$keyword('lambda'),
+			elm$parser$Parser$symbol('\\')
+		]));
+var author$project$Lambda$Parse$termTyAppSubExpr = A2(
+	elm$parser$Parser$keeper,
+	A2(
+		elm$parser$Parser$ignorer,
+		A2(
+			elm$parser$Parser$ignorer,
+			elm$parser$Parser$succeed(elm$core$Basics$identity),
+			elm$parser$Parser$symbol('[')),
+		elm$parser$Parser$spaces),
+	A2(
+		elm$parser$Parser$ignorer,
+		A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$typeExpr, elm$parser$Parser$spaces),
+		elm$parser$Parser$symbol(']')));
+var author$project$Lambda$Parse$thenSymbol = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			elm$parser$Parser$keyword('then'),
+			elm$parser$Parser$keyword('Then')
+		]));
+var author$project$Lambda$Parse$typeAbsLambdaSymbol = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			elm$parser$Parser$symbol(author$project$Lambda$Parse$symbols.capitalLambda),
+			elm$parser$Parser$keyword('Lambda')
+		]));
+var author$project$Lambda$Parse$appExprHelp = function (term) {
+	return A2(
+		elm$parser$Parser$keeper,
+		A2(
+			elm$parser$Parser$ignorer,
+			elm$parser$Parser$succeed(elm$core$Basics$identity),
+			elm$parser$Parser$spaces),
+		elm$parser$Parser$oneOf(
+			_List_fromArray(
+				[
+					A2(
+					elm$parser$Parser$andThen,
+					author$project$Lambda$Parse$appExprHelp,
+					elm$parser$Parser$oneOf(
+						_List_fromArray(
+							[
+								A2(
+								elm$parser$Parser$map,
+								author$project$Lambda$Parse$TmApp(term),
+								author$project$Lambda$Parse$cyclic$termSubExpr()),
+								A2(
+								elm$parser$Parser$map,
+								author$project$Lambda$Parse$TmTApp(term),
+								author$project$Lambda$Parse$termTyAppSubExpr)
+							]))),
+					elm$parser$Parser$succeed(term)
+				])));
+};
+function author$project$Lambda$Parse$cyclic$termExpr() {
+	return A2(
+		elm$parser$Parser$andThen,
+		author$project$Lambda$Parse$appExprHelp,
+		A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$ignorer,
+				elm$parser$Parser$succeed(elm$core$Basics$identity),
+				elm$parser$Parser$spaces),
+			author$project$Lambda$Parse$cyclic$termSubExpr()));
+}
+function author$project$Lambda$Parse$cyclic$termSubExpr() {
+	return elm$parser$Parser$oneOf(
+		_List_fromArray(
+			[
+				A2(elm$parser$Parser$map, author$project$Lambda$Parse$TmVar, author$project$Lambda$Parse$termVar),
+				author$project$Lambda$Parse$cyclic$termAbs(),
+				author$project$Lambda$Parse$cyclic$typeAbs(),
+				author$project$Lambda$Parse$cyclic$letExpr(),
+				author$project$Lambda$Parse$cyclic$ifExpr(),
+				A2(
+				elm$parser$Parser$keeper,
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						elm$parser$Parser$succeed(elm$core$Basics$identity),
+						elm$parser$Parser$symbol('(')),
+					elm$parser$Parser$spaces),
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						A2(
+							elm$parser$Parser$ignorer,
+							elm$parser$Parser$lazy(
+								function (_n7) {
+									return author$project$Lambda$Parse$cyclic$termExpr();
+								}),
+							elm$parser$Parser$spaces),
+						elm$parser$Parser$symbol(')')),
+					elm$parser$Parser$spaces))
 			]));
+}
+function author$project$Lambda$Parse$cyclic$ifExpr() {
+	return A2(
+		elm$parser$Parser$keeper,
+		A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$keeper,
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						elm$parser$Parser$succeed(author$project$Lambda$Parse$TmIf),
+						author$project$Lambda$Parse$ifSymbol),
+					elm$parser$Parser$spaces),
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						A2(
+							elm$parser$Parser$ignorer,
+							elm$parser$Parser$lazy(
+								function (_n4) {
+									return author$project$Lambda$Parse$cyclic$termExpr();
+								}),
+							elm$parser$Parser$spaces),
+						author$project$Lambda$Parse$thenSymbol),
+					elm$parser$Parser$spaces)),
+			A2(
+				elm$parser$Parser$ignorer,
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						elm$parser$Parser$lazy(
+							function (_n5) {
+								return author$project$Lambda$Parse$cyclic$termExpr();
+							}),
+						elm$parser$Parser$spaces),
+					author$project$Lambda$Parse$elseSymbol),
+				elm$parser$Parser$spaces)),
+		elm$parser$Parser$lazy(
+			function (_n6) {
+				return author$project$Lambda$Parse$cyclic$termExpr();
+			}));
+}
+function author$project$Lambda$Parse$cyclic$letExpr() {
+	return A2(
+		elm$parser$Parser$keeper,
+		A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$keeper,
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						elm$parser$Parser$succeed(author$project$Lambda$Parse$TmLet),
+						author$project$Lambda$Parse$letSymbol),
+					elm$parser$Parser$spaces),
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$termVar, elm$parser$Parser$spaces),
+					elm$parser$Parser$symbol('='))),
+			A2(
+				elm$parser$Parser$ignorer,
+				A2(
+					elm$parser$Parser$ignorer,
+					elm$parser$Parser$lazy(
+						function (_n2) {
+							return author$project$Lambda$Parse$cyclic$termExpr();
+						}),
+					elm$parser$Parser$spaces),
+				author$project$Lambda$Parse$inSymbol)),
+		elm$parser$Parser$lazy(
+			function (_n3) {
+				return author$project$Lambda$Parse$cyclic$termExpr();
+			}));
+}
+function author$project$Lambda$Parse$cyclic$termAbs() {
+	return A2(
+		elm$parser$Parser$keeper,
+		A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$keeper,
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						elm$parser$Parser$succeed(author$project$Lambda$Parse$TmAbs),
+						author$project$Lambda$Parse$termAbsLambdaSymbol),
+					elm$parser$Parser$spaces),
+				A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$termVar, elm$parser$Parser$spaces)),
+			A2(
+				elm$parser$Parser$ignorer,
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$maybeTypeAnnotation, elm$parser$Parser$spaces),
+					elm$parser$Parser$symbol('.')),
+				elm$parser$Parser$spaces)),
+		elm$parser$Parser$lazy(
+			function (_n1) {
+				return author$project$Lambda$Parse$cyclic$termExpr();
+			}));
+}
+function author$project$Lambda$Parse$cyclic$typeAbs() {
+	return A2(
+		elm$parser$Parser$keeper,
+		A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$ignorer,
+				A2(
+					elm$parser$Parser$ignorer,
+					elm$parser$Parser$succeed(author$project$Lambda$Parse$TmTAbs),
+					author$project$Lambda$Parse$typeAbsLambdaSymbol),
+				elm$parser$Parser$spaces),
+			A2(
+				elm$parser$Parser$ignorer,
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$typeVar, elm$parser$Parser$spaces),
+					elm$parser$Parser$symbol('.')),
+				elm$parser$Parser$spaces)),
+		elm$parser$Parser$lazy(
+			function (_n0) {
+				return author$project$Lambda$Parse$cyclic$termExpr();
+			}));
+}
+try {
+	var author$project$Lambda$Parse$termExpr = author$project$Lambda$Parse$cyclic$termExpr();
+	author$project$Lambda$Parse$cyclic$termExpr = function () {
+		return author$project$Lambda$Parse$termExpr;
+	};
+	var author$project$Lambda$Parse$termSubExpr = author$project$Lambda$Parse$cyclic$termSubExpr();
+	author$project$Lambda$Parse$cyclic$termSubExpr = function () {
+		return author$project$Lambda$Parse$termSubExpr;
+	};
+	var author$project$Lambda$Parse$ifExpr = author$project$Lambda$Parse$cyclic$ifExpr();
+	author$project$Lambda$Parse$cyclic$ifExpr = function () {
+		return author$project$Lambda$Parse$ifExpr;
+	};
+	var author$project$Lambda$Parse$letExpr = author$project$Lambda$Parse$cyclic$letExpr();
+	author$project$Lambda$Parse$cyclic$letExpr = function () {
+		return author$project$Lambda$Parse$letExpr;
+	};
+	var author$project$Lambda$Parse$termAbs = author$project$Lambda$Parse$cyclic$termAbs();
+	author$project$Lambda$Parse$cyclic$termAbs = function () {
+		return author$project$Lambda$Parse$termAbs;
+	};
+	var author$project$Lambda$Parse$typeAbs = author$project$Lambda$Parse$cyclic$typeAbs();
+	author$project$Lambda$Parse$cyclic$typeAbs = function () {
+		return author$project$Lambda$Parse$typeAbs;
+	};
+} catch ($) {
+throw 'Some top-level definitions from `Lambda.Parse` are causing infinite recursion:\n\n  ┌─────┐\n  │    termExpr\n  │     ↓\n  │    appExprHelp\n  │     ↓\n  │    termSubExpr\n  │     ↓\n  │    ifExpr\n  │     ↓\n  │    letExpr\n  │     ↓\n  │    termAbs\n  │     ↓\n  │    typeAbs\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.0/halting-problem to learn how to fix it!';}
+var author$project$Lambda$Parse$parseTerm = function (text) {
+	return A2(elm$parser$Parser$run, author$project$Lambda$Parse$termExpr, text);
+};
+var author$project$Lambda$Parse$parseType = function (text) {
+	return A2(elm$parser$Parser$run, author$project$Lambda$Parse$typeExpr, text);
+};
+var author$project$Lambda$ContextUtils$addbindingTup = F2(
+	function (ctx, tup) {
+		var x = tup.a;
+		var bind = tup.b;
+		return A3(author$project$Lambda$ContextUtils$addbinding, ctx, x, bind);
+	});
+var author$project$Lambda$ContextUtils$emptycontext = _List_Nil;
+var author$project$Lambda$Expression$NameBind = {$: 'NameBind'};
+var author$project$Lambda$Expression$VarBind = function (a) {
+	return {$: 'VarBind', a: a};
+};
+var elm_community$list_extra$List$Extra$findIndexHelp = F3(
+	function (index, predicate, list) {
+		findIndexHelp:
+		while (true) {
+			if (!list.b) {
+				return elm$core$Maybe$Nothing;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (predicate(x)) {
+					return elm$core$Maybe$Just(index);
+				} else {
+					var $temp$index = index + 1,
+						$temp$predicate = predicate,
+						$temp$list = xs;
+					index = $temp$index;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue findIndexHelp;
+				}
+			}
+		}
+	});
+var elm_community$list_extra$List$Extra$findIndex = elm_community$list_extra$List$Extra$findIndexHelp(0);
+var author$project$Lambda$ContextUtils$name2index = F3(
+	function (fi, ctx, x) {
+		return A2(
+			elm_community$list_extra$List$Extra$findIndex,
+			A2(
+				elm$core$Basics$composeR,
+				elm$core$Tuple$first,
+				elm$core$Basics$eq(x)),
+			ctx);
+	});
+var author$project$Lambda$Expression$I = {$: 'I'};
+var author$project$Lambda$Expression$TyAll = F2(
+	function (a, b) {
+		return {$: 'TyAll', a: a, b: b};
+	});
+var author$project$Lambda$Expression$TyArr = F2(
+	function (a, b) {
+		return {$: 'TyArr', a: a, b: b};
+	});
+var author$project$Lambda$Expression$TyVar = F2(
+	function (a, b) {
+		return {$: 'TyVar', a: a, b: b};
+	});
+var author$project$Lambda$ParseTransform$IndexNotFound = function (a) {
+	return {$: 'IndexNotFound', a: a};
+};
+var toastal$either$Either$Left = function (a) {
+	return {$: 'Left', a: a};
+};
+var toastal$either$Either$Right = function (a) {
+	return {$: 'Right', a: a};
+};
+var toastal$either$Either$andThen = F2(
+	function (f, e) {
+		if (e.$ === 'Right') {
+			var b = e.a;
+			return f(b);
+		} else {
+			var a = e.a;
+			return toastal$either$Either$Left(a);
+		}
+	});
+var toastal$either$Either$andThenRight = toastal$either$Either$andThen;
+var toastal$either$Either$map = F2(
+	function (f, e) {
+		if (e.$ === 'Right') {
+			var b = e.a;
+			return toastal$either$Either$Right(
+				f(b));
+		} else {
+			var a = e.a;
+			return toastal$either$Either$Left(a);
+		}
+	});
+var toastal$either$Either$mapRight = toastal$either$Either$map;
+var author$project$Lambda$ParseTransform$fromParseType = F2(
+	function (ctx, ty) {
+		switch (ty.$) {
+			case 'TyVar':
+				var name = ty.a;
+				var _n1 = A3(author$project$Lambda$ContextUtils$name2index, author$project$Lambda$Expression$I, ctx, name);
+				if (_n1.$ === 'Just') {
+					var index = _n1.a;
+					return toastal$either$Either$Right(
+						A2(
+							author$project$Lambda$Expression$TyVar,
+							index,
+							author$project$Lambda$ContextUtils$ctxlength(ctx)));
+				} else {
+					switch (name) {
+						case 'Bool':
+							return toastal$either$Either$Right(
+								author$project$Lambda$Expression$TyName('Bool'));
+						case 'Int':
+							return toastal$either$Either$Right(
+								author$project$Lambda$Expression$TyName('Int'));
+						default:
+							return toastal$either$Either$Left(
+								author$project$Lambda$ParseTransform$IndexNotFound(name));
+					}
+				}
+			case 'TyArr':
+				var ty1 = ty.a;
+				var ty2 = ty.b;
+				return A2(
+					toastal$either$Either$andThenRight,
+					function (t1) {
+						return A2(
+							toastal$either$Either$andThenRight,
+							function (t2) {
+								return toastal$either$Either$Right(
+									A2(author$project$Lambda$Expression$TyArr, t1, t2));
+							},
+							A2(author$project$Lambda$ParseTransform$fromParseType, ctx, ty2));
+					},
+					A2(author$project$Lambda$ParseTransform$fromParseType, ctx, ty1));
+			default:
+				var name = ty.a;
+				var ty1 = ty.b;
+				return A2(
+					toastal$either$Either$mapRight,
+					author$project$Lambda$Expression$TyAll(name),
+					A2(
+						author$project$Lambda$ParseTransform$fromParseType,
+						A3(author$project$Lambda$ContextUtils$addbinding, ctx, name, author$project$Lambda$Expression$TyVarBind),
+						ty1));
+		}
+	});
+var author$project$Lambda$ParseTransform$fromParseContext = function (ctx) {
+	var bindings = ctx.a;
+	return A3(
+		elm$core$List$foldl,
+		function (binding) {
+			return toastal$either$Either$andThen(
+				function (someCtx) {
+					var transformed = function () {
+						if (binding.$ === 'VarBind') {
+							var name = binding.a;
+							var maybeType = binding.b;
+							return _Utils_Tuple2(
+								name,
+								A2(
+									elm$core$Maybe$withDefault,
+									toastal$either$Either$Right(author$project$Lambda$Expression$NameBind),
+									A2(
+										elm$core$Maybe$map,
+										toastal$either$Either$mapRight(author$project$Lambda$Expression$VarBind),
+										A2(
+											elm$core$Maybe$map,
+											author$project$Lambda$ParseTransform$fromParseType(someCtx),
+											maybeType))));
+						} else {
+							var name = binding.a;
+							return _Utils_Tuple2(
+								name,
+								toastal$either$Either$Right(author$project$Lambda$Expression$TyVarBind));
+						}
+					}();
+					var eitherTransformed = function () {
+						if (transformed.b.$ === 'Right') {
+							var name = transformed.a;
+							var smt = transformed.b.a;
+							return toastal$either$Either$Right(
+								_Utils_Tuple2(name, smt));
+						} else {
+							var name = transformed.a;
+							var err = transformed.b.a;
+							return toastal$either$Either$Left(err);
+						}
+					}();
+					return A2(
+						toastal$either$Either$mapRight,
+						author$project$Lambda$ContextUtils$addbindingTup(someCtx),
+						eitherTransformed);
+				});
+		},
+		toastal$either$Either$Right(author$project$Lambda$ContextUtils$emptycontext),
+		bindings);
+};
+var author$project$Lambda$Expression$TmAbs = F4(
+	function (a, b, c, d) {
+		return {$: 'TmAbs', a: a, b: b, c: c, d: d};
+	});
+var author$project$Lambda$Expression$TmApp = F3(
+	function (a, b, c) {
+		return {$: 'TmApp', a: a, b: b, c: c};
+	});
+var author$project$Lambda$Expression$TmIf = F4(
+	function (a, b, c, d) {
+		return {$: 'TmIf', a: a, b: b, c: c, d: d};
+	});
+var author$project$Lambda$Expression$TmTAbs = F3(
+	function (a, b, c) {
+		return {$: 'TmTAbs', a: a, b: b, c: c};
+	});
+var author$project$Lambda$Expression$TmTApp = F3(
+	function (a, b, c) {
+		return {$: 'TmTApp', a: a, b: b, c: c};
+	});
+var author$project$Lambda$Expression$TmVar = F3(
+	function (a, b, c) {
+		return {$: 'TmVar', a: a, b: b, c: c};
+	});
+var author$project$Lambda$ParseTransform$NotImplemented = function (a) {
+	return {$: 'NotImplemented', a: a};
+};
+var author$project$Lambda$ParseTransform$TypeMissing = function (a) {
+	return {$: 'TypeMissing', a: a};
+};
+var author$project$Lambda$ParseTransform$fromParseTerm = F2(
+	function (ctx, t) {
+		switch (t.$) {
+			case 'TmVar':
+				var name = t.a;
+				var _n1 = A3(author$project$Lambda$ContextUtils$name2index, author$project$Lambda$Expression$I, ctx, name);
+				if (_n1.$ === 'Just') {
+					var index = _n1.a;
+					return toastal$either$Either$Right(
+						A3(
+							author$project$Lambda$Expression$TmVar,
+							author$project$Lambda$Expression$I,
+							index,
+							author$project$Lambda$ContextUtils$ctxlength(ctx)));
+				} else {
+					return toastal$either$Either$Left(
+						author$project$Lambda$ParseTransform$IndexNotFound(name));
+				}
+			case 'TmAbs':
+				var name = t.a;
+				var maybeTy = t.b;
+				var t1 = t.c;
+				return A2(
+					toastal$either$Either$andThenRight,
+					function (ty) {
+						return A2(
+							toastal$either$Either$andThenRight,
+							function (t1t) {
+								return toastal$either$Either$Right(
+									A4(author$project$Lambda$Expression$TmAbs, author$project$Lambda$Expression$I, name, ty, t1t));
+							},
+							A2(
+								author$project$Lambda$ParseTransform$fromParseTerm,
+								A3(
+									author$project$Lambda$ContextUtils$addbinding,
+									ctx,
+									name,
+									author$project$Lambda$Expression$VarBind(ty)),
+								t1));
+					},
+					A2(
+						elm$core$Maybe$withDefault,
+						toastal$either$Either$Left(
+							author$project$Lambda$ParseTransform$TypeMissing(name)),
+						A2(
+							elm$core$Maybe$map,
+							author$project$Lambda$ParseTransform$fromParseType(ctx),
+							maybeTy)));
+			case 'TmApp':
+				var t1 = t.a;
+				var t2 = t.b;
+				return A2(
+					toastal$either$Either$andThenRight,
+					function (t1t) {
+						return A2(
+							toastal$either$Either$andThenRight,
+							function (t2t) {
+								return toastal$either$Either$Right(
+									A3(author$project$Lambda$Expression$TmApp, author$project$Lambda$Expression$I, t1t, t2t));
+							},
+							A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t2));
+					},
+					A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t1));
+			case 'TmTAbs':
+				var name = t.a;
+				var t1 = t.b;
+				return A2(
+					toastal$either$Either$mapRight,
+					A2(author$project$Lambda$Expression$TmTAbs, author$project$Lambda$Expression$I, name),
+					A2(
+						author$project$Lambda$ParseTransform$fromParseTerm,
+						A3(author$project$Lambda$ContextUtils$addbinding, ctx, name, author$project$Lambda$Expression$TyVarBind),
+						t1));
+			case 'TmTApp':
+				var t1 = t.a;
+				var ty1 = t.b;
+				return A2(
+					toastal$either$Either$andThenRight,
+					function (t1t) {
+						return A2(
+							toastal$either$Either$andThenRight,
+							function (ty1t) {
+								return toastal$either$Either$Right(
+									A3(author$project$Lambda$Expression$TmTApp, author$project$Lambda$Expression$I, t1t, ty1t));
+							},
+							A2(author$project$Lambda$ParseTransform$fromParseType, ctx, ty1));
+					},
+					A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t1));
+			case 'TmIf':
+				var t1 = t.a;
+				var t2 = t.b;
+				var t3 = t.c;
+				return A2(
+					toastal$either$Either$andThenRight,
+					function (t1t) {
+						return A2(
+							toastal$either$Either$andThenRight,
+							function (t2t) {
+								return A2(
+									toastal$either$Either$andThenRight,
+									function (t3t) {
+										return toastal$either$Either$Right(
+											A4(author$project$Lambda$Expression$TmIf, author$project$Lambda$Expression$I, t1t, t2t, t3t));
+									},
+									A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t3));
+							},
+							A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t2));
+					},
+					A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t1));
+			default:
+				var name = t.a;
+				var t1 = t.b;
+				var t2 = t.c;
+				return toastal$either$Either$Left(
+					author$project$Lambda$ParseTransform$NotImplemented('Let'));
+		}
+	});
+var elm$core$Result$andThen = F2(
+	function (callback, result) {
+		if (result.$ === 'Ok') {
+			var value = result.a;
+			return callback(value);
+		} else {
+			var msg = result.a;
+			return elm$core$Result$Err(msg);
+		}
+	});
+var elm$core$Result$map = F2(
+	function (func, ra) {
+		if (ra.$ === 'Ok') {
+			var a = ra.a;
+			return elm$core$Result$Ok(
+				func(a));
+		} else {
+			var e = ra.a;
+			return elm$core$Result$Err(e);
+		}
+	});
+var toastal$either$Either$andMap = F2(
+	function (e, e1) {
+		if (e1.$ === 'Right') {
+			var f = e1.a;
+			return A2(toastal$either$Either$map, f, e);
+		} else {
+			var x = e1.a;
+			return toastal$either$Either$Left(x);
+		}
+	});
+var toastal$either$Either$map3 = F4(
+	function (f, e, e1, e2) {
+		return A2(
+			toastal$either$Either$andMap,
+			e2,
+			A2(
+				toastal$either$Either$andMap,
+				e1,
+				A2(toastal$either$Either$map, f, e)));
+	});
+var author$project$Lambda$Rule$getCtxTermTy = F3(
+	function (ctx, term, ty) {
+		return function (r) {
+			if (r.$ === 'Ok') {
+				if (r.a.$ === 'Left') {
+					var smt = r.a.a;
+					return elm$core$Result$Err('Parse Error');
+				} else {
+					var smt = r.a.a;
+					return elm$core$Result$Ok(smt);
+				}
+			} else {
+				var smt = r.a;
+				return elm$core$Result$Err('Parse Result Error');
+			}
+		}(
+			A2(
+				elm$core$Result$map,
+				function (_n0) {
+					var x = _n0.a;
+					var y = _n0.b;
+					var z = _n0.c;
+					return A4(
+						toastal$either$Either$map3,
+						F3(
+							function (a, b, c) {
+								return _Utils_Tuple3(a, b, c);
+							}),
+						x,
+						y,
+						z);
+				},
+				A2(
+					elm$core$Result$andThen,
+					function (ctx1) {
+						return A2(
+							elm$core$Result$andThen,
+							function (term1) {
+								return A2(
+									elm$core$Result$andThen,
+									function (ty1) {
+										return elm$core$Result$Ok(
+											_Utils_Tuple3(
+												author$project$Lambda$ParseTransform$fromParseContext(ctx1),
+												A2(
+													toastal$either$Either$andThen,
+													function (parsedCtx) {
+														return A2(author$project$Lambda$ParseTransform$fromParseTerm, parsedCtx, term1);
+													},
+													author$project$Lambda$ParseTransform$fromParseContext(ctx1)),
+												A2(
+													toastal$either$Either$andThen,
+													function (parsedCtx) {
+														return A2(author$project$Lambda$ParseTransform$fromParseType, parsedCtx, ty1);
+													},
+													author$project$Lambda$ParseTransform$fromParseContext(ctx1))));
+									},
+									author$project$Lambda$Parse$parseType(ty));
+							},
+							author$project$Lambda$Parse$parseTerm(term));
+					},
+					author$project$Lambda$Parse$parseCtx(ctx))));
+	});
+var author$project$Lambda$Rule$tryRule = function (t) {
+	var ctx = t.a.ctx;
+	var term = t.a.term;
+	var ty = t.a.ty;
+	var rule = t.a.rule;
+	var children = t.b;
+	var _n1 = _Utils_Tuple2(rule, children);
+	_n1$2:
+	while (true) {
+		if (_n1.b.b) {
+			if (!_n1.b.b.b) {
+				if (_n1.a.$ === 'TVar') {
+					var _n2 = _n1.a;
+					var _n3 = _n1.b;
+					var child = _n3.a;
+					var childC = child.a;
+					var top = A3(author$project$Lambda$Rule$getCtxTermTy, childC.ctx, childC.term, childC.ty);
+					var bottom = A3(author$project$Lambda$Rule$getCtxTermTy, ctx, term, ty);
+					return function (r) {
+						if (r.$ === 'Err') {
+							var text = r.a;
+							return text;
+						} else {
+							var checks = r.a;
+							return checks ? 'OK' : 'NOK';
+						}
+					}(
+						A2(
+							elm$core$Result$andThen,
+							function (_n5) {
+								var c1 = _n5.a;
+								var tm1 = _n5.b;
+								var ty1 = _n5.c;
+								return A2(
+									elm$core$Result$andThen,
+									function (_n6) {
+										var c2 = _n6.a;
+										var tm2 = _n6.b;
+										var ty2 = _n6.c;
+										return elm$core$Result$Ok(
+											author$project$Lambda$Rule$checkRule(
+												author$project$Lambda$Rule$TVar(
+													{
+														bottom: {ctx: c1, term: tm1, ty: ty1},
+														top: {ctx: c2, term: tm2, ty: ty2}
+													})));
+									},
+									top);
+							},
+							bottom));
+				} else {
+					break _n1$2;
+				}
+			} else {
+				if (((_n1.a.$ === 'TIf') && _n1.b.b.b.b) && (!_n1.b.b.b.b.b)) {
+					var _n8 = _n1.a;
+					var _n9 = _n1.b;
+					var child1 = _n9.a;
+					var _n10 = _n9.b;
+					var child2 = _n10.a;
+					var _n11 = _n10.b;
+					var child3 = _n11.a;
+					var _n12 = _Utils_Tuple3(child1, child2, child3);
+					var _n13 = _n12.a;
+					var childC1 = _n13.a;
+					var _n14 = _n12.b;
+					var childC2 = _n14.a;
+					var _n15 = _n12.c;
+					var childC3 = _n15.a;
+					var top3 = A3(author$project$Lambda$Rule$getCtxTermTy, childC3.ctx, childC3.term, childC3.ty);
+					var top2 = A3(author$project$Lambda$Rule$getCtxTermTy, childC2.ctx, childC2.term, childC2.ty);
+					var top1 = A3(author$project$Lambda$Rule$getCtxTermTy, childC1.ctx, childC1.term, childC1.ty);
+					var bottom = A3(author$project$Lambda$Rule$getCtxTermTy, ctx, term, ty);
+					return function (r) {
+						if (r.$ === 'Err') {
+							var text = r.a;
+							return text;
+						} else {
+							var checks = r.a;
+							return checks ? 'OK' : 'NOK';
+						}
+					}(
+						A2(
+							elm$core$Result$andThen,
+							function (_n16) {
+								var c1 = _n16.a;
+								var tm1 = _n16.b;
+								var ty1 = _n16.c;
+								return A2(
+									elm$core$Result$andThen,
+									function (_n17) {
+										var ctxC1 = _n17.a;
+										var tmC1 = _n17.b;
+										var tyC1 = _n17.c;
+										return A2(
+											elm$core$Result$andThen,
+											function (_n18) {
+												var ctxC2 = _n18.a;
+												var tmC2 = _n18.b;
+												var tyC2 = _n18.c;
+												return A2(
+													elm$core$Result$andThen,
+													function (_n19) {
+														var ctxC3 = _n19.a;
+														var tmC3 = _n19.b;
+														var tyC3 = _n19.c;
+														return elm$core$Result$Ok(
+															author$project$Lambda$Rule$checkRule(
+																author$project$Lambda$Rule$TIf(
+																	{
+																		bottom: {ctx: c1, term: tm1, ty: ty1},
+																		top1: {ctx: ctxC1, term: tmC1, ty: tyC1},
+																		top2: {ctx: ctxC2, term: tmC2, ty: tyC2},
+																		top3: {ctx: ctxC3, term: tmC3, ty: tyC3}
+																	})));
+													},
+													top3);
+											},
+											top2);
+									},
+									top1);
+							},
+							bottom));
+				} else {
+					break _n1$2;
+				}
+			}
+		} else {
+			break _n1$2;
+		}
+	}
+	return '';
+};
+var author$project$ViewModel$getTreeViewData = function (t) {
+	var ctx = t.a.ctx;
+	var term = t.a.term;
+	var ty = t.a.ty;
+	var rule = t.a.rule;
+	var children = t.b;
+	return A2(
+		author$project$Model$Node,
+		{
+			ctx: ctx,
+			result: author$project$Lambda$Rule$tryRule(t),
+			rule: rule,
+			term: term,
+			ty: ty
+		},
+		A2(elm$core$List$map, author$project$ViewModel$getTreeViewData, children));
 };
 var rtfeldman$elm_css$Css$row = {flexDirection: rtfeldman$elm_css$Css$Structure$Compatible, flexDirectionOrWrap: rtfeldman$elm_css$Css$Structure$Compatible, value: 'row'};
 var rtfeldman$elm_css$Css$column = _Utils_update(
@@ -7724,17 +9943,6 @@ var author$project$View$Lambda$Tree$drawTree = function (tree) {
 								_List_fromArray(
 									[
 										rtfeldman$elm_css$Html$Styled$Events$onClick(
-										author$project$Message$AddMsg(path))
-									]),
-								_List_fromArray(
-									[
-										rtfeldman$elm_css$Html$Styled$text('Add')
-									])),
-								A2(
-								rtfeldman$elm_css$Html$Styled$button,
-								_List_fromArray(
-									[
-										rtfeldman$elm_css$Html$Styled$Events$onClick(
 										author$project$Message$RemoveMsg(path))
 									]),
 								_List_fromArray(
@@ -7768,7 +9976,7 @@ var author$project$View$Lambda$Tree$drawTree = function (tree) {
 												[i])));
 								}),
 							children)),
-						(elm$core$List$length(children) <= 1) ? A2(rtfeldman$elm_css$Html$Styled$div, _List_Nil, _List_Nil) : author$project$View$Lambda$Tree$hairline(content.rule),
+						(elm$core$List$length(children) <= 1) ? A2(rtfeldman$elm_css$Html$Styled$div, _List_Nil, _List_Nil) : A2(author$project$View$Lambda$Tree$hairline, content.rule, content.result),
 						A4(
 						rtfeldman$elm_css$Html$Styled$styled,
 						rtfeldman$elm_css$Html$Styled$div,
@@ -7781,7 +9989,7 @@ var author$project$View$Lambda$Tree$drawTree = function (tree) {
 						_List_Nil,
 						_List_fromArray(
 							[
-								elm$core$List$isEmpty(children) ? A2(rtfeldman$elm_css$Html$Styled$div, _List_Nil, _List_Nil) : author$project$View$Lambda$Tree$hairline(content.rule),
+								elm$core$List$isEmpty(children) ? A2(rtfeldman$elm_css$Html$Styled$div, _List_Nil, _List_Nil) : A2(author$project$View$Lambda$Tree$hairline, content.rule, content.result),
 								A2(
 								author$project$View$Lambda$ProofCell$proofCell,
 								content,
@@ -7791,7 +9999,7 @@ var author$project$View$Lambda$Tree$drawTree = function (tree) {
 		});
 	return A2(
 		drawTreeP,
-		author$project$Model$getTreeViewData(tree),
+		author$project$ViewModel$getTreeViewData(tree),
 		_List_Nil);
 };
 var rtfeldman$elm_css$Css$flexStart = rtfeldman$elm_css$Css$prop1('flex-start');
@@ -8187,7 +10395,6 @@ var elm$core$Task$perform = F2(
 				A2(elm$core$Task$map, toMessage, task)));
 	});
 var elm$core$String$length = _String_length;
-var elm$core$String$slice = _String_slice;
 var elm$core$String$dropLeft = F2(
 	function (n, string) {
 		return (n < 1) ? string : A3(

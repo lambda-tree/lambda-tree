@@ -1,24 +1,53 @@
 module View.Lambda.ProofCell exposing (..)
 
-import Html.Styled as S exposing (Html, styled)
 import Css exposing (..)
+import Html.Styled as S exposing (Html, styled)
 import Message exposing (Msg)
 import Model exposing (TextKind(..))
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
+import ViewModel exposing (TreeViewDataResult)
 
 
-proofCell : { a | ctx : String, term : String, ty : String } -> (TextKind -> String -> Msg) -> S.Html Msg
+getBackgroundColor : TreeViewDataResult -> Color
+getBackgroundColor result =
+    case result.error of
+        Nothing ->
+            rgba 0 0 0 0
+
+        Just _ ->
+            rgba 255 0 0 0.5
+
+
+proofCell : { a | ctx : TreeViewDataResult, term : TreeViewDataResult, ty : TreeViewDataResult } -> (TextKind -> String -> Msg) -> S.Html Msg
 proofCell content msgCreator =
     S.div
         []
         [ styled S.div
             [ displayFlex, flexShrink <| int 0, alignItems center, minWidth <| rem 45, margin <| rem 0.5 ]
             []
-            [ styled S.div [ displayFlex, flex <| int 1 ] [] [ lambdaExprInput True content.ctx (msgCreator CtxKind) ]
+            [ styled S.div
+                [ displayFlex
+                , flex <| int 1
+                , backgroundColor <| getBackgroundColor content.ctx
+                ]
+                []
+                [ lambdaExprInput True content.ctx.text (msgCreator CtxKind) ]
             , lambdaExprText "⊢"
-            , styled S.div [ displayFlex, flex <| int 2 ] [] [ lambdaExprInput False content.term (msgCreator TermKind) ]
+            , styled S.div
+                [ displayFlex
+                , flex <| int 2
+                , backgroundColor <| getBackgroundColor content.term
+                ]
+                []
+                [ lambdaExprInput False content.term.text (msgCreator TermKind) ]
             , lambdaExprText ":"
-            , styled S.div [ displayFlex, flex <| int 1 ] [] [ lambdaExprInput False content.ty (msgCreator TyKind) ]
+            , styled S.div
+                [ displayFlex
+                , flex <| int 1
+                , backgroundColor <| getBackgroundColor content.ty
+                ]
+                []
+                [ lambdaExprInput False content.ty.text (msgCreator TyKind) ]
             ]
         ]

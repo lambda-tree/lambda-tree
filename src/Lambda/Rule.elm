@@ -1,15 +1,14 @@
 module Lambda.Rule exposing (..)
 
 import Either
-import Lambda.Expression exposing (..)
-import Lambda.ExpressionUtils exposing (equalTypes, equalTypesExact)
-import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
-import Maybe exposing (..)
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
-import Model exposing (Tree(..), TreeModel)
+import Lambda.Expression exposing (..)
+import Lambda.ExpressionUtils exposing (equalTypes)
 import Lambda.Parse as P
-import Parser exposing (deadEndsToString)
+import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
+import Maybe exposing (..)
+import Model exposing (Tree(..), TreeModel)
 import Result
 
 
@@ -113,30 +112,30 @@ tryRule t =
                                 top =
                                     getCtxTermTy childC.ctx childC.term childC.ty
                             in
-                                bottom
-                                    |> Result.andThen
-                                        (\( c1, tm1, ty1 ) ->
-                                            top
-                                                |> Result.andThen
-                                                    (\( c2, tm2, ty2 ) ->
-                                                        Result.Ok <|
-                                                            checkRule
-                                                                (TVar
-                                                                    { bottom =
-                                                                        { ctx = c1
-                                                                        , term = tm1
-                                                                        , ty = ty1
-                                                                        }
-                                                                    , top =
-                                                                        { ctx = c2
-                                                                        , term = tm2
-                                                                        , ty = ty2
-                                                                        }
+                            bottom
+                                |> Result.andThen
+                                    (\( c1, tm1, ty1 ) ->
+                                        top
+                                            |> Result.andThen
+                                                (\( c2, tm2, ty2 ) ->
+                                                    Result.Ok <|
+                                                        checkRule
+                                                            (TVar
+                                                                { bottom =
+                                                                    { ctx = c1
+                                                                    , term = tm1
+                                                                    , ty = ty1
                                                                     }
-                                                                )
-                                                    )
-                                        )
-                                    |> \r ->
+                                                                , top =
+                                                                    { ctx = c2
+                                                                    , term = tm2
+                                                                    , ty = ty2
+                                                                    }
+                                                                }
+                                                            )
+                                                )
+                                    )
+                                |> (\r ->
                                         case r of
                                             Err text ->
                                                 text
@@ -144,8 +143,10 @@ tryRule t =
                                             Ok checks ->
                                                 if checks then
                                                     "OK"
+
                                                 else
                                                     "NOK"
+                                   )
 
                 ( Model.TIf, [ child1, child2, child3 ] ) ->
                     case ( child1, child2, child3 ) of
@@ -163,48 +164,48 @@ tryRule t =
                                 top3 =
                                     getCtxTermTy childC3.ctx childC3.term childC3.ty
                             in
-                                bottom
-                                    |> Result.andThen
-                                        (\( c1, tm1, ty1 ) ->
-                                            top1
-                                                |> Result.andThen
-                                                    (\( ctxC1, tmC1, tyC1 ) ->
-                                                        top2
-                                                            |> Result.andThen
-                                                                (\( ctxC2, tmC2, tyC2 ) ->
-                                                                    top3
-                                                                        |> Result.andThen
-                                                                            (\( ctxC3, tmC3, tyC3 ) ->
-                                                                                Result.Ok <|
-                                                                                    checkRule
-                                                                                        (TIf
-                                                                                            { bottom =
-                                                                                                { ctx = c1
-                                                                                                , term = tm1
-                                                                                                , ty = ty1
-                                                                                                }
-                                                                                            , top1 =
-                                                                                                { ctx = ctxC1
-                                                                                                , term = tmC1
-                                                                                                , ty = tyC1
-                                                                                                }
-                                                                                            , top2 =
-                                                                                                { ctx = ctxC2
-                                                                                                , term = tmC2
-                                                                                                , ty = tyC2
-                                                                                                }
-                                                                                            , top3 =
-                                                                                                { ctx = ctxC3
-                                                                                                , term = tmC3
-                                                                                                , ty = tyC3
-                                                                                                }
+                            bottom
+                                |> Result.andThen
+                                    (\( c1, tm1, ty1 ) ->
+                                        top1
+                                            |> Result.andThen
+                                                (\( ctxC1, tmC1, tyC1 ) ->
+                                                    top2
+                                                        |> Result.andThen
+                                                            (\( ctxC2, tmC2, tyC2 ) ->
+                                                                top3
+                                                                    |> Result.andThen
+                                                                        (\( ctxC3, tmC3, tyC3 ) ->
+                                                                            Result.Ok <|
+                                                                                checkRule
+                                                                                    (TIf
+                                                                                        { bottom =
+                                                                                            { ctx = c1
+                                                                                            , term = tm1
+                                                                                            , ty = ty1
                                                                                             }
-                                                                                        )
-                                                                            )
-                                                                )
-                                                    )
-                                        )
-                                    |> \r ->
+                                                                                        , top1 =
+                                                                                            { ctx = ctxC1
+                                                                                            , term = tmC1
+                                                                                            , ty = tyC1
+                                                                                            }
+                                                                                        , top2 =
+                                                                                            { ctx = ctxC2
+                                                                                            , term = tmC2
+                                                                                            , ty = tyC2
+                                                                                            }
+                                                                                        , top3 =
+                                                                                            { ctx = ctxC3
+                                                                                            , term = tmC3
+                                                                                            , ty = tyC3
+                                                                                            }
+                                                                                        }
+                                                                                    )
+                                                                        )
+                                                            )
+                                                )
+                                    )
+                                |> (\r ->
                                         case r of
                                             Err text ->
                                                 text
@@ -212,8 +213,10 @@ tryRule t =
                                             Ok checks ->
                                                 if checks then
                                                     "OK"
+
                                                 else
                                                     "NOK"
+                                   )
 
                 _ ->
                     ""

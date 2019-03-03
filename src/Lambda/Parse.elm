@@ -1,9 +1,9 @@
 module Lambda.Parse exposing (..)
 
-import Parser exposing (..)
-import Set
 import Char
 import List.Extra
+import Parser exposing (..)
+import Set
 
 
 type Term
@@ -29,6 +29,10 @@ type Binding
 
 type TyContext
     = TyContext (List Binding)
+
+
+type alias Error =
+    { row : Int, col : Int }
 
 
 {-| Reserved keywords
@@ -275,7 +279,7 @@ checkIfNoOperands maybeResult =
             succeed result
 
         Nothing ->
-            problem ("operator has no operands")
+            problem "operator has no operands"
 
 
 {-| Term expression
@@ -396,16 +400,43 @@ typeContext =
         |. spaces
 
 
-parseTerm : String -> Result (List Parser.DeadEnd) Term
-parseTerm text =
-    run termExpr text
+transformError : List Parser.DeadEnd -> Error
+transformError =
+    List.head
+        >> Maybe.map (\deadEnd -> { row = deadEnd.row, col = deadEnd.col })
+        >> Maybe.withDefault { row = 0, col = 0 }
 
 
-parseType : String -> Result (List Parser.DeadEnd) Ty
-parseType text =
-    run typeExpr text
+runParser parser text =
+    Parser.run parser text
+        |> Result.mapError transformError
 
 
-parseCtx : String -> Result (List Parser.DeadEnd) TyContext
-parseCtx text =
-    run typeContext text
+parseTerm : String -> Result Error Term
+parseTerm =
+    succeed identity
+        |. spaces
+        |= termExpr
+        |. spaces
+        |. end
+        |> runParser
+
+
+parseType : String -> Result Error Ty
+parseType =
+    succeed identity
+        |. spaces
+        |= typeExpr
+        |. spaces
+        |. end
+        |> runParser
+
+
+parseCtx : String -> Result Error TyContext
+parseCtx =
+    succeed identity
+        |. spaces
+        |= typeContext
+        |. spaces
+        |. end
+        |> runParser

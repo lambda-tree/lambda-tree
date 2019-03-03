@@ -2,8 +2,8 @@ module Lambda.RuleTests exposing (..)
 
 import Expect exposing (Expectation)
 import Lambda.Expression exposing (..)
-import Test exposing (..)
 import Lambda.Rule exposing (TyRule(..), checkRule)
+import Test exposing (..)
 
 
 dummyTest : Test
@@ -22,7 +22,7 @@ compilationTest =
         [ test "test if it compiles" <|
             \_ ->
                 checkRule
-                    |> \_ -> Expect.pass
+                    |> (\_ -> Expect.pass)
         ]
 
 
@@ -40,8 +40,8 @@ checkRuleTest =
                                         (TyName "Bool")
                                   )
                                 ]
-                            , term = (TmVar I 0 1)
-                            , ty = (TyName "Bool")
+                            , term = TmVar I 0 1
+                            , ty = TyName "Bool"
                             }
                         , top =
                             { ctx =
@@ -50,8 +50,8 @@ checkRuleTest =
                                         (TyName "Bool")
                                   )
                                 ]
-                            , term = (TmVar I 0 1)
-                            , ty = (TyName "Bool")
+                            , term = TmVar I 0 1
+                            , ty = TyName "Bool"
                             }
                         }
                     )

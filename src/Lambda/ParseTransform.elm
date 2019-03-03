@@ -1,10 +1,10 @@
 module Lambda.ParseTransform exposing (..)
 
-import Lambda.Parse as P
-import Lambda.Expression exposing (..)
+import Either exposing (Either(..))
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
-import Either exposing (Either(..))
+import Lambda.Expression exposing (..)
+import Lambda.Parse as P
 
 
 type ParseError
@@ -47,8 +47,8 @@ fromParseContext ctx =
                                             ( name, Left err ) ->
                                                 Left err
                                 in
-                                    eitherTransformed
-                                        |> Either.mapRight (addbindingTup someCtx)
+                                eitherTransformed
+                                    |> Either.mapRight (addbindingTup someCtx)
                             )
                     )
                     (Right emptycontext)

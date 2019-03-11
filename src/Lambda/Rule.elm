@@ -1,6 +1,5 @@
 module Lambda.Rule exposing (..)
 
-import Either
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
@@ -77,19 +76,19 @@ getCtxTermTy ctx term ty =
                                     (\ty1 ->
                                         Result.Ok
                                             ( fromParseContext ctx1
-                                            , fromParseContext ctx1 |> Either.andThen (\parsedCtx -> fromParseTerm parsedCtx term1)
-                                            , fromParseContext ctx1 |> Either.andThen (\parsedCtx -> fromParseType parsedCtx ty1)
+                                            , fromParseContext ctx1 |> Result.andThen (\parsedCtx -> fromParseTerm parsedCtx term1)
+                                            , fromParseContext ctx1 |> Result.andThen (\parsedCtx -> fromParseType parsedCtx ty1)
                                             )
                                     )
                         )
             )
-        |> Result.map (\( x, y, z ) -> Either.map3 (\a b c -> ( a, b, c )) x y z)
+        |> Result.map (\( x, y, z ) -> Result.map3 (\a b c -> ( a, b, c )) x y z)
         |> (\r ->
                 case r of
-                    Result.Ok (Either.Left smt) ->
+                    Result.Ok (Result.Err smt) ->
                         Result.Err "Parse Error"
 
-                    Result.Ok (Either.Right smt) ->
+                    Result.Ok (Result.Ok smt) ->
                         Result.Ok smt
 
                     Result.Err smt ->

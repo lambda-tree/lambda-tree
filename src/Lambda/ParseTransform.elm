@@ -1,6 +1,5 @@
 module Lambda.ParseTransform exposing (..)
 
-import Either exposing (Either(..))
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
@@ -16,14 +15,14 @@ type ParseError
 {-| Transforms Parsed context to lambda expression context
 Note that Parse type context is ordered "left to right" but lambda Context is ordered "right to left"
 -}
-fromParseContext : P.TyContext -> Either ParseError Context
+fromParseContext : P.TyContext -> Result ParseError Context
 fromParseContext ctx =
     case ctx of
         P.TyContext bindings ->
             bindings
                 |> List.foldl
                     (\binding ->
-                        Either.andThen
+                        Result.andThen
                             (\someCtx ->
                                 let
                                     transformed =
@@ -32,116 +31,116 @@ fromParseContext ctx =
                                                 ( name
                                                 , maybeType
                                                     |> Maybe.map (fromParseType someCtx)
-                                                    |> Maybe.map (Either.mapRight VarBind)
-                                                    |> Maybe.withDefault (Right NameBind)
+                                                    |> Maybe.map (Result.map VarBind)
+                                                    |> Maybe.withDefault (Ok NameBind)
                                                 )
 
                                             P.TyVarBind name ->
-                                                ( name, Right TyVarBind )
+                                                ( name, Ok TyVarBind )
 
-                                    eitherTransformed =
+                                    resultTransformed =
                                         case transformed of
-                                            ( name, Right smt ) ->
-                                                Right ( name, smt )
+                                            ( name, Ok smt ) ->
+                                                Ok ( name, smt )
 
-                                            ( name, Left err ) ->
-                                                Left err
+                                            ( name, Err err ) ->
+                                                Err err
                                 in
-                                eitherTransformed
-                                    |> Either.mapRight (addbindingTup someCtx)
+                                resultTransformed
+                                    |> Result.map (addbindingTup someCtx)
                             )
                     )
-                    (Right emptycontext)
+                    (Ok emptycontext)
 
 
-fromParseType : Context -> P.Ty -> Either ParseError Ty
+fromParseType : Context -> P.Ty -> Result ParseError Ty
 fromParseType ctx ty =
     case ty of
         P.TyVar name ->
             case name2index I ctx name of
                 Just index ->
-                    Right <| TyVar index (ctxlength ctx)
+                    Ok <| TyVar index (ctxlength ctx)
 
                 Nothing ->
                     case name of
                         "Bool" ->
-                            Right <| TyName "Bool"
+                            Ok <| TyName "Bool"
 
                         "Int" ->
-                            Right <| TyName "Int"
+                            Ok <| TyName "Int"
 
                         _ ->
-                            Left <| IndexNotFound name
+                            Err <| IndexNotFound name
 
         P.TyArr ty1 ty2 ->
             fromParseType ctx ty1
-                |> Either.andThenRight
+                |> Result.andThen
                     (\t1 ->
                         fromParseType ctx ty2
-                            |> Either.andThenRight
-                                (\t2 -> Right <| TyArr t1 t2)
+                            |> Result.andThen
+                                (\t2 -> Ok <| TyArr t1 t2)
                     )
 
         P.TyAll name ty1 ->
             fromParseType (addbinding ctx name TyVarBind) ty1
-                |> Either.mapRight (TyAll name)
+                |> Result.map (TyAll name)
 
 
-fromParseTerm : Context -> P.Term -> Either ParseError Term
+fromParseTerm : Context -> P.Term -> Result ParseError Term
 fromParseTerm ctx t =
     case t of
         P.TmVar name ->
             case name2index I ctx name of
                 Just index ->
-                    Right <| TmVar I index (ctxlength ctx)
+                    Ok <| TmVar I index (ctxlength ctx)
 
                 Nothing ->
-                    Left (IndexNotFound name)
+                    Err (IndexNotFound name)
 
         P.TmAbs name maybeTy t1 ->
             maybeTy
                 |> Maybe.map (fromParseType ctx)
-                |> Maybe.withDefault (Left <| TypeMissing name)
-                |> Either.andThenRight
+                |> Maybe.withDefault (Err <| TypeMissing name)
+                |> Result.andThen
                     (\ty ->
                         fromParseTerm (addbinding ctx name (VarBind ty)) t1
-                            |> Either.andThenRight (\t1t -> Right <| TmAbs I name ty t1t)
+                            |> Result.andThen (\t1t -> Ok <| TmAbs I name ty t1t)
                     )
 
         P.TmApp t1 t2 ->
             fromParseTerm ctx t1
-                |> Either.andThenRight
+                |> Result.andThen
                     (\t1t ->
                         fromParseTerm ctx t2
-                            |> Either.andThenRight
-                                (\t2t -> Right <| TmApp I t1t t2t)
+                            |> Result.andThen
+                                (\t2t -> Ok <| TmApp I t1t t2t)
                     )
 
         P.TmTAbs name t1 ->
             fromParseTerm (addbinding ctx name TyVarBind) t1
-                |> Either.mapRight (TmTAbs I name)
+                |> Result.map (TmTAbs I name)
 
         P.TmTApp t1 ty1 ->
             fromParseTerm ctx t1
-                |> Either.andThenRight
+                |> Result.andThen
                     (\t1t ->
                         fromParseType ctx ty1
-                            |> Either.andThenRight
-                                (\ty1t -> Right <| TmTApp I t1t ty1t)
+                            |> Result.andThen
+                                (\ty1t -> Ok <| TmTApp I t1t ty1t)
                     )
 
         P.TmIf t1 t2 t3 ->
             fromParseTerm ctx t1
-                |> Either.andThenRight
+                |> Result.andThen
                     (\t1t ->
                         fromParseTerm ctx t2
-                            |> Either.andThenRight
+                            |> Result.andThen
                                 (\t2t ->
                                     fromParseTerm ctx t3
-                                        |> Either.andThenRight
-                                            (\t3t -> Right <| TmIf I t1t t2t t3t)
+                                        |> Result.andThen
+                                            (\t3t -> Ok <| TmIf I t1t t2t t3t)
                                 )
                     )
 
         P.TmLet name t1 t2 ->
-            Left <| NotImplemented "Let"
+            Err <| NotImplemented "Let"

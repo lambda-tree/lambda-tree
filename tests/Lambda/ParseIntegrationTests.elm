@@ -1,11 +1,11 @@
 module Lambda.ParseIntegrationTests exposing (..)
 
-import Either exposing (Either(..))
 import Expect exposing (Expectation)
-import Test exposing (..)
-import Lambda.ParseTransform exposing (..)
-import Lambda.Parse as P
 import Lambda.Expression as L
+import Lambda.Parse as P
+import Lambda.ParseTransform exposing (..)
+import Result exposing (Result(..))
+import Test exposing (..)
 
 
 transformTextExprTest : Test
@@ -51,20 +51,20 @@ transformTextExprTest =
                                                 (\ty ->
                                                     Result.Ok
                                                         ( fromParseContext ctx
-                                                        , fromParseContext ctx |> Either.andThen (\parsedCtx -> fromParseTerm parsedCtx term)
-                                                        , fromParseContext ctx |> Either.andThen (\parsedCtx -> fromParseType parsedCtx ty)
+                                                        , fromParseContext ctx |> Result.andThen (\parsedCtx -> fromParseTerm parsedCtx term)
+                                                        , fromParseContext ctx |> Result.andThen (\parsedCtx -> fromParseType parsedCtx ty)
                                                         )
                                                 )
                                     )
                         )
                     |> Expect.equal
                         (Result.Ok <|
-                            ( Right [ ( "termVar2", L.VarBind (L.TyVar 2 3) ), ( "TypeVar2", L.TyVarBind ), ( "termVar1", L.VarBind (L.TyVar 0 1) ), ( "TypeVar1", L.TyVarBind ) ]
-                            , Right <|
+                            ( Ok [ ( "termVar2", L.VarBind (L.TyVar 2 3) ), ( "TypeVar2", L.TyVarBind ), ( "termVar1", L.VarBind (L.TyVar 0 1) ), ( "TypeVar1", L.TyVarBind ) ]
+                            , Ok <|
                                 L.TmApp L.I
                                     (L.TmAbs L.I "x" (L.TyVar 3 4) (L.TmVar L.I 0 5))
                                     (L.TmVar L.I 0 4)
-                            , Right <| L.TyVar 3 4
+                            , Ok <| L.TyVar 3 4
                             )
                         )
         ]

@@ -1,11 +1,11 @@
 module Lambda.ParseTransformTests exposing (..)
 
-import Either exposing (Either(..))
 import Expect exposing (Expectation)
-import Test exposing (..)
-import Lambda.ParseTransform exposing (..)
-import Lambda.Parse as P
 import Lambda.Expression as L
+import Lambda.Parse as P
+import Lambda.ParseTransform exposing (..)
+import Result exposing (Result(..))
+import Test exposing (..)
 
 
 fromParseContextTest : Test
@@ -14,7 +14,7 @@ fromParseContextTest =
         [ test "test empty context" <|
             \_ ->
                 fromParseContext (P.TyContext [])
-                    |> Expect.equal (Right [])
+                    |> Expect.equal (Ok [])
         , test "test non empty context" <|
             \_ ->
                 fromParseContext
@@ -24,7 +24,7 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        (Right
+                        (Ok
                             [ ( "x", L.NameBind )
                             , ( "X", L.TyVarBind )
                             ]
@@ -38,7 +38,7 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        (Right
+                        (Ok
                             [ ( "x", L.VarBind (L.TyVar 0 1) )
                             , ( "X", L.TyVarBind )
                             ]
@@ -52,7 +52,7 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        (Right
+                        (Ok
                             [ ( "x", L.VarBind (L.TyAll "Z" (L.TyVar 0 2)) )
                             , ( "X", L.TyVarBind )
                             ]
@@ -66,7 +66,7 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        (Right
+                        (Ok
                             [ ( "x", L.VarBind (L.TyAll "Z" (L.TyVar 1 2)) )
                             , ( "X", L.TyVarBind )
                             ]
@@ -80,7 +80,7 @@ fromParseContextTest =
                         ]
                     )
                     |> Expect.equal
-                        (Right
+                        (Ok
                             [ ( "x", L.VarBind (L.TyAll "Z" <| L.TyAll "A" <| L.TyAll "B" <| L.TyVar 2 4) )
                             , ( "X", L.TyVarBind )
                             ]
@@ -95,7 +95,7 @@ fromParseContextTest =
                     )
                     |> Expect.equal
                         -- TODO: Should fail with error!
-                        (Left <| IndexNotFound "Nonexistent")
+                        (Err <| IndexNotFound "Nonexistent")
         ]
 
 
@@ -113,13 +113,13 @@ fromParseTypeTest =
                     , ( "termVar5", L.NameBind )
                     ]
                     (P.TyVar "TypeVar1")
-                    |> Expect.equal (Right <| L.TyVar 1 6)
+                    |> Expect.equal (Ok <| L.TyVar 1 6)
         , test "should return error if variable not found in empty context" <|
             \_ ->
                 fromParseType
                     []
                     (P.TyVar "TypeVar1")
-                    |> Expect.equal (Left <| IndexNotFound "TypeVar1")
+                    |> Expect.equal (Err <| IndexNotFound "TypeVar1")
         , test "should return arrow type if variables are found in context " <|
             \_ ->
                 fromParseType
@@ -131,7 +131,7 @@ fromParseTypeTest =
                     , ( "TypeVar2", L.TyVarBind )
                     ]
                     (P.TyArr (P.TyVar "TypeVar1") (P.TyVar "TypeVar2"))
-                    |> Expect.equal (Right <| L.TyArr (L.TyVar 1 6) (L.TyVar 5 6))
+                    |> Expect.equal (Ok <| L.TyArr (L.TyVar 1 6) (L.TyVar 5 6))
         , test "should return error for arrow type if variables are not found in context " <|
             \_ ->
                 fromParseType
@@ -143,7 +143,7 @@ fromParseTypeTest =
                     , ( "TypeVar2", L.TyVarBind )
                     ]
                     (P.TyArr (P.TyVar "TypeVar888") (P.TyVar "TypeVar999"))
-                    |> Expect.equal (Left <| IndexNotFound "TypeVar888")
+                    |> Expect.equal (Err <| IndexNotFound "TypeVar888")
         , test "should return error for arrow type if second variable is not found in context " <|
             \_ ->
                 fromParseType
@@ -155,7 +155,7 @@ fromParseTypeTest =
                     , ( "TypeVar2", L.TyVarBind )
                     ]
                     (P.TyArr (P.TyVar "TypeVar1") (P.TyVar "TypeVar999"))
-                    |> Expect.equal (Left <| IndexNotFound "TypeVar999")
+                    |> Expect.equal (Err <| IndexNotFound "TypeVar999")
         , test "should consider the expression's 'added' variable to the context in context length and deBruijn index" <|
             \_ ->
                 fromParseType
@@ -167,7 +167,7 @@ fromParseTypeTest =
                     , ( "TypeVar2", L.TyVarBind )
                     ]
                     (P.TyAll "TypeVar3" (P.TyVar "TypeVar2"))
-                    |> Expect.equal (Right <| L.TyAll "TypeVar3" (L.TyVar 6 7))
+                    |> Expect.equal (Ok <| L.TyAll "TypeVar3" (L.TyVar 6 7))
         , test "should return forall type correctly if the type's variable is referenced" <|
             \_ ->
                 fromParseType
@@ -179,7 +179,7 @@ fromParseTypeTest =
                     , ( "TypeVar2", L.TyVarBind )
                     ]
                     (P.TyAll "TypeVar3" (P.TyVar "TypeVar3"))
-                    |> Expect.equal (Right <| L.TyAll "TypeVar3" (L.TyVar 0 7))
+                    |> Expect.equal (Ok <| L.TyAll "TypeVar3" (L.TyVar 0 7))
         , test "should return error if variable is not found in context" <|
             \_ ->
                 fromParseType
@@ -191,7 +191,7 @@ fromParseTypeTest =
                     , ( "TypeVar2", L.TyVarBind )
                     ]
                     (P.TyAll "TypeVar3" (P.TyVar "TypeVar999"))
-                    |> Expect.equal (Left <| IndexNotFound "TypeVar999")
+                    |> Expect.equal (Err <| IndexNotFound "TypeVar999")
         ]
 
 
@@ -209,13 +209,13 @@ fromParseTermTest =
                     , ( "termVar5", L.NameBind )
                     ]
                     (P.TmVar "termVar2")
-                    |> Expect.equal (Right <| L.TmVar L.I 2 6)
+                    |> Expect.equal (Ok <| L.TmVar L.I 2 6)
         , test "TmVar should return error if variable not found in empty context" <|
             \_ ->
                 fromParseTerm
                     []
                     (P.TmVar "termVar2")
-                    |> Expect.equal (Left <| IndexNotFound "termVar2")
+                    |> Expect.equal (Err <| IndexNotFound "termVar2")
         , test "TmAbs should consider the expression's 'added' variable to the context in context length and deBruijn index" <|
             \_ ->
                 fromParseTerm
@@ -227,7 +227,7 @@ fromParseTermTest =
                     , ( "TypeVar2", L.TyVarBind )
                     ]
                     (P.TmAbs "termVar5" (Just <| P.TyVar "TypeVar2") (P.TmVar "termVar5"))
-                    |> Expect.equal (Right <| L.TmAbs L.I "termVar5" (L.TyVar 5 6) (L.TmVar L.I 0 7))
+                    |> Expect.equal (Ok <| L.TmAbs L.I "termVar5" (L.TyVar 5 6) (L.TmVar L.I 0 7))
         , test "TmApp should transform term application" <|
             \_ ->
                 fromParseTerm
@@ -243,7 +243,7 @@ fromParseTermTest =
                         (P.TmVar "termVar2")
                     )
                     |> Expect.equal
-                        (Right <|
+                        (Ok <|
                             L.TmApp L.I
                                 (L.TmAbs L.I "termVar5" (L.TyVar 5 6) (L.TmVar L.I 0 7))
                                 (L.TmVar L.I 2 6)
@@ -260,7 +260,7 @@ fromParseTermTest =
                     ]
                     (P.TmTAbs "TypeVar5" <| P.TmAbs "termVar5" (Just <| P.TyVar "TypeVar5") (P.TmVar "termVar5"))
                     |> Expect.equal
-                        (Right <|
+                        (Ok <|
                             L.TmTAbs L.I "TypeVar5" <|
                                 L.TmAbs L.I "termVar5" (L.TyVar 0 7) (L.TmVar L.I 0 8)
                         )
@@ -279,7 +279,7 @@ fromParseTermTest =
                         (P.TyArr (P.TyVar "TypeVar1") (P.TyVar "TypeVar2"))
                     )
                     |> Expect.equal
-                        (Right <|
+                        (Ok <|
                             L.TmTApp L.I
                                 (L.TmTAbs L.I
                                     "TypeVar5"

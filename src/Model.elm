@@ -1,9 +1,11 @@
 module Model exposing (..)
 
+import Utils.Tree exposing (Tree(..))
+
+
 {-| The data representation for the single source of truth in the App.
 The view would ideally transform it to some "view model" on every render. That would be inefficient though, so the model is fragmented and there is a view model for every fragment.
 -}
-
 type Rule
     = TTrue
     | TFalse
@@ -16,10 +18,6 @@ type Rule
 
 type alias ModelContent =
     { ctx : String, term : String, ty : String, rule : Rule }
-
-
-type Tree a
-    = Node a (List (Tree a))
 
 
 type alias TreeModel =

@@ -1,9 +1,10 @@
 module Update exposing (..)
 
-import List.Extra
-import Model exposing (..)
-import Message exposing (..)
 import Lambda.Parse
+import List.Extra
+import Message exposing (..)
+import Model exposing (..)
+import Utils.Tree exposing (Tree(..))
 
 
 update : Msg -> Model -> Model
@@ -66,12 +67,13 @@ addNode path tree rule =
                                 (\i t ->
                                     if i == idx then
                                         addNode subPath t rule
+
                                     else
                                         t
                                 )
                                 children
                     in
-                        Node content updatedChildren
+                    Node content updatedChildren
 
 
 removeNode : List Int -> TreeModel -> TreeModel
@@ -92,12 +94,13 @@ removeNode path tree =
                                 (\i t ->
                                     if i == idx then
                                         removeNode subPath t
+
                                     else
                                         t
                                 )
                                 children
                     in
-                        Node content updatedChildren
+                    Node content updatedChildren
 
 
 updateTextInPath kind tree text path =
@@ -105,30 +108,31 @@ updateTextInPath kind tree text path =
         preprocessed =
             Lambda.Parse.preprocess text
     in
-        case tree of
-            Node content children ->
-                case path of
-                    [] ->
-                        case kind of
-                            CtxKind ->
-                                Node { content | ctx = preprocessed } children
+    case tree of
+        Node content children ->
+            case path of
+                [] ->
+                    case kind of
+                        CtxKind ->
+                            Node { content | ctx = preprocessed } children
 
-                            TermKind ->
-                                Node { content | term = preprocessed } children
+                        TermKind ->
+                            Node { content | term = preprocessed } children
 
-                            TyKind ->
-                                Node { content | ty = preprocessed } children
+                        TyKind ->
+                            Node { content | ty = preprocessed } children
 
-                    idx :: subPath ->
-                        let
-                            updatedChildren =
-                                List.indexedMap
-                                    (\i t ->
-                                        if i == idx then
-                                            updateTextInPath kind t text subPath
-                                        else
-                                            t
-                                    )
-                                    children
-                        in
-                            Node content updatedChildren
+                idx :: subPath ->
+                    let
+                        updatedChildren =
+                            List.indexedMap
+                                (\i t ->
+                                    if i == idx then
+                                        updateTextInPath kind t text subPath
+
+                                    else
+                                        t
+                                )
+                                children
+                    in
+                    Node content updatedChildren

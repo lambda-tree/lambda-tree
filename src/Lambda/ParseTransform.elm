@@ -6,7 +6,7 @@ import Lambda.Expression exposing (..)
 import Lambda.Parse as P
 
 
-type ParseError
+type ParseTransformError
     = IndexNotFound String
     | TypeMissing String
     | NotImplemented String
@@ -15,7 +15,7 @@ type ParseError
 {-| Transforms Parsed context to lambda expression context
 Note that Parse type context is ordered "left to right" but lambda Context is ordered "right to left"
 -}
-fromParseContext : P.TyContext -> Result ParseError Context
+fromParseContext : P.TyContext -> Result ParseTransformError Context
 fromParseContext ctx =
     case ctx of
         P.TyContext bindings ->
@@ -53,7 +53,7 @@ fromParseContext ctx =
                     (Ok emptycontext)
 
 
-fromParseType : Context -> P.Ty -> Result ParseError Ty
+fromParseType : Context -> P.Ty -> Result ParseTransformError Ty
 fromParseType ctx ty =
     case ty of
         P.TyVar name ->
@@ -86,7 +86,7 @@ fromParseType ctx ty =
                 |> Result.map (TyAll name)
 
 
-fromParseTerm : Context -> P.Term -> Result ParseError Term
+fromParseTerm : Context -> P.Term -> Result ParseTransformError Term
 fromParseTerm ctx t =
     case t of
         P.TmVar name ->

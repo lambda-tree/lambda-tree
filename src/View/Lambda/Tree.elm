@@ -1,14 +1,15 @@
 module View.Lambda.Tree exposing (..)
 
-import Html.Styled.Events as E
-import Html.Styled as S exposing (Html, styled)
 import Css exposing (..)
+import Html.Styled as S exposing (Html, styled)
+import Html.Styled.Events as E
 import Message exposing (Msg(..))
-import Model exposing (ModelContent, TextKind(..), Tree(..))
+import Model exposing (ModelContent, TextKind(..))
+import Utils.Tree exposing (Tree(..))
 import View.Lambda.ProofCell exposing (proofCell)
 import View.Lambda.RuleSelector exposing (ruleSelector)
 import View.Theme exposing (theme)
-import ViewModel exposing (getTreeViewData, TreeViewData)
+import ViewModel exposing (TreeViewData, getTreeViewData)
 
 
 drawTree tree =
@@ -25,6 +26,7 @@ drawTree tree =
                                 [ ruleSelector <| RuleSelectedMsg path
                                 , S.button [ E.onClick <| RemoveMsg path ] [ S.text "Remove" ]
                                 ]
+
                           else
                             S.div [] []
                         , styled S.div
@@ -35,6 +37,7 @@ drawTree tree =
                             )
                         , if List.length children <= 1 then
                             S.div [] []
+
                           else
                             hairline content.rule content.result
                         , styled S.div
@@ -42,13 +45,14 @@ drawTree tree =
                             []
                             [ if List.isEmpty children then
                                 S.div [] []
+
                               else
                                 hairline content.rule content.result
                             , proofCell content (TextChangedMsg path)
                             ]
                         ]
     in
-        drawTreeP (getTreeViewData tree) []
+    drawTreeP (getTreeViewData tree) []
 
 
 hairline rule text =

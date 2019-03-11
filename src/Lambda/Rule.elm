@@ -5,10 +5,11 @@ import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (equalTypes)
 import Lambda.Parse as P
-import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
+import Lambda.ParseTransform exposing (ParseTransformError, fromParseContext, fromParseTerm, fromParseType)
 import Maybe exposing (..)
-import Model exposing (Tree(..), TreeModel)
+import Model exposing (Rule, TreeModel)
 import Result
+import Utils.Tree exposing (Tree(..))
 
 
 type TyRule
@@ -22,6 +23,21 @@ type alias TypeStatement =
 
 type alias ContainmentStatement =
     { ctx : Context, variable : Term }
+
+
+type RuleError
+    = ParseError { row : Int, col : Int }
+    | ParseTransformError ParseTransformError
+    | PrerequisiteDataError
+
+
+type alias ExprTree =
+    Tree
+        { ctx : Result RuleError Lambda.Context.Context
+        , term : Result RuleError Lambda.Expression.Term
+        , ty : Result RuleError Lambda.Expression.Ty
+        , rule : Rule
+        }
 
 
 checkRule : TyRule -> Bool
@@ -63,40 +79,28 @@ checkRule rule =
                     False
 
 
-getCtxTermTy : String -> String -> String -> Result String ( Context, Term, Ty )
+getCtxTermTy : Maybe Context -> Maybe Term -> Maybe Ty -> Maybe ( Context, Term, Ty )
 getCtxTermTy ctx term ty =
-    P.parseCtx ctx
-        |> Result.andThen
+    ctx
+        |> Maybe.andThen
             (\ctx1 ->
-                P.parseTerm term
-                    |> Result.andThen
+                term
+                    |> Maybe.andThen
                         (\term1 ->
-                            P.parseType ty
-                                |> Result.andThen
+                            ty
+                                |> Maybe.andThen
                                     (\ty1 ->
-                                        Result.Ok
-                                            ( fromParseContext ctx1
-                                            , fromParseContext ctx1 |> Result.andThen (\parsedCtx -> fromParseTerm parsedCtx term1)
-                                            , fromParseContext ctx1 |> Result.andThen (\parsedCtx -> fromParseType parsedCtx ty1)
+                                        Maybe.Just
+                                            ( ctx1
+                                            , term1
+                                            , ty1
                                             )
                                     )
                         )
             )
-        |> Result.map (\( x, y, z ) -> Result.map3 (\a b c -> ( a, b, c )) x y z)
-        |> (\r ->
-                case r of
-                    Result.Ok (Result.Err smt) ->
-                        Result.Err "Parse Error"
-
-                    Result.Ok (Result.Ok smt) ->
-                        Result.Ok smt
-
-                    Result.Err smt ->
-                        Result.Err "Parse Result Error"
-           )
 
 
-tryRule : TreeModel -> String
+tryRule : ExprTree -> String
 tryRule t =
     case t of
         Node { ctx, term, ty, rule } children ->
@@ -106,18 +110,18 @@ tryRule t =
                         Node childC _ ->
                             let
                                 bottom =
-                                    getCtxTermTy ctx term ty
+                                    getCtxTermTy (Result.toMaybe ctx) (Result.toMaybe term) (Result.toMaybe ty)
 
                                 top =
-                                    getCtxTermTy childC.ctx childC.term childC.ty
+                                    getCtxTermTy (Result.toMaybe childC.ctx) (Result.toMaybe childC.term) (Result.toMaybe childC.ty)
                             in
                             bottom
-                                |> Result.andThen
+                                |> Maybe.andThen
                                     (\( c1, tm1, ty1 ) ->
                                         top
-                                            |> Result.andThen
+                                            |> Maybe.andThen
                                                 (\( c2, tm2, ty2 ) ->
-                                                    Result.Ok <|
+                                                    Maybe.Just <|
                                                         checkRule
                                                             (TVar
                                                                 { bottom =
@@ -136,10 +140,10 @@ tryRule t =
                                     )
                                 |> (\r ->
                                         case r of
-                                            Err text ->
-                                                text
+                                            Nothing ->
+                                                "NOTHING"
 
-                                            Ok checks ->
+                                            Just checks ->
                                                 if checks then
                                                     "OK"
 
@@ -152,30 +156,30 @@ tryRule t =
                         ( Node childC1 _, Node childC2 _, Node childC3 _ ) ->
                             let
                                 bottom =
-                                    getCtxTermTy ctx term ty
+                                    getCtxTermTy (Result.toMaybe ctx) (Result.toMaybe term) (Result.toMaybe ty)
 
                                 top1 =
-                                    getCtxTermTy childC1.ctx childC1.term childC1.ty
+                                    getCtxTermTy (Result.toMaybe childC1.ctx) (Result.toMaybe childC1.term) (Result.toMaybe childC1.ty)
 
                                 top2 =
-                                    getCtxTermTy childC2.ctx childC2.term childC2.ty
+                                    getCtxTermTy (Result.toMaybe childC2.ctx) (Result.toMaybe childC2.term) (Result.toMaybe childC2.ty)
 
                                 top3 =
-                                    getCtxTermTy childC3.ctx childC3.term childC3.ty
+                                    getCtxTermTy (Result.toMaybe childC3.ctx) (Result.toMaybe childC3.term) (Result.toMaybe childC3.ty)
                             in
                             bottom
-                                |> Result.andThen
+                                |> Maybe.andThen
                                     (\( c1, tm1, ty1 ) ->
                                         top1
-                                            |> Result.andThen
+                                            |> Maybe.andThen
                                                 (\( ctxC1, tmC1, tyC1 ) ->
                                                     top2
-                                                        |> Result.andThen
+                                                        |> Maybe.andThen
                                                             (\( ctxC2, tmC2, tyC2 ) ->
                                                                 top3
-                                                                    |> Result.andThen
+                                                                    |> Maybe.andThen
                                                                         (\( ctxC3, tmC3, tyC3 ) ->
-                                                                            Result.Ok <|
+                                                                            Maybe.Just <|
                                                                                 checkRule
                                                                                     (TIf
                                                                                         { bottom =
@@ -206,10 +210,10 @@ tryRule t =
                                     )
                                 |> (\r ->
                                         case r of
-                                            Err text ->
-                                                text
+                                            Nothing ->
+                                                "NOTHING"
 
-                                            Ok checks ->
+                                            Just checks ->
                                                 if checks then
                                                     "OK"
 

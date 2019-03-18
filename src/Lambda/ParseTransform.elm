@@ -95,7 +95,15 @@ fromParseTerm ctx t =
                     Ok <| TmVar I index (ctxlength ctx)
 
                 Nothing ->
-                    Err (IndexNotFound name)
+                    case name of
+                        "true" ->
+                            Ok <| TmConst I TmTrue
+
+                        "false" ->
+                            Ok <| TmConst I TmFalse
+
+                        _ ->
+                            Err (IndexNotFound name)
 
         P.TmAbs name maybeTy t1 ->
             maybeTy

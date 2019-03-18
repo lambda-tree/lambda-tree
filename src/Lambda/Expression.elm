@@ -21,6 +21,11 @@ type Info
     = I
 
 
+type TmConst
+    = TmTrue
+    | TmFalse
+
+
 {-| Term
 -}
 type Term
@@ -30,6 +35,7 @@ type Term
     | TmIf Info Term Term Term
     | TmTAbs Info String Term
     | TmTApp Info Term Ty
+    | TmConst Info TmConst
 
 
 {-| Binding.

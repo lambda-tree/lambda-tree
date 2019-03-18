@@ -4,8 +4,7 @@ import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (equalTypes)
-import Lambda.Parse as P
-import Lambda.ParseTransform exposing (ParseTransformError, fromParseContext, fromParseTerm, fromParseType)
+import Lambda.ParseTransform exposing (ParseTransformError)
 import Maybe exposing (..)
 import Model exposing (Rule, TreeModel)
 import Result
@@ -79,147 +78,97 @@ checkRule rule =
                     False
 
 
-getCtxTermTy : Maybe Context -> Maybe Term -> Maybe Ty -> Maybe ( Context, Term, Ty )
-getCtxTermTy ctx term ty =
-    ctx
-        |> Maybe.andThen
-            (\ctx1 ->
-                term
-                    |> Maybe.andThen
-                        (\term1 ->
-                            ty
-                                |> Maybe.andThen
-                                    (\ty1 ->
-                                        Maybe.Just
-                                            ( ctx1
-                                            , term1
-                                            , ty1
-                                            )
-                                    )
-                        )
-            )
-
-
 tryRule : ExprTree -> String
 tryRule t =
-    case t of
-        Node { ctx, term, ty, rule } children ->
-            case ( rule, children ) of
-                ( Model.TVar, [ child ] ) ->
-                    case child of
-                        Node childC _ ->
-                            let
-                                bottom =
-                                    getCtxTermTy (Result.toMaybe ctx) (Result.toMaybe term) (Result.toMaybe ty)
+    let
+        erasedErrorTree =
+            t
+                |> Utils.Tree.map
+                    (\{ ctx, term, ty, rule } ->
+                        case ( ctx, term, ty ) of
+                            ( Result.Ok ctx_, Result.Ok term_, Result.Ok ty_ ) ->
+                                Result.Ok
+                                    { ctx = ctx_
+                                    , term = term_
+                                    , ty = ty_
+                                    , rule = rule
+                                    }
 
-                                top =
-                                    getCtxTermTy (Result.toMaybe childC.ctx) (Result.toMaybe childC.term) (Result.toMaybe childC.ty)
-                            in
-                            bottom
-                                |> Maybe.andThen
-                                    (\( c1, tm1, ty1 ) ->
-                                        top
-                                            |> Maybe.andThen
-                                                (\( c2, tm2, ty2 ) ->
-                                                    Maybe.Just <|
-                                                        checkRule
-                                                            (TVar
-                                                                { bottom =
-                                                                    { ctx = c1
-                                                                    , term = tm1
-                                                                    , ty = ty1
-                                                                    }
-                                                                , top =
-                                                                    { ctx = c2
-                                                                    , term = tm2
-                                                                    , ty = ty2
-                                                                    }
-                                                                }
-                                                            )
-                                                )
-                                    )
-                                |> (\r ->
-                                        case r of
-                                            Nothing ->
-                                                "NOTHING"
+                            _ ->
+                                Result.Err "Field is missing"
+                    )
+    in
+    case erasedErrorTree of
+        Node (Result.Ok r) children ->
+            case r.rule of
+                Model.TVar ->
+                    case children of
+                        [ Node (Result.Ok c1) _ ] ->
+                            checkRule
+                                (TVar
+                                    { bottom =
+                                        { ctx = r.ctx
+                                        , term = r.term
+                                        , ty = r.ty
+                                        }
+                                    , top =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
 
-                                            Just checks ->
-                                                if checks then
-                                                    "OK"
-
-                                                else
-                                                    "NOK"
+                                        else
+                                            "NOK"
                                    )
 
-                ( Model.TIf, [ child1, child2, child3 ] ) ->
-                    case ( child1, child2, child3 ) of
-                        ( Node childC1 _, Node childC2 _, Node childC3 _ ) ->
-                            let
-                                bottom =
-                                    getCtxTermTy (Result.toMaybe ctx) (Result.toMaybe term) (Result.toMaybe ty)
+                        _ ->
+                            "Top rule Error"
 
-                                top1 =
-                                    getCtxTermTy (Result.toMaybe childC1.ctx) (Result.toMaybe childC1.term) (Result.toMaybe childC1.ty)
+                Model.TIf ->
+                    case children of
+                        [ Node (Result.Ok c1) _, Node (Result.Ok c2) _, Node (Result.Ok c3) _ ] ->
+                            checkRule
+                                (TIf
+                                    { bottom =
+                                        { ctx = r.ctx
+                                        , term = r.term
+                                        , ty = r.ty
+                                        }
+                                    , top1 =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
+                                        }
+                                    , top2 =
+                                        { ctx = c2.ctx
+                                        , term = c2.term
+                                        , ty = c2.ty
+                                        }
+                                    , top3 =
+                                        { ctx = c3.ctx
+                                        , term = c3.term
+                                        , ty = c3.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
 
-                                top2 =
-                                    getCtxTermTy (Result.toMaybe childC2.ctx) (Result.toMaybe childC2.term) (Result.toMaybe childC2.ty)
-
-                                top3 =
-                                    getCtxTermTy (Result.toMaybe childC3.ctx) (Result.toMaybe childC3.term) (Result.toMaybe childC3.ty)
-                            in
-                            bottom
-                                |> Maybe.andThen
-                                    (\( c1, tm1, ty1 ) ->
-                                        top1
-                                            |> Maybe.andThen
-                                                (\( ctxC1, tmC1, tyC1 ) ->
-                                                    top2
-                                                        |> Maybe.andThen
-                                                            (\( ctxC2, tmC2, tyC2 ) ->
-                                                                top3
-                                                                    |> Maybe.andThen
-                                                                        (\( ctxC3, tmC3, tyC3 ) ->
-                                                                            Maybe.Just <|
-                                                                                checkRule
-                                                                                    (TIf
-                                                                                        { bottom =
-                                                                                            { ctx = c1
-                                                                                            , term = tm1
-                                                                                            , ty = ty1
-                                                                                            }
-                                                                                        , top1 =
-                                                                                            { ctx = ctxC1
-                                                                                            , term = tmC1
-                                                                                            , ty = tyC1
-                                                                                            }
-                                                                                        , top2 =
-                                                                                            { ctx = ctxC2
-                                                                                            , term = tmC2
-                                                                                            , ty = tyC2
-                                                                                            }
-                                                                                        , top3 =
-                                                                                            { ctx = ctxC3
-                                                                                            , term = tmC3
-                                                                                            , ty = tyC3
-                                                                                            }
-                                                                                        }
-                                                                                    )
-                                                                        )
-                                                            )
-                                                )
-                                    )
-                                |> (\r ->
-                                        case r of
-                                            Nothing ->
-                                                "NOTHING"
-
-                                            Just checks ->
-                                                if checks then
-                                                    "OK"
-
-                                                else
-                                                    "NOK"
+                                        else
+                                            "NOK"
                                    )
+
+                        _ ->
+                            "Top rule Error"
 
                 _ ->
-                    ""
+                    "Unimplemented Rule"
+
+        _ ->
+            "Bottom rule error"

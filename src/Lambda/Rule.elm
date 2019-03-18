@@ -14,6 +14,8 @@ import Utils.Tree exposing (Tree(..))
 type TyRule
     = TVar { bottom : TypeStatement, top : TypeStatement }
     | TIf { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement, top3 : TypeStatement }
+    | TTrue { bottom : TypeStatement, top : TypeStatement }
+    | TFalse { bottom : TypeStatement, top : TypeStatement }
 
 
 type alias TypeStatement =
@@ -73,6 +75,26 @@ checkRule rule =
                         && equalTypes top2.ctx top2.ty bottom.ctx bottom.ty
                         && (top3.term == t3)
                         && equalTypes top3.ctx top3.ty bottom.ctx bottom.ty
+
+                _ ->
+                    False
+
+        TTrue { bottom, top } ->
+            case bottom.term of
+                TmConst _ TmTrue ->
+                    (bottom.ctx == top.ctx)
+                        && (top.term == bottom.term)
+                        && equalTypes top.ctx top.ty bottom.ctx (TyName "Bool")
+
+                _ ->
+                    False
+
+        TFalse { bottom, top } ->
+            case bottom.term of
+                TmConst _ TmFalse ->
+                    (bottom.ctx == top.ctx)
+                        && (top.term == bottom.term)
+                        && equalTypes top.ctx top.ty bottom.ctx (TyName "Bool")
 
                 _ ->
                     False
@@ -153,6 +175,62 @@ tryRule t =
                                         { ctx = c3.ctx
                                         , term = c3.term
                                         , ty = c3.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
+
+                                        else
+                                            "NOK"
+                                   )
+
+                        _ ->
+                            "Top rule Error"
+
+                Model.TTrue ->
+                    case children of
+                        [ Node (Result.Ok c1) _ ] ->
+                            checkRule
+                                (TTrue
+                                    { bottom =
+                                        { ctx = r.ctx
+                                        , term = r.term
+                                        , ty = r.ty
+                                        }
+                                    , top =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
+
+                                        else
+                                            "NOK"
+                                   )
+
+                        _ ->
+                            "Top rule Error"
+
+                Model.TFalse ->
+                    case children of
+                        [ Node (Result.Ok c1) _ ] ->
+                            checkRule
+                                (TTrue
+                                    { bottom =
+                                        { ctx = r.ctx
+                                        , term = r.term
+                                        , ty = r.ty
+                                        }
+                                    , top =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
                                         }
                                     }
                                 )

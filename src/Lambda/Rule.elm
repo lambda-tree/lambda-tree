@@ -16,6 +16,7 @@ type TyRule
     | TIf { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement, top3 : TypeStatement }
     | TTrue { bottom : TypeStatement, top : TypeStatement }
     | TFalse { bottom : TypeStatement, top : TypeStatement }
+    | TAbs { bottom : TypeStatement, top : TypeStatement }
 
 
 type alias TypeStatement =
@@ -45,12 +46,9 @@ checkRule : TyRule -> Bool
 checkRule rule =
     case rule of
         TVar { bottom, top } ->
-            bottom.ctx
-                == Debug.log "topCtx" top.ctx
-                && Debug.log "bottomTerm" bottom.term
-                == Debug.log "topTerm" top.term
-                && Debug.log "bottomTy" bottom.ty
-                == Debug.log "topTy" top.ty
+            (bottom.ctx == top.ctx)
+                && (bottom.term == top.term)
+                && (bottom.ty == top.ty)
                 && (case bottom.term of
                         TmVar _ x _ ->
                             case getbinding top.ctx x of
@@ -95,6 +93,18 @@ checkRule rule =
                     (bottom.ctx == top.ctx)
                         && (top.term == bottom.term)
                         && equalTypes top.ctx top.ty bottom.ctx (TyName "Bool")
+
+                _ ->
+                    False
+
+        TAbs { bottom, top } ->
+            case ( bottom.term, bottom.ty ) of
+                ( TmAbs _ varName ty t, TyArr ty1 ty2 ) ->
+                    (popbinding top.ctx == bottom.ctx)
+                        && (top.ctx == addbinding bottom.ctx varName (VarBind ty))
+                        && (top.term == t)
+                        && equalTypes top.ctx top.ty bottom.ctx ty2
+                        && equalTypes bottom.ctx ty bottom.ctx ty1
 
                 _ ->
                     False
@@ -227,6 +237,30 @@ tryRule t =
                                         , term = r.term
                                         , ty = r.ty
                                         }
+                                    , top =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
+
+                                        else
+                                            "NOK"
+                                   )
+
+                        _ ->
+                            "Top rule Error"
+
+                Model.TAbs ->
+                    case children of
+                        [ Node (Result.Ok c1) _ ] ->
+                            checkRule
+                                (TAbs
+                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top =
                                         { ctx = c1.ctx
                                         , term = c1.term

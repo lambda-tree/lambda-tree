@@ -21,6 +21,12 @@ addbinding ctx x bind =
     ( x, bind ) :: ctx
 
 
+popbinding : Context -> Context
+popbinding ctx =
+    List.tail ctx
+        |> Maybe.withDefault emptycontext
+
+
 addbindingTup : Context -> ( String, Binding ) -> Context
 addbindingTup ctx tup =
     case tup of
@@ -44,8 +50,9 @@ pickfreshname : Context -> String -> ( Context, String )
 pickfreshname ctx x =
     if isnamebound ctx x then
         pickfreshname ctx (x ++ "'")
+
     else
-        ( (( x, NameBind ) :: ctx), x )
+        ( ( x, NameBind ) :: ctx, x )
 
 
 index2name : Info -> Context -> Int -> Maybe String

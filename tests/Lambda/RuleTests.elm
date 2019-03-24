@@ -29,28 +29,35 @@ compilationTest =
 checkRuleTest : Test
 checkRuleTest =
     describe "checkRule"
-        [ test "test1" <|
+        [ test "TVar" <|
             \_ ->
                 checkRule
                     (TVar
                         { bottom =
-                            { ctx =
-                                [ ( "x"
-                                  , VarBind
-                                        (TyName "Bool")
-                                  )
-                                ]
+                            { ctx = [ ( "x", VarBind <| TyName "Bool" ) ]
                             , term = TmVar I 0 1
                             , ty = TyName "Bool"
                             }
                         , top =
-                            { ctx =
-                                [ ( "x"
-                                  , VarBind
-                                        (TyName "Bool")
-                                  )
-                                ]
+                            { ctx = [ ( "x", VarBind <| TyName "Bool" ) ]
                             , term = TmVar I 0 1
+                            , ty = TyName "Bool"
+                            }
+                        }
+                    )
+                    |> Expect.equal True
+        , test "TAbs" <|
+            \_ ->
+                checkRule
+                    (TAbs
+                        { bottom =
+                            { ctx = []
+                            , term = TmAbs I "x" (TyName "Bool") (TmVar I 0 0)
+                            , ty = TyArr (TyName "Bool") (TyName "Bool")
+                            }
+                        , top =
+                            { ctx = [ ( "x", VarBind <| TyName "Bool" ) ]
+                            , term = TmVar I 0 0
                             , ty = TyName "Bool"
                             }
                         }

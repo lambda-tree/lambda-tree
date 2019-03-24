@@ -46,6 +46,67 @@ checkRuleTest =
                         }
                     )
                     |> Expect.equal True
+        , test "TIf" <|
+            \_ ->
+                checkRule
+                    (TIf
+                        { bottom =
+                            { ctx = [ ( "X", TyVarBind ), ( "y", VarBind <| TyName "Bool" ), ( "x", VarBind <| TyVar 1 2 ) ]
+                            , term = TmIf I (TmVar I 1 3) (TmVar I 0 3) (TmApp I (TmAbs I "x" (TyName "Bool") (TmVar I 1 4)) (TmConst I TmTrue))
+                            , ty = TyVar 2 3
+                            }
+                        , top1 =
+                            { ctx = [ ( "X", TyVarBind ), ( "y", VarBind <| TyName "Bool" ), ( "x", VarBind <| TyVar 1 2 ) ]
+                            , term = TmVar I 1 3
+                            , ty = TyName "Bool"
+                            }
+                        , top2 =
+                            { ctx = [ ( "X", TyVarBind ), ( "y", VarBind <| TyName "Bool" ), ( "x", VarBind <| TyVar 1 2 ) ]
+                            , term = TmVar I 0 3
+                            , ty = TyVar 2 3
+                            }
+                        , top3 =
+                            { ctx = [ ( "X", TyVarBind ), ( "y", VarBind <| TyName "Bool" ), ( "x", VarBind <| TyVar 1 2 ) ]
+                            , term = TmApp I (TmAbs I "x" (TyName "Bool") (TmVar I 1 4)) (TmConst I TmTrue)
+                            , ty = TyVar 2 3
+                            }
+                        }
+                    )
+                    |> Expect.equal True
+        , test "TTrue" <|
+            \_ ->
+                checkRule
+                    (TTrue
+                        { bottom =
+                            { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
+                            , term = TmConst I TmTrue
+                            , ty = TyName "Bool"
+                            }
+                        , top =
+                            { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
+                            , term = TmConst I TmTrue
+                            , ty = TyName "Bool"
+                            }
+                        }
+                    )
+                    |> Expect.equal True
+        , test "TFalse" <|
+            \_ ->
+                checkRule
+                    (TFalse
+                        { bottom =
+                            { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
+                            , term = TmConst I TmFalse
+                            , ty = TyName "Bool"
+                            }
+                        , top =
+                            { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
+                            , term = TmConst I TmFalse
+                            , ty = TyName "Bool"
+                            }
+                        }
+                    )
+                    |> Expect.equal True
         , test "TAbs" <|
             \_ ->
                 checkRule
@@ -58,6 +119,28 @@ checkRuleTest =
                         , top =
                             { ctx = [ ( "x", VarBind <| TyName "Bool" ) ]
                             , term = TmVar I 0 0
+                            , ty = TyName "Bool"
+                            }
+                        }
+                    )
+                    |> Expect.equal True
+        , test "TApp" <|
+            \_ ->
+                checkRule
+                    (TApp
+                        { bottom =
+                            { ctx = []
+                            , term = TmApp I (TmAbs I "x" (TyName "Bool") (TmVar I 0 0)) (TmConst I TmTrue)
+                            , ty = TyName "Bool"
+                            }
+                        , top1 =
+                            { ctx = []
+                            , term = TmAbs I "x" (TyName "Bool") (TmVar I 0 0)
+                            , ty = TyArr (TyName "Bool") (TyName "Bool")
+                            }
+                        , top2 =
+                            { ctx = []
+                            , term = TmConst I TmTrue
                             , ty = TyName "Bool"
                             }
                         }

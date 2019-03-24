@@ -17,6 +17,7 @@ type TyRule
     | TTrue { bottom : TypeStatement, top : TypeStatement }
     | TFalse { bottom : TypeStatement, top : TypeStatement }
     | TAbs { bottom : TypeStatement, top : TypeStatement }
+    | TApp { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
 
 
 type alias TypeStatement =
@@ -105,6 +106,18 @@ checkRule rule =
                         && (top.term == t)
                         && equalTypes top.ctx top.ty bottom.ctx ty2
                         && equalTypes bottom.ctx ty bottom.ctx ty1
+
+                _ ->
+                    False
+
+        TApp { bottom, top1, top2 } ->
+            case ( bottom.term, top1.ty ) of
+                ( TmApp _ t1 t2, TyArr ty1 ty2 ) ->
+                    List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx ]
+                        && (top1.term == t1)
+                        && (top2.term == t2)
+                        && equalTypes top1.ctx ty1 top2.ctx top2.ty
+                        && equalTypes top1.ctx ty2 bottom.ctx bottom.ty
 
                 _ ->
                     False
@@ -265,6 +278,35 @@ tryRule t =
                                         { ctx = c1.ctx
                                         , term = c1.term
                                         , ty = c1.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
+
+                                        else
+                                            "NOK"
+                                   )
+
+                        _ ->
+                            "Top rule Error"
+
+                Model.TApp ->
+                    case children of
+                        [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
+                            checkRule
+                                (TApp
+                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                    , top1 =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
+                                        }
+                                    , top2 =
+                                        { ctx = c2.ctx
+                                        , term = c2.term
+                                        , ty = c2.ty
                                         }
                                     }
                                 )

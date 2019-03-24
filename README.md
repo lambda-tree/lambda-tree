@@ -14,11 +14,11 @@ Model:
     - [x] Terms
     - [x] Context
 - [ ] Rule Checking
-    - [ ] T-True
-    - [ ] T-False
+    - [x] T-True
+    - [x] T-False
     - [x] T-Var
-    - [ ] T-Abs
-    - [ ] T-App
+    - [x] T-Abs
+    - [x] T-App
     - [x] T-If
     - [ ] T-Let
     - [ ] T-Inst

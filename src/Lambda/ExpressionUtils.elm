@@ -187,6 +187,10 @@ tymap onvar ctx typeT =
 
 equalTypes : Context -> Ty -> Context -> Ty -> Bool
 equalTypes ctx1 ty1 ctx2 ty2 =
+    let
+        _ =
+            Debug.log "---" ( ty1, ty2 )
+    in
     case ( ty1, ty2 ) of
         ( TyName s1, TyName s2 ) ->
             s1 == s2
@@ -215,6 +219,12 @@ equalTypes ctx1 ty1 ctx2 ty2 =
                 ( Just TyVarBind, Just TyVarBind ) ->
                     l2 - l1 == i2 - i1
 
+                ( Just NameBind, Just NameBind ) ->
+                    l2 - l1 == i2 - i1
+
+                ( Just (VarBind varTy1), Just (VarBind varTy2) ) ->
+                    l2 - l1 == i2 - i1
+
                 _ ->
                     False
 
@@ -222,40 +232,43 @@ equalTypes ctx1 ty1 ctx2 ty2 =
             False
 
 
-equalTypesExact : Context -> Ty -> Context -> Ty -> Bool
-equalTypesExact ctx1 ty1 ctx2 ty2 =
-    case ( ty1, ty2 ) of
-        ( TyName s1, TyName s2 ) ->
-            s1 == s2
 
-        ( TyAll s1 ty11, TyAll s2 ty21 ) ->
-            (s1 == s2)
-                && equalTypes
-                    (addbinding ctx1 s1 TyVarBind)
-                    ty11
-                    (addbinding ctx2 s2 TyVarBind)
-                    ty21
+{-
+   equalTypesExact : Context -> Ty -> Context -> Ty -> Bool
+   equalTypesExact ctx1 ty1 ctx2 ty2 =
+       case ( ty1, ty2 ) of
+           ( TyName s1, TyName s2 ) ->
+               s1 == s2
 
-        ( TyArr ty11 ty12, TyArr ty21 ty22 ) ->
-            equalTypes
-                ctx1
-                ty11
-                ctx2
-                ty21
-                && equalTypes
-                    ctx1
-                    ty12
-                    ctx2
-                    ty22
+           ( TyAll s1 ty11, TyAll s2 ty21 ) ->
+               (s1 == s2)
+                   && equalTypes
+                       (addbinding ctx1 s1 TyVarBind)
+                       ty11
+                       (addbinding ctx2 s2 TyVarBind)
+                       ty21
 
-        ( TyVar i1 l1, TyVar i2 l2 ) ->
-            (getbinding ctx1 (i1 + (ctxlength ctx1 - l1))
-                == getbinding ctx2 (i2 + (ctxlength ctx2 - l2))
-            )
-                && (index2name I ctx1 (i1 + (ctxlength ctx1 - l1))
-                        == index2name I ctx2 (i2 + (ctxlength ctx2 - l2))
-                   )
-                && (l2 - l1 == i2 - i1)
+           ( TyArr ty11 ty12, TyArr ty21 ty22 ) ->
+               equalTypes
+                   ctx1
+                   ty11
+                   ctx2
+                   ty21
+                   && equalTypes
+                       ctx1
+                       ty12
+                       ctx2
+                       ty22
 
-        _ ->
-            False
+           ( TyVar i1 l1, TyVar i2 l2 ) ->
+               (getbinding ctx1 (i1 + (ctxlength ctx1 - l1))
+                   == getbinding ctx2 (i2 + (ctxlength ctx2 - l2))
+               )
+                   && (index2name I ctx1 (i1 + (ctxlength ctx1 - l1))
+                           == index2name I ctx2 (i2 + (ctxlength ctx2 - l2))
+                      )
+                   && (l2 - l1 == i2 - i1)
+
+           _ ->
+               False
+-}

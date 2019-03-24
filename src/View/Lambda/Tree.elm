@@ -4,7 +4,6 @@ import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Events as E
 import Message exposing (Msg(..))
-import Model exposing (ModelContent, TextKind(..))
 import Utils.Tree exposing (Tree(..))
 import View.Lambda.ProofCell exposing (proofCell)
 import View.Lambda.RuleSelector exposing (ruleSelector)
@@ -52,7 +51,7 @@ drawTree tree =
                             ]
                         ]
     in
-    drawTreeP (getTreeViewData tree) []
+    drawTreeP (getTreeViewData (Debug.log "tree" tree)) []
 
 
 hairline rule text =

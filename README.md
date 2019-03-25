@@ -25,8 +25,8 @@ Model:
     - [ ] T-Gen
     - [ ] T-Var' (T-Var + T-Inst Combined rule for H-M)
     - [ ] T-Let' (T-Let + T-Gen Combined rule for H-M)
-    - [ ] T-TAbs
-    - [ ] T-TApp
+    - [x] T-TAbs
+    - [x] T-TApp
 - [ ] Whole tree checking
 - [ ] Export to LaTex
 

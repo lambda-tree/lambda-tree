@@ -1,7 +1,7 @@
 module View.Lambda.RuleSelector exposing (..)
 
-import Html.Styled.Events as E
 import Html.Styled as S exposing (Html, styled)
+import Html.Styled.Events as E
 import Model exposing (Rule(..))
 import View.Theme exposing (theme)
 
@@ -10,7 +10,7 @@ ruleSelector createMsgClick =
     styled S.div
         []
         []
-        (List.map (ruleButton createMsgClick) [ TTrue, TFalse, TVar, TAbs, TApp, TIf ])
+        (List.map (ruleButton createMsgClick) [ TTrue, TFalse, TVar, TAbs, TApp, TIf, TTAbs, TTApp ])
 
 
 ruleButton createClick r =

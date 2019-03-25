@@ -57,6 +57,12 @@ addNode path tree rule =
                         TIf ->
                             Node { content | rule = rule } [ emptyTree, emptyTree, emptyTree ]
 
+                        TTApp ->
+                            Node { content | rule = rule } [ emptyTree ]
+
+                        TTAbs ->
+                            Node { content | rule = rule } [ emptyTree ]
+
                         NoRule ->
                             Node { content | rule = rule } [ emptyTree ]
 

@@ -13,6 +13,8 @@ type Rule
     | TAbs
     | TApp
     | TIf
+    | TTAbs
+    | TTApp
     | NoRule
 
 

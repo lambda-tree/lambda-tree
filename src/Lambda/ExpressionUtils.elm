@@ -189,7 +189,10 @@ equalTypes : Context -> Ty -> Context -> Ty -> Bool
 equalTypes ctx1 ty1 ctx2 ty2 =
     let
         _ =
-            Debug.log "---" ( ty1, ty2 )
+            Debug.log "equalTypes (ctx1, ty1)" ( ctx1, ty1 )
+
+        _ =
+            Debug.log "equalTypes (ctx2, ty2)" ( ctx2, ty2 )
     in
     case ( ty1, ty2 ) of
         ( TyName s1, TyName s2 ) ->

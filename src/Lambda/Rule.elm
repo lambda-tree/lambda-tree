@@ -3,7 +3,7 @@ module Lambda.Rule exposing (..)
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
-import Lambda.ExpressionUtils exposing (equalTypes)
+import Lambda.ExpressionUtils exposing (equalTypes, typeSubstTop)
 import Lambda.ParseTransform exposing (ParseTransformError)
 import Maybe exposing (..)
 import Model exposing (Rule, TreeModel)
@@ -18,6 +18,8 @@ type TyRule
     | TFalse { bottom : TypeStatement, top : TypeStatement }
     | TAbs { bottom : TypeStatement, top : TypeStatement }
     | TApp { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
+    | TTAbs { bottom : TypeStatement, top : TypeStatement }
+    | TTApp { bottom : TypeStatement, top : TypeStatement }
 
 
 type alias TypeStatement =
@@ -121,6 +123,46 @@ checkRule rule =
 
                 _ ->
                     False
+
+        TTAbs { bottom, top } ->
+            case ( bottom.term, bottom.ty ) of
+                ( TmTAbs _ tyVarName1 t, TyAll tyVarName2 ty ) ->
+                    Ok ()
+                        |> check ( "1 - typeVariablesSame", tyVarName1 == tyVarName2 )
+                        |> check ( "2 - isAddedToContext", addbinding bottom.ctx tyVarName1 TyVarBind == top.ctx )
+                        |> check ( "3 - isFree", not <| isnamebound bottom.ctx tyVarName1 )
+                        |> check ( "4 - termsEqual", top.term == t )
+                        |> check ( "5 - typesEqual", ty == top.ty )
+                        |> Result.map (\_ -> True)
+                        |> Result.withDefault False
+
+                _ ->
+                    False
+
+        TTApp { bottom, top } ->
+            case ( bottom.term, top.ty ) of
+                ( TmTApp _ t ty2, TyAll _ ty1 ) ->
+                    (bottom.ctx == top.ctx)
+                        && (top.term == t)
+                        && (bottom.ty == typeSubstTop ty2 ty1)
+
+                _ ->
+                    False
+
+
+check : ( String, Bool ) -> Result String () -> Result String ()
+check condition previous =
+    previous
+        |> Result.andThen
+            (\_ ->
+                case condition of
+                    ( error, conditionResult ) ->
+                        if conditionResult then
+                            Ok ()
+
+                        else
+                            Err error
+            )
 
 
 tryRule : ExprTree -> String
@@ -307,6 +349,30 @@ tryRule t =
                                         { ctx = c2.ctx
                                         , term = c2.term
                                         , ty = c2.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
+
+                                        else
+                                            "NOK"
+                                   )
+
+                        _ ->
+                            "Top rule Error"
+
+                Model.TTApp ->
+                    case children of
+                        [ Node (Result.Ok c1) _ ] ->
+                            checkRule
+                                (TTApp
+                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                    , top =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
                                         }
                                     }
                                 )

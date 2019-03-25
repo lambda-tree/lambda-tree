@@ -146,4 +146,63 @@ checkRuleTest =
                         }
                     )
                     |> Expect.equal True
+        , test "TTAbs {TypeVar1, TypeVar2} |- ΛTypeVar3. λtermVar3: TypeVar3. termVar3" <|
+            \_ ->
+                checkRule
+                    (TTAbs
+                        { bottom =
+                            { ctx =
+                                [ ( "TypeVar2", TyVarBind )
+                                , ( "TypeVar1", TyVarBind )
+                                ]
+                            , term =
+                                TmTAbs I
+                                    "TypeVar3"
+                                    (TmAbs I "termVar3" (TyVar 0 3) (TmVar I 0 4))
+                            , ty = TyAll "TypeVar3" <| TyArr (TyVar 0 3) (TyVar 0 3)
+                            }
+                        , top =
+                            { ctx =
+                                [ ( "TypeVar3", TyVarBind )
+                                , ( "TypeVar2", TyVarBind )
+                                , ( "TypeVar1", TyVarBind )
+                                ]
+                            , term = TmAbs I "termVar3" (TyVar 0 3) (TmVar I 0 4)
+                            , ty = TyArr (TyVar 0 3) (TyVar 0 3)
+                            }
+                        }
+                    )
+                    |> Expect.equal True
+        , test "TTApp {TypeVar1, TypeVar2} |- (ΛTypeVar3. λtermVar3: TypeVar3. termVar3) [TypeVar1->TypeVar2]" <|
+            \_ ->
+                checkRule
+                    (TTApp
+                        { bottom =
+                            { ctx =
+                                [ ( "TypeVar2", TyVarBind )
+                                , ( "TypeVar1", TyVarBind )
+                                ]
+                            , term =
+                                TmTApp I
+                                    (TmTAbs I
+                                        "TypeVar3"
+                                        (TmAbs I "termVar3" (TyVar 0 3) (TmVar I 0 4))
+                                    )
+                                    (TyArr (TyVar 1 2) (TyVar 0 2))
+                            , ty = TyArr (TyArr (TyVar 1 2) (TyVar 0 2)) (TyArr (TyVar 1 2) (TyVar 0 2))
+                            }
+                        , top =
+                            { ctx =
+                                [ ( "TypeVar2", TyVarBind )
+                                , ( "TypeVar1", TyVarBind )
+                                ]
+                            , term =
+                                TmTAbs I
+                                    "TypeVar3"
+                                    (TmAbs I "termVar3" (TyVar 0 3) (TmVar I 0 4))
+                            , ty = TyAll "Alpha" <| TyArr (TyVar 0 3) (TyVar 0 3)
+                            }
+                        }
+                    )
+                    |> Expect.equal True
         ]

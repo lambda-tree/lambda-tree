@@ -52,7 +52,7 @@ checkRuleTest =
                     (TIf
                         { bottom =
                             { ctx = [ ( "X", TyVarBind ), ( "y", VarBind <| TyName "Bool" ), ( "x", VarBind <| TyVar 1 2 ) ]
-                            , term = TmIf I (TmVar I 1 3) (TmVar I 0 3) (TmApp I (TmAbs I "x" (TyName "Bool") (TmVar I 1 4)) (TmConst I TmTrue))
+                            , term = TmIf I (TmVar I 1 3) (TmVar I 0 3) (TmApp I (TmAbs I "x" (Just <| TyName "Bool") (TmVar I 1 4)) (TmConst I TmTrue))
                             , ty = TyVar 2 3
                             }
                         , top1 =
@@ -67,7 +67,7 @@ checkRuleTest =
                             }
                         , top3 =
                             { ctx = [ ( "X", TyVarBind ), ( "y", VarBind <| TyName "Bool" ), ( "x", VarBind <| TyVar 1 2 ) ]
-                            , term = TmApp I (TmAbs I "x" (TyName "Bool") (TmVar I 1 4)) (TmConst I TmTrue)
+                            , term = TmApp I (TmAbs I "x" (Just <| TyName "Bool") (TmVar I 1 4)) (TmConst I TmTrue)
                             , ty = TyVar 2 3
                             }
                         }
@@ -113,7 +113,7 @@ checkRuleTest =
                     (TAbs
                         { bottom =
                             { ctx = []
-                            , term = TmAbs I "x" (TyName "Bool") (TmVar I 0 0)
+                            , term = TmAbs I "x" (Just <| TyName "Bool") (TmVar I 0 0)
                             , ty = TyArr (TyName "Bool") (TyName "Bool")
                             }
                         , top =
@@ -130,12 +130,12 @@ checkRuleTest =
                     (TApp
                         { bottom =
                             { ctx = []
-                            , term = TmApp I (TmAbs I "x" (TyName "Bool") (TmVar I 0 0)) (TmConst I TmTrue)
+                            , term = TmApp I (TmAbs I "x" (Just <| TyName "Bool") (TmVar I 0 0)) (TmConst I TmTrue)
                             , ty = TyName "Bool"
                             }
                         , top1 =
                             { ctx = []
-                            , term = TmAbs I "x" (TyName "Bool") (TmVar I 0 0)
+                            , term = TmAbs I "x" (Just <| TyName "Bool") (TmVar I 0 0)
                             , ty = TyArr (TyName "Bool") (TyName "Bool")
                             }
                         , top2 =
@@ -158,7 +158,7 @@ checkRuleTest =
                             , term =
                                 TmTAbs I
                                     "TypeVar3"
-                                    (TmAbs I "termVar3" (TyVar 0 3) (TmVar I 0 4))
+                                    (TmAbs I "termVar3" (Just <| TyVar 0 3) (TmVar I 0 4))
                             , ty = TyAll "TypeVar3" <| TyArr (TyVar 0 3) (TyVar 0 3)
                             }
                         , top =
@@ -167,7 +167,7 @@ checkRuleTest =
                                 , ( "TypeVar2", TyVarBind )
                                 , ( "TypeVar1", TyVarBind )
                                 ]
-                            , term = TmAbs I "termVar3" (TyVar 0 3) (TmVar I 0 4)
+                            , term = TmAbs I "termVar3" (Just <| TyVar 0 3) (TmVar I 0 4)
                             , ty = TyArr (TyVar 0 3) (TyVar 0 3)
                             }
                         }
@@ -186,7 +186,7 @@ checkRuleTest =
                                 TmTApp I
                                     (TmTAbs I
                                         "TypeVar3"
-                                        (TmAbs I "termVar3" (TyVar 0 3) (TmVar I 0 4))
+                                        (TmAbs I "termVar3" (Just <| TyVar 0 3) (TmVar I 0 4))
                                     )
                                     (TyArr (TyVar 1 2) (TyVar 0 2))
                             , ty = TyArr (TyArr (TyVar 1 2) (TyVar 0 2)) (TyArr (TyVar 1 2) (TyVar 0 2))
@@ -199,7 +199,7 @@ checkRuleTest =
                             , term =
                                 TmTAbs I
                                     "TypeVar3"
-                                    (TmAbs I "termVar3" (TyVar 0 3) (TmVar I 0 4))
+                                    (TmAbs I "termVar3" (Just <| TyVar 0 3) (TmVar I 0 4))
                             , ty = TyAll "Alpha" <| TyArr (TyVar 0 3) (TyVar 0 3)
                             }
                         }

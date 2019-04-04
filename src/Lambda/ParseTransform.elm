@@ -4,6 +4,7 @@ import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
 import Lambda.Parse as P
+import Maybe.Extra
 
 
 type ParseTransformError
@@ -106,13 +107,32 @@ fromParseTerm ctx t =
                             Err (IndexNotFound name)
 
         P.TmAbs name maybeTy t1 ->
-            maybeTy
-                |> Maybe.map (fromParseType ctx)
-                |> Maybe.withDefault (Err <| TypeMissing name)
+            let
+                resultTyT =
+                    case Maybe.map (fromParseType ctx) maybeTy of
+                        Nothing ->
+                            Ok Nothing
+
+                        Just (Ok ty) ->
+                            Ok <| Just ty
+
+                        Just (Err err) ->
+                            Err err
+
+                binding =
+                    resultTyT
+                        |> Result.withDefault Nothing
+                        |> Maybe.map VarBind
+                        |> Maybe.withDefault NameBind
+            in
+            resultTyT
                 |> Result.andThen
                     (\ty ->
-                        fromParseTerm (addbinding ctx name (VarBind ty)) t1
-                            |> Result.andThen (\t1t -> Ok <| TmAbs I name ty t1t)
+                        fromParseTerm (addbinding ctx name binding) t1
+                            |> Result.andThen
+                                (\t1t ->
+                                    Ok <| TmAbs I name ty t1t
+                                )
                     )
 
         P.TmApp t1 t2 ->
@@ -151,4 +171,10 @@ fromParseTerm ctx t =
                     )
 
         P.TmLet name t1 t2 ->
-            Err <| NotImplemented "Let"
+            fromParseTerm ctx t1
+                |> Result.andThen
+                    (\t1t ->
+                        fromParseTerm (addbinding ctx name NameBind) t2
+                            |> Result.andThen
+                                (\t2t -> Ok <| TmLet I name t1t t2t)
+                    )

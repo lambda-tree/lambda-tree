@@ -103,11 +103,18 @@ checkRule rule =
         TAbs { bottom, top } ->
             case ( bottom.term, bottom.ty ) of
                 ( TmAbs _ varName ty t, TyArr ty1 ty2 ) ->
+                    let
+                        argType =
+                            ty
+                                |> Maybe.map (\x () -> x)
+                                |> Maybe.withDefault (\() -> Debug.todo "Infer the type here, or use type hole")
+                                |> (\x -> x ())
+                    in
                     (popbinding top.ctx == bottom.ctx)
-                        && (top.ctx == addbinding bottom.ctx varName (VarBind ty))
+                        && (top.ctx == addbinding bottom.ctx varName (VarBind argType))
                         && (top.term == t)
                         && equalTypes top.ctx top.ty bottom.ctx ty2
-                        && equalTypes bottom.ctx ty bottom.ctx ty1
+                        && equalTypes bottom.ctx argType bottom.ctx ty1
 
                 _ ->
                     False

@@ -30,9 +30,10 @@ type TmConst
 -}
 type Term
     = TmVar Info Int Int
-    | TmAbs Info String Ty Term
+    | TmAbs Info String (Maybe Ty) Term
     | TmApp Info Term Term
     | TmIf Info Term Term Term
+    | TmLet Info String Term Term
     | TmTAbs Info String Term
     | TmTApp Info Term Ty
     | TmConst Info TmConst

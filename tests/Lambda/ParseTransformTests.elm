@@ -227,7 +227,7 @@ fromParseTermTest =
                     , ( "TypeVar2", L.TyVarBind )
                     ]
                     (P.TmAbs "termVar5" (Just <| P.TyVar "TypeVar2") (P.TmVar "termVar5"))
-                    |> Expect.equal (Ok <| L.TmAbs L.I "termVar5" (L.TyVar 5 6) (L.TmVar L.I 0 7))
+                    |> Expect.equal (Ok <| L.TmAbs L.I "termVar5" (Just <| L.TyVar 5 6) (L.TmVar L.I 0 7))
         , test "TmApp should transform term application" <|
             \_ ->
                 fromParseTerm
@@ -245,7 +245,7 @@ fromParseTermTest =
                     |> Expect.equal
                         (Ok <|
                             L.TmApp L.I
-                                (L.TmAbs L.I "termVar5" (L.TyVar 5 6) (L.TmVar L.I 0 7))
+                                (L.TmAbs L.I "termVar5" (Just <| L.TyVar 5 6) (L.TmVar L.I 0 7))
                                 (L.TmVar L.I 2 6)
                         )
         , test "TmTAbs should transform type abstraction" <|
@@ -262,7 +262,7 @@ fromParseTermTest =
                     |> Expect.equal
                         (Ok <|
                             L.TmTAbs L.I "TypeVar5" <|
-                                L.TmAbs L.I "termVar5" (L.TyVar 0 7) (L.TmVar L.I 0 8)
+                                L.TmAbs L.I "termVar5" (Just <| L.TyVar 0 7) (L.TmVar L.I 0 8)
                         )
         , test "TmTApp should transform type application" <|
             \_ ->
@@ -283,7 +283,7 @@ fromParseTermTest =
                             L.TmTApp L.I
                                 (L.TmTAbs L.I
                                     "TypeVar5"
-                                    (L.TmAbs L.I "termVar5" (L.TyVar 0 7) (L.TmVar L.I 0 8))
+                                    (L.TmAbs L.I "termVar5" (Just <| L.TyVar 0 7) (L.TmVar L.I 0 8))
                                 )
                                 (L.TyArr (L.TyVar 1 6) (L.TyVar 5 6))
                         )

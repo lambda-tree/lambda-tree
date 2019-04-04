@@ -1,10 +1,10 @@
 module Lambda.ExpressionUtilsTests exposing (..)
 
 import Expect exposing (Expectation)
-import Test exposing (..)
+import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (..)
-import Lambda.ContextUtils exposing (..)
+import Test exposing (..)
 
 
 {-| forall a. a -> a
@@ -27,7 +27,7 @@ typeIdentityFunction =
 -}
 identityF =
     TmTAbs I "alpha" <|
-        TmAbs I "a" (TyVar 0 1) <|
+        TmAbs I "a" (Just <| TyVar 0 1) <|
             TmVar I 0 2
 
 
@@ -36,7 +36,7 @@ typeShiftAboveTest =
     describe "typeShiftAbove"
         [ test "Shifting Type" <|
             \_ ->
-                typeShiftAbove (-1) 0 (TyAll "alpha" (TyArr (TyVar 1 1) (TyVar 1 1)))
+                typeShiftAbove -1 0 (TyAll "alpha" (TyArr (TyVar 1 1) (TyVar 1 1)))
                     |> Expect.equal (TyAll "alpha" (TyArr (TyVar 0 0) (TyVar 0 0)))
         ]
 
@@ -46,8 +46,8 @@ tytermSubstTopTest =
     describe "tytermSubstTop"
         [ test "T-Inst Step - System F" <|
             \_ ->
-                tytermSubstTop (TyName "Bool") (TmAbs I "a" (TyVar 0 1) <| TmVar I 0 2)
-                    |> Expect.equal (TmAbs I "a" (TyName "Bool") <| TmVar I 0 1)
+                tytermSubstTop (TyName "Bool") (TmAbs I "a" (Just <| TyVar 0 1) <| TmVar I 0 2)
+                    |> Expect.equal (TmAbs I "a" (Just <| TyName "Bool") <| TmVar I 0 1)
         ]
 
 
@@ -63,13 +63,13 @@ termShiftTest =
                 termShift 2
                     (TmAbs I
                         "x"
-                        (TyArr (TyName "Bool") (TyName "Bool"))
+                        (Just <| TyArr (TyName "Bool") (TyName "Bool"))
                         (TmVar I 0 2)
                     )
                     |> Expect.equal
                         (TmAbs I
                             "x"
-                            (TyArr (TyName "Bool") (TyName "Bool"))
+                            (Just <| TyArr (TyName "Bool") (TyName "Bool"))
                             (TmVar I 0 4)
                         )
         , test "Should shift only free variable and not shift bound." <|
@@ -78,7 +78,7 @@ termShiftTest =
                     (TmApp I
                         (TmAbs I
                             "x"
-                            (TyArr (TyName "Bool") (TyName "Bool"))
+                            (Just <| TyArr (TyName "Bool") (TyName "Bool"))
                             (TmVar I 0 2)
                         )
                         (TmVar I 1 2)
@@ -87,7 +87,7 @@ termShiftTest =
                         (TmApp I
                             (TmAbs I
                                 "x"
-                                (TyArr (TyName "Bool") (TyName "Bool"))
+                                (Just <| TyArr (TyName "Bool") (TyName "Bool"))
                                 (TmVar I 0 7)
                             )
                             (TmVar I 6 7)
@@ -105,7 +105,7 @@ termShiftAboveTest =
                     (TmApp I
                         (TmAbs I
                             "x"
-                            (TyArr (TyName "Bool") (TyName "Bool"))
+                            (Just <| TyArr (TyName "Bool") (TyName "Bool"))
                             (TmVar I 0 2)
                         )
                         (TmVar I 1 2)
@@ -114,7 +114,7 @@ termShiftAboveTest =
                         (TmApp I
                             (TmAbs I
                                 "x"
-                                (TyArr (TyName "Bool") (TyName "Bool"))
+                                (Just <| TyArr (TyName "Bool") (TyName "Bool"))
                                 (TmVar I 0 7)
                             )
                             (TmVar I 1 7)
@@ -132,7 +132,7 @@ termSubstTest =
                     (TmApp I
                         (TmAbs I
                             "x"
-                            (TyArr (TyName "Bool") (TyName "Bool"))
+                            (Just <| TyArr (TyName "Bool") (TyName "Bool"))
                             (TmVar I 0 2)
                         )
                         (TmVar I 1 2)
@@ -141,7 +141,7 @@ termSubstTest =
                         (TmApp I
                             (TmAbs I
                                 "x"
-                                (TyArr (TyName "Bool") (TyName "Bool"))
+                                (Just <| TyArr (TyName "Bool") (TyName "Bool"))
                                 (TmVar I 0 7)
                             )
                             (TmVar I 1 7)

@@ -62,7 +62,7 @@ transformTextExprTest =
                             ( Ok [ ( "termVar2", L.VarBind (L.TyVar 2 3) ), ( "TypeVar2", L.TyVarBind ), ( "termVar1", L.VarBind (L.TyVar 0 1) ), ( "TypeVar1", L.TyVarBind ) ]
                             , Ok <|
                                 L.TmApp L.I
-                                    (L.TmAbs L.I "x" (L.TyVar 3 4) (L.TmVar L.I 0 5))
+                                    (L.TmAbs L.I "x" (Just <| L.TyVar 3 4) (L.TmVar L.I 0 5))
                                     (L.TmVar L.I 0 4)
                             , Ok <| L.TyVar 3 4
                             )

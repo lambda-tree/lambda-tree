@@ -85,13 +85,16 @@ tmmap onvar ontype ctx term =
                     onvar fi c x n
 
                 TmAbs fi x tyT1 t2 ->
-                    TmAbs fi x (ontype c tyT1) (walk (c + 1) t2)
+                    TmAbs fi x (Maybe.map (ontype c) tyT1) (walk (c + 1) t2)
 
                 TmApp fi t1 t2 ->
                     TmApp fi (walk c t1) (walk c t2)
 
                 TmIf fi t1 t2 t3 ->
                     TmIf fi (walk c t1) (walk c t2) (walk c t3)
+
+                TmLet fi x t1 t2 ->
+                    TmLet fi x (walk c t1) (walk (c + 1) t2)
 
                 TmTAbs fi tyX t2 ->
                     TmTAbs fi tyX (walk (c + 1) t2)

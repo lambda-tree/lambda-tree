@@ -73,3 +73,13 @@ name2index : Info -> Context -> String -> Maybe Int
 name2index fi ctx x =
     ctx
         |> findIndex (Tuple.first >> (==) x)
+
+
+getTypeFromContext : Info -> Context -> Int -> Maybe Ty
+getTypeFromContext fi ctx i =
+    case getbinding ctx i of
+        Just (VarBind ty) ->
+            Just ty
+
+        _ ->
+            Nothing

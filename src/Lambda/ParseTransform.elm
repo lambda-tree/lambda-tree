@@ -4,8 +4,6 @@ import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
 import Lambda.Parse as P
-import Lambda.TypeReturn exposing (TypeReturn, mapTy)
-import Maybe.Extra
 
 
 type ParseTransformError
@@ -33,60 +31,43 @@ fromParseContext ctx =
                                                 ( name
                                                 , maybeType
                                                     |> Maybe.map (fromParseType someCtx)
-                                                    |> Maybe.map (.ty >> VarBind >> Ok)
-                                                    |> Maybe.withDefault (Ok NameBind)
+                                                    |> Maybe.map VarBind
+                                                    |> Maybe.withDefault NameBind
                                                 )
 
                                             P.TyVarBind name ->
-                                                ( name, Ok TyVarBind )
-
-                                    resultTransformed =
-                                        case transformed of
-                                            ( name, Ok smt ) ->
-                                                Ok ( name, smt )
-
-                                            ( name, Err err ) ->
-                                                Err err
+                                                ( name, TyVarBind )
                                 in
-                                resultTransformed
-                                    |> Result.map (addbindingTup someCtx)
+                                Ok <| addbindingTup someCtx transformed
                             )
                     )
                     (Ok emptycontext)
 
 
-fromParseType : Context -> P.Ty -> TypeReturn
+fromParseType : Context -> P.Ty -> Ty
 fromParseType ctx ty =
     case ty of
         P.TyVar name ->
             case name2index I ctx name of
                 Just index ->
-                    { ctx = ctx, ty = TyVar index (ctxlength ctx) }
+                    TyVar index (ctxlength ctx)
 
                 Nothing ->
                     case name of
                         "Bool" ->
-                            { ctx = ctx, ty = TyName "Bool" }
+                            TyName "Bool"
 
                         "Int" ->
-                            { ctx = ctx, ty = TyName "Int" }
+                            TyName "Int"
 
                         _ ->
-                            { ctx = addFreeVar ctx name, ty = TyVar (ctxlength ctx) (ctxlength ctx + 1) }
+                            TyName name
 
         P.TyArr ty1 ty2 ->
-            let
-                r1 =
-                    fromParseType ctx ty1
-
-                r2 =
-                    fromParseType r1.ctx ty2
-            in
-            { ctx = r2.ctx, ty = TyArr r1.ty r2.ty }
+            TyArr (fromParseType ctx ty1) (fromParseType ctx ty2)
 
         P.TyAll name ty1 ->
-            fromParseType (addbinding ctx name TyVarBind) ty1
-                |> mapTy (TyAll name)
+            TyAll name (fromParseType (addbinding ctx name TyVarBind) ty1)
 
 
 fromParseTerm : Context -> P.Term -> Result ParseTransformError Term
@@ -111,31 +92,15 @@ fromParseTerm ctx t =
         P.TmAbs name maybeTy t1 ->
             let
                 resultTyT =
-                    case Maybe.map (Ok << .ty << fromParseType ctx) maybeTy of
-                        Nothing ->
-                            Ok Nothing
-
-                        Just (Ok ty) ->
-                            Ok <| Just ty
-
-                        Just (Err err) ->
-                            Err err
+                    Maybe.map (fromParseType ctx) maybeTy
 
                 binding =
                     resultTyT
-                        |> Result.withDefault Nothing
                         |> Maybe.map VarBind
                         |> Maybe.withDefault NameBind
             in
-            resultTyT
-                |> Result.andThen
-                    (\ty ->
-                        fromParseTerm (addbinding ctx name binding) t1
-                            |> Result.andThen
-                                (\t1t ->
-                                    Ok <| TmAbs I name ty t1t
-                                )
-                    )
+            fromParseTerm (addbinding ctx name binding) t1
+                |> Result.map (TmAbs I name resultTyT)
 
         P.TmApp t1 t2 ->
             fromParseTerm ctx t1
@@ -152,12 +117,7 @@ fromParseTerm ctx t =
 
         P.TmTApp t1 ty1 ->
             fromParseTerm ctx t1
-                |> Result.andThen
-                    (\t1t ->
-                        fromParseType ctx ty1
-                            |> .ty
-                            |> (\ty1t -> Ok <| TmTApp I t1t ty1t)
-                    )
+                |> Result.map (\t1t -> TmTApp I t1t (fromParseType ctx ty1))
 
         P.TmIf t1 t2 t3 ->
             fromParseTerm ctx t1

@@ -52,7 +52,7 @@ transformTextExprTest =
                                                     Result.Ok
                                                         ( fromParseContext ctx
                                                         , fromParseContext ctx |> Result.andThen (\parsedCtx -> fromParseTerm parsedCtx term)
-                                                        , fromParseContext ctx |> Result.andThen (\parsedCtx -> Ok <| .ty <| fromParseType parsedCtx ty)
+                                                        , fromParseContext ctx |> Result.andThen (\parsedCtx -> Ok <| fromParseType parsedCtx ty)
                                                         )
                                                 )
                                     )

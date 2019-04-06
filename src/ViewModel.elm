@@ -61,12 +61,7 @@ getExprTree t =
                                 (\parsedTy ->
                                     ctxExpr
                                         |> Result.mapError (\_ -> PrerequisiteDataError)
-                                        |> Result.andThen
-                                            (\okContext ->
-                                                fromParseType okContext parsedTy
-                                                    |> .ty
-                                                    |> Result.Ok
-                                            )
+                                        |> Result.map (\okContext -> fromParseType okContext parsedTy)
                                 )
                 in
                 { ctx = ctxExpr

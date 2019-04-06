@@ -20,6 +20,7 @@ type TyRule
     | TApp { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
     | TTAbs { bottom : TypeStatement, top : TypeStatement }
     | TTApp { bottom : TypeStatement, top : TypeStatement }
+    | TLet { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
 
 
 type alias TypeStatement =
@@ -103,18 +104,19 @@ checkRule rule =
         TAbs { bottom, top } ->
             case ( bottom.term, bottom.ty ) of
                 ( TmAbs _ varName ty t, TyArr ty1 ty2 ) ->
-                    let
-                        argType =
-                            ty
-                                |> Maybe.map (\x () -> x)
-                                |> Maybe.withDefault (\() -> Debug.todo "Infer the type here, or use type hole")
-                                |> (\x -> x ())
-                    in
-                    (popbinding top.ctx == bottom.ctx)
-                        && (top.ctx == addbinding bottom.ctx varName (VarBind argType))
-                        && (top.term == t)
-                        && equalTypes top.ctx top.ty bottom.ctx ty2
-                        && equalTypes bottom.ctx argType bottom.ctx ty1
+                    Ok ()
+                        |> check ( "ctxs are same", popbinding top.ctx == bottom.ctx )
+                        |> check ( "var is added to ctx with correct type", top.ctx == addbinding bottom.ctx varName (VarBind ty1) )
+                        |> check ( "terms are same", top.term == t )
+                        |> check ( "return type is correct", equalTypes top.ctx top.ty bottom.ctx ty2 )
+                        |> check
+                            ( "arg type is correct"
+                            , ty
+                                |> Maybe.map (\justTy -> equalTypes bottom.ctx justTy bottom.ctx ty1)
+                                |> Maybe.withDefault True
+                            )
+                        |> Result.map (\_ -> True)
+                        |> Result.withDefault False
 
                 _ ->
                     False
@@ -156,6 +158,21 @@ checkRule rule =
                 _ ->
                     False
 
+        TLet { bottom, top1, top2 } ->
+            case bottom.term of
+                TmLet _ varName t1 t2 ->
+                    Ok ()
+                        |> check ( "bottom & top1 ctxs are same", bottom.ctx == top1.ctx )
+                        |> check ( "variable is added to ctx with correct type binding", top2.ctx == addbinding bottom.ctx varName (VarBind top1.ty) )
+                        |> check ( "in expr types are same", bottom.ty == top2.ty )
+                        |> check ( "in expr terms are same", t2 == top2.term )
+                        |> check ( "bound terms are same", t1 == top1.term )
+                        |> Result.map (\_ -> True)
+                        |> Result.withDefault False
+
+                _ ->
+                    False
+
 
 check : ( String, Bool ) -> Result String () -> Result String ()
 check condition previous =
@@ -164,6 +181,10 @@ check condition previous =
             (\_ ->
                 case condition of
                     ( error, conditionResult ) ->
+                        let
+                            _ =
+                                Debug.log ("CHECK: " ++ error) conditionResult
+                        in
                         if conditionResult then
                             Ok ()
 
@@ -341,6 +362,30 @@ tryRule t =
                         _ ->
                             "Top rule Error"
 
+                Model.TTAbs ->
+                    case children of
+                        [ Node (Result.Ok c1) _ ] ->
+                            checkRule
+                                (TTAbs
+                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                    , top =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
+
+                                        else
+                                            "NOK"
+                                   )
+
+                        _ ->
+                            "Top rule Error"
+
                 Model.TApp ->
                     case children of
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
@@ -380,6 +425,35 @@ tryRule t =
                                         { ctx = c1.ctx
                                         , term = c1.term
                                         , ty = c1.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
+
+                                        else
+                                            "NOK"
+                                   )
+
+                        _ ->
+                            "Top rule Error"
+
+                Model.TLet ->
+                    case children of
+                        [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
+                            checkRule
+                                (TLet
+                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                    , top1 =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
+                                        }
+                                    , top2 =
+                                        { ctx = c2.ctx
+                                        , term = c2.term
+                                        , ty = c2.ty
                                         }
                                     }
                                 )

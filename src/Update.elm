@@ -63,6 +63,9 @@ addNode path tree rule =
                         TTAbs ->
                             Node { content | rule = rule } [ emptyTree ]
 
+                        TLet ->
+                            Node { content | rule = rule } [ emptyTree, emptyTree ]
+
                         NoRule ->
                             Node { content | rule = rule } [ emptyTree ]
 

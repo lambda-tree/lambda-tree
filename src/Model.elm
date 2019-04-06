@@ -15,6 +15,7 @@ type Rule
     | TIf
     | TTAbs
     | TTApp
+    | TLet
     | NoRule
 
 

@@ -21,6 +21,11 @@ addbinding ctx x bind =
     ( x, bind ) :: ctx
 
 
+addFreeVar : Context -> String -> Context
+addFreeVar ctx x =
+    ctx ++ [ ( x, TyVarBindFree ) ]
+
+
 popbinding : Context -> Context
 popbinding ctx =
     List.tail ctx

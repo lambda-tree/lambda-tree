@@ -48,3 +48,4 @@ type Binding
     = NameBind
     | VarBind Ty
     | TyVarBind
+    | TyVarBindFree

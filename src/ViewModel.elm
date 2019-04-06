@@ -64,7 +64,8 @@ getExprTree t =
                                         |> Result.andThen
                                             (\okContext ->
                                                 fromParseType okContext parsedTy
-                                                    |> Result.mapError ParseTransformError
+                                                    |> .ty
+                                                    |> Result.Ok
                                             )
                                 )
                 in

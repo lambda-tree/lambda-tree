@@ -10,7 +10,7 @@ ruleSelector createMsgClick =
     styled S.div
         []
         []
-        (List.map (ruleButton createMsgClick) [ TTrue, TFalse, TVar, TAbs, TApp, TIf, TTAbs, TTApp, TLet ])
+        (List.map (ruleButton createMsgClick) [ TTrue, TFalse, TVar, TAbs, TApp, TIf, TTAbs, TTApp, TLet, TGen ])
 
 
 ruleButton createClick r =

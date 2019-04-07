@@ -205,4 +205,21 @@ checkRuleTest =
                         }
                     )
                     |> Expect.equal True
+        , test "TGen {TypeVar1, TypeVar2} |- (ΛTypeVar3. λtermVar3: TypeVar3. termVar3) [TypeVar1->TypeVar2]" <|
+            \_ ->
+                checkRule
+                    (TGen
+                        { bottom =
+                            { ctx = []
+                            , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)
+                            , ty = TyAll "TypeVar1" <| TyArr (TyVar 0 1) (TyVar 0 1)
+                            }
+                        , top =
+                            { ctx = []
+                            , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)
+                            , ty = TyArr (TyName "TypeVar1") (TyName "TypeVar1")
+                            }
+                        }
+                    )
+                    |> Expect.equal True
         ]

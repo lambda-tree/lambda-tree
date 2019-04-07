@@ -66,6 +66,9 @@ addNode path tree rule =
                         TLet ->
                             Node { content | rule = rule } [ emptyTree, emptyTree ]
 
+                        TGen ->
+                            Node { content | rule = rule } [ emptyTree ]
+
                         NoRule ->
                             Node { content | rule = rule } [ emptyTree ]
 

@@ -16,6 +16,7 @@ type Rule
     | TTAbs
     | TTApp
     | TLet
+    | TGen
     | NoRule
 
 

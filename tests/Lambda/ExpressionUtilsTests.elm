@@ -236,3 +236,109 @@ equalTypesTest =
                     |> Expect.equal
                         True
         ]
+
+
+degeneralizeTypeTopTest : Test
+degeneralizeTypeTopTest =
+    describe "degeneralizeTypeTop"
+        [ test "Should degeneralize empty context single var type" <|
+            \_ ->
+                degeneralizeTypeTop [] (TyAll "TyVar1" <| TyVar 0 1)
+                    |> Expect.equal (TyName "TyVar1")
+        , test "Should degeneralize full context single var type" <|
+            \_ ->
+                degeneralizeTypeTop
+                    [ ( "X", TyVarBind )
+                    , ( "y", VarBind <| TyVar 0 1 )
+                    , ( "Z", TyVarBind )
+                    ]
+                    (TyAll "TyVar1" <| TyVar 0 4)
+                    |> Expect.equal (TyName "TyVar1")
+        , test "Should degeneralize full context multiple var type" <|
+            \_ ->
+                degeneralizeTypeTop
+                    [ ( "X", TyVarBind )
+                    , ( "y", VarBind <| TyVar 0 1 )
+                    , ( "Z", TyVarBind )
+                    ]
+                    (TyAll "TyVar1" <| TyArr (TyVar 1 4) (TyArr (TyName "Bool") (TyVar 0 4)))
+                    |> Expect.equal (TyArr (TyVar 0 3) (TyArr (TyName "Bool") (TyName "TyVar1")))
+        , test "Should degeneralize full context multiple vars bound and free type" <|
+            \_ ->
+                degeneralizeTypeTop
+                    [ ( "X", TyVarBind )
+                    , ( "y", VarBind <| TyVar 0 1 )
+                    , ( "Z", TyVarBind )
+                    ]
+                    (TyAll "TyVar1" <|
+                        TyArr
+                            (TyVar 1 4)
+                            (TyArr
+                                (TyAll "TyVar2" <| TyArr (TyName "Bool") (TyVar 0 5))
+                                (TyVar 0 4)
+                            )
+                    )
+                    |> Expect.equal
+                        (TyArr
+                            (TyVar 0 3)
+                            (TyArr
+                                (TyAll "TyVar2" <| TyArr (TyName "Bool") (TyVar 0 4))
+                                (TyName "TyVar1")
+                            )
+                        )
+        ]
+
+
+generalizeTypeTopTest : Test
+generalizeTypeTopTest =
+    describe "generalizeTypeTop"
+        [ test "Should generalize empty context single var type" <|
+            \_ ->
+                generalizeTypeTop [] (TyName "TyVar1") "TyVar1"
+                    |> Expect.equal (TyAll "TyVar1" <| TyVar 0 1)
+        , test "Should generalize full context single var type" <|
+            \_ ->
+                generalizeTypeTop
+                    [ ( "X", TyVarBind )
+                    , ( "y", VarBind <| TyVar 0 1 )
+                    , ( "Z", TyVarBind )
+                    ]
+                    (TyName "TyVar1")
+                    "TyVar1"
+                    |> Expect.equal (TyAll "TyVar1" <| TyVar 0 4)
+        , test "Should generalize full context multiple var type" <|
+            \_ ->
+                generalizeTypeTop
+                    [ ( "X", TyVarBind )
+                    , ( "y", VarBind <| TyVar 0 1 )
+                    , ( "Z", TyVarBind )
+                    ]
+                    (TyArr (TyVar 0 3) (TyArr (TyName "Bool") (TyName "TyVar1")))
+                    "TyVar1"
+                    |> Expect.equal
+                        (TyAll "TyVar1" <| TyArr (TyVar 1 4) (TyArr (TyName "Bool") (TyVar 0 4)))
+        , test "Should generalize full context multiple vars bound and free type" <|
+            \_ ->
+                generalizeTypeTop
+                    [ ( "X", TyVarBind )
+                    , ( "y", VarBind <| TyVar 0 1 )
+                    , ( "Z", TyVarBind )
+                    ]
+                    (TyArr
+                        (TyVar 0 3)
+                        (TyArr
+                            (TyAll "TyVar2" <| TyArr (TyName "Bool") (TyVar 0 4))
+                            (TyName "TyVar1")
+                        )
+                    )
+                    "TyVar1"
+                    |> Expect.equal
+                        (TyAll "TyVar1" <|
+                            TyArr
+                                (TyVar 1 4)
+                                (TyArr
+                                    (TyAll "TyVar2" <| TyArr (TyName "Bool") (TyVar 0 5))
+                                    (TyVar 0 4)
+                                )
+                        )
+        ]

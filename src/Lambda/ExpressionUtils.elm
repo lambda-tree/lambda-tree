@@ -124,7 +124,7 @@ typeShiftAbove d c tyT =
             else
                 TyVar x (n + d)
     in
-    tymap shiftVar c tyT
+    tymap shiftVar (\_ -> TyName) c tyT
 
 
 {-| Shift all indices by `d` in type `tyT`
@@ -150,7 +150,7 @@ typeSubst tyS jIdx tyT =
             else
                 TyVar x n
     in
-    tymap substVar jIdx tyT
+    tymap substVar (\_ -> TyName) jIdx tyT
 
 
 {-| Beta reduction step. Reduce with substitution for `tyS` in `tyT`
@@ -164,8 +164,8 @@ typeSubstTop tyS tyT =
 
 {-| Map over type. Walk the type recursively and apply `onvar`(current ctx length, var idx, var ctx length) on variables
 -}
-tymap : (Int -> Int -> Int -> Ty) -> Int -> Ty -> Ty
-tymap onvar ctx typeT =
+tymap : (Int -> Int -> Int -> Ty) -> (Int -> String -> Ty) -> Int -> Ty -> Ty
+tymap onvar onname ctx typeT =
     let
         walk c tyT =
             case tyT of
@@ -179,13 +179,55 @@ tymap onvar ctx typeT =
                     TyAll tyX (walk (c + 1) tyT2)
 
                 TyName s ->
-                    TyName s
+                    onname c s
     in
     walk ctx typeT
 
 
 
 -- ---------------------------
+
+
+degeneralizeTypeTop : Context -> Ty -> Ty
+degeneralizeTypeTop ctx ty =
+    case ty of
+        TyAll varName ty1 ->
+            let
+                onvar c x n =
+                    if c - ctxlength ctx - x == 0 then
+                        TyName varName
+
+                    else
+                        TyVar x n
+            in
+            tymap onvar (\_ -> TyName) (ctxlength ctx) ty1
+                |> typeShift -1
+
+        _ ->
+            ty
+
+
+generalizeTypeTop : Context -> Ty -> String -> Ty
+generalizeTypeTop ctx ty varName =
+    let
+        onvar _ x n =
+            TyVar x n
+
+        onname c name =
+            if name == varName then
+                -- Also shift the replacing context length
+                TyVar (c - ctxlength ctx) (c + 1)
+
+            else
+                TyName name
+
+        ty1 =
+            ty
+                -- shift other vars first
+                |> typeShift 1
+                |> tymap onvar onname (ctxlength ctx)
+    in
+    TyAll varName ty1
 
 
 equalTypes : Context -> Ty -> Context -> Ty -> Bool

@@ -55,10 +55,10 @@ fromParseType ctx ty =
                 Nothing ->
                     case name of
                         "Bool" ->
-                            TyName "Bool"
+                            TyConst TyBool
 
                         "Int" ->
-                            TyName "Int"
+                            TyConst TyInt
 
                         _ ->
                             TyName name

@@ -46,8 +46,8 @@ tytermSubstTopTest =
     describe "tytermSubstTop"
         [ test "T-Inst Step - System F" <|
             \_ ->
-                tytermSubstTop (TyName "Bool") (TmAbs I "a" (Just <| TyVar 0 1) <| TmVar I 0 2)
-                    |> Expect.equal (TmAbs I "a" (Just <| TyName "Bool") <| TmVar I 0 1)
+                tytermSubstTop (TyConst TyBool) (TmAbs I "a" (Just <| TyVar 0 1) <| TmVar I 0 2)
+                    |> Expect.equal (TmAbs I "a" (Just <| TyConst TyBool) <| TmVar I 0 1)
         ]
 
 
@@ -63,13 +63,13 @@ termShiftTest =
                 termShift 2
                     (TmAbs I
                         "x"
-                        (Just <| TyArr (TyName "Bool") (TyName "Bool"))
+                        (Just <| TyArr (TyConst TyBool) (TyConst TyBool))
                         (TmVar I 0 2)
                     )
                     |> Expect.equal
                         (TmAbs I
                             "x"
-                            (Just <| TyArr (TyName "Bool") (TyName "Bool"))
+                            (Just <| TyArr (TyConst TyBool) (TyConst TyBool))
                             (TmVar I 0 4)
                         )
         , test "Should shift only free variable and not shift bound." <|
@@ -78,7 +78,7 @@ termShiftTest =
                     (TmApp I
                         (TmAbs I
                             "x"
-                            (Just <| TyArr (TyName "Bool") (TyName "Bool"))
+                            (Just <| TyArr (TyConst TyBool) (TyConst TyBool))
                             (TmVar I 0 2)
                         )
                         (TmVar I 1 2)
@@ -87,7 +87,7 @@ termShiftTest =
                         (TmApp I
                             (TmAbs I
                                 "x"
-                                (Just <| TyArr (TyName "Bool") (TyName "Bool"))
+                                (Just <| TyArr (TyConst TyBool) (TyConst TyBool))
                                 (TmVar I 0 7)
                             )
                             (TmVar I 6 7)
@@ -105,7 +105,7 @@ termShiftAboveTest =
                     (TmApp I
                         (TmAbs I
                             "x"
-                            (Just <| TyArr (TyName "Bool") (TyName "Bool"))
+                            (Just <| TyArr (TyConst TyBool) (TyConst TyBool))
                             (TmVar I 0 2)
                         )
                         (TmVar I 1 2)
@@ -114,7 +114,7 @@ termShiftAboveTest =
                         (TmApp I
                             (TmAbs I
                                 "x"
-                                (Just <| TyArr (TyName "Bool") (TyName "Bool"))
+                                (Just <| TyArr (TyConst TyBool) (TyConst TyBool))
                                 (TmVar I 0 7)
                             )
                             (TmVar I 1 7)
@@ -132,7 +132,7 @@ termSubstTest =
                     (TmApp I
                         (TmAbs I
                             "x"
-                            (Just <| TyArr (TyName "Bool") (TyName "Bool"))
+                            (Just <| TyArr (TyConst TyBool) (TyConst TyBool))
                             (TmVar I 0 2)
                         )
                         (TmVar I 1 2)
@@ -141,7 +141,7 @@ termSubstTest =
                         (TmApp I
                             (TmAbs I
                                 "x"
-                                (Just <| TyArr (TyName "Bool") (TyName "Bool"))
+                                (Just <| TyArr (TyConst TyBool) (TyConst TyBool))
                                 (TmVar I 0 7)
                             )
                             (TmVar I 1 7)
@@ -154,49 +154,59 @@ equalTypesTest =
     describe "equalTypes"
         [ test "Should be true if type names are same" <|
             \_ ->
-                equalTypes emptycontext (TyName "Bool") emptycontext (TyName "Bool")
+                equalTypes emptycontext (TyName "B") emptycontext (TyName "B")
                     |> Expect.equal
                         True
         , test "Should be false if type names are not same" <|
             \_ ->
-                equalTypes emptycontext (TyName "Bool") emptycontext (TyName "Int")
+                equalTypes emptycontext (TyName "B") emptycontext (TyName "")
+                    |> Expect.equal
+                        False
+        , test "Should be true if type constants are same" <|
+            \_ ->
+                equalTypes emptycontext (TyConst TyBool) emptycontext (TyConst TyBool)
+                    |> Expect.equal
+                        True
+        , test "Should be false if type constants are not same" <|
+            \_ ->
+                equalTypes emptycontext (TyConst TyBool) emptycontext (TyConst TyInt)
                     |> Expect.equal
                         False
         , test "Should be true if forall names are same" <|
             \_ ->
-                equalTypes emptycontext (TyAll "x" <| TyName "Bool") emptycontext (TyAll "x" <| TyName "Bool")
+                equalTypes emptycontext (TyAll "x" <| TyConst TyBool) emptycontext (TyAll "x" <| TyConst TyBool)
                     |> Expect.equal
                         True
         , test "Should be true even if forall names are not same" <|
             \_ ->
-                equalTypes emptycontext (TyAll "x" <| TyName "Bool") emptycontext (TyAll "y" <| TyName "Bool")
+                equalTypes emptycontext (TyAll "x" <| TyConst TyBool) emptycontext (TyAll "y" <| TyConst TyBool)
                     |> Expect.equal
                         True
         , test "Should be true if both TyArr types are same" <|
             \_ ->
                 equalTypes
                     emptycontext
-                    (TyArr (TyName "Bool") (TyName "Int"))
+                    (TyArr (TyConst TyBool) (TyConst TyInt))
                     emptycontext
-                    (TyArr (TyName "Bool") (TyName "Int"))
+                    (TyArr (TyConst TyBool) (TyConst TyInt))
                     |> Expect.equal
                         True
         , test "Should be false if left TyArr type is different" <|
             \_ ->
                 equalTypes
                     emptycontext
-                    (TyArr (TyName "Int") (TyName "Int"))
+                    (TyArr (TyConst TyInt) (TyConst TyInt))
                     emptycontext
-                    (TyArr (TyName "Bool") (TyName "Int"))
+                    (TyArr (TyConst TyBool) (TyConst TyInt))
                     |> Expect.equal
                         False
         , test "Should be false if right TyArr type is different" <|
             \_ ->
                 equalTypes
                     emptycontext
-                    (TyArr (TyName "Bool") (TyName "Bool"))
+                    (TyArr (TyConst TyBool) (TyConst TyBool))
                     emptycontext
-                    (TyArr (TyName "Bool") (TyName "Int"))
+                    (TyArr (TyConst TyBool) (TyConst TyInt))
                     |> Expect.equal
                         False
         , test "Should be true if ctxts and vars are same and variables exist" <|
@@ -261,8 +271,8 @@ degeneralizeTypeTopTest =
                     , ( "y", VarBind <| TyVar 0 1 )
                     , ( "Z", TyVarBind )
                     ]
-                    (TyAll "TyVar1" <| TyArr (TyVar 1 4) (TyArr (TyName "Bool") (TyVar 0 4)))
-                    |> Expect.equal (TyArr (TyVar 0 3) (TyArr (TyName "Bool") (TyName "TyVar1")))
+                    (TyAll "TyVar1" <| TyArr (TyVar 1 4) (TyArr (TyConst TyBool) (TyVar 0 4)))
+                    |> Expect.equal (TyArr (TyVar 0 3) (TyArr (TyConst TyBool) (TyName "TyVar1")))
         , test "Should degeneralize full context multiple vars bound and free type" <|
             \_ ->
                 degeneralizeTypeTop
@@ -274,7 +284,7 @@ degeneralizeTypeTopTest =
                         TyArr
                             (TyVar 1 4)
                             (TyArr
-                                (TyAll "TyVar2" <| TyArr (TyName "Bool") (TyVar 0 5))
+                                (TyAll "TyVar2" <| TyArr (TyConst TyBool) (TyVar 0 5))
                                 (TyVar 0 4)
                             )
                     )
@@ -282,7 +292,7 @@ degeneralizeTypeTopTest =
                         (TyArr
                             (TyVar 0 3)
                             (TyArr
-                                (TyAll "TyVar2" <| TyArr (TyName "Bool") (TyVar 0 4))
+                                (TyAll "TyVar2" <| TyArr (TyConst TyBool) (TyVar 0 4))
                                 (TyName "TyVar1")
                             )
                         )
@@ -313,10 +323,10 @@ generalizeTypeTopTest =
                     , ( "y", VarBind <| TyVar 0 1 )
                     , ( "Z", TyVarBind )
                     ]
-                    (TyArr (TyVar 0 3) (TyArr (TyName "Bool") (TyName "TyVar1")))
+                    (TyArr (TyVar 0 3) (TyArr (TyConst TyBool) (TyName "TyVar1")))
                     "TyVar1"
                     |> Expect.equal
-                        (TyAll "TyVar1" <| TyArr (TyVar 1 4) (TyArr (TyName "Bool") (TyVar 0 4)))
+                        (TyAll "TyVar1" <| TyArr (TyVar 1 4) (TyArr (TyConst TyBool) (TyVar 0 4)))
         , test "Should generalize full context multiple vars bound and free type" <|
             \_ ->
                 generalizeTypeTop
@@ -327,7 +337,7 @@ generalizeTypeTopTest =
                     (TyArr
                         (TyVar 0 3)
                         (TyArr
-                            (TyAll "TyVar2" <| TyArr (TyName "Bool") (TyVar 0 4))
+                            (TyAll "TyVar2" <| TyArr (TyConst TyBool) (TyVar 0 4))
                             (TyName "TyVar1")
                         )
                     )
@@ -337,7 +347,7 @@ generalizeTypeTopTest =
                             TyArr
                                 (TyVar 1 4)
                                 (TyArr
-                                    (TyAll "TyVar2" <| TyArr (TyName "Bool") (TyVar 0 5))
+                                    (TyAll "TyVar2" <| TyArr (TyConst TyBool) (TyVar 0 5))
                                     (TyVar 0 4)
                                 )
                         )

@@ -3,6 +3,11 @@ module Lambda.Expression exposing (..)
 {-| -}
 
 
+type TyConst
+    = TyBool
+    | TyInt
+
+
 {-| Type of term
 `TyVar`(de Bruijn index - indexing from 0, context length) - type variable use
 `TyArr`(from type, to type) - function type
@@ -13,6 +18,7 @@ type Ty
     | TyArr Ty Ty
     | TyAll String Ty
     | TyName String
+    | TyConst TyConst
 
 
 {-| Info dictionary

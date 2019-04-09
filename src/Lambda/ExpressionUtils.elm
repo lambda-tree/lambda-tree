@@ -180,6 +180,9 @@ tymap onvar onname ctx typeT =
 
                 TyName s ->
                     onname c s
+
+                TyConst _ ->
+                    tyT
     in
     walk ctx typeT
 
@@ -303,6 +306,9 @@ equalTypes ctx1 ty1 ctx2 ty2 =
             Debug.log "equalTypes (ctx2, ty2)" ( ctx2, ty2 )
     in
     case ( ty1, ty2 ) of
+        ( TyConst s1, TyConst s2 ) ->
+            s1 == s2
+
         ( TyName s1, TyName s2 ) ->
             s1 == s2
 

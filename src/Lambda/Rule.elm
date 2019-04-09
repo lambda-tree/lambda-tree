@@ -75,7 +75,7 @@ checkRule rule =
                 TmIf _ t1 t2 t3 ->
                     List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx, top3.ctx ]
                         && (top1.term == t1)
-                        && equalTypes top1.ctx top1.ty bottom.ctx (TyName "Bool")
+                        && equalTypes top1.ctx top1.ty bottom.ctx (TyConst TyBool)
                         && (top2.term == t2)
                         && equalTypes top2.ctx top2.ty bottom.ctx bottom.ty
                         && (top3.term == t3)
@@ -89,7 +89,7 @@ checkRule rule =
                 TmConst _ TmTrue ->
                     (bottom.ctx == top.ctx)
                         && (top.term == bottom.term)
-                        && equalTypes top.ctx top.ty bottom.ctx (TyName "Bool")
+                        && equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool)
 
                 _ ->
                     False
@@ -99,7 +99,7 @@ checkRule rule =
                 TmConst _ TmFalse ->
                     (bottom.ctx == top.ctx)
                         && (top.term == bottom.term)
-                        && equalTypes top.ctx top.ty bottom.ctx (TyName "Bool")
+                        && equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool)
 
                 _ ->
                     False

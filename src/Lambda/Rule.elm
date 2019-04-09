@@ -3,11 +3,12 @@ module Lambda.Rule exposing (..)
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
-import Lambda.ExpressionUtils exposing (degeneralizeTypeTop, equalTypes, generalizeTypeTop, typeSubstTop)
+import Lambda.ExpressionUtils exposing (degeneralizeTypeTop, equalTypes, generalizeTypeTop, typeSubstTop, unifyType)
 import Lambda.ParseTransform exposing (ParseTransformError)
 import Maybe exposing (..)
 import Model exposing (Rule, TreeModel)
 import Result
+import Result.Extra
 import Utils.Tree exposing (Tree(..))
 
 
@@ -22,6 +23,7 @@ type TyRule
     | TTApp { bottom : TypeStatement, top : TypeStatement }
     | TLet { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
     | TGen { bottom : TypeStatement, top : TypeStatement }
+    | TInst { bottom : TypeStatement, top : TypeStatement }
 
 
 type alias TypeStatement =
@@ -182,6 +184,20 @@ checkRule rule =
                         |> check ( "terms are same", bottom.term == top.term )
                         |> check ( "var is not a free var of ctx", isnamebound bottom.ctx varName |> not )
                         |> check ( "type is degeneralized", degeneralizeTypeTop bottom.ctx bottom.ty == top.ty )
+                        |> check ( "type is generalized", generalizeTypeTop top.ctx top.ty varName == bottom.ty )
+                        |> Result.map (\_ -> True)
+                        |> Result.withDefault False
+
+                _ ->
+                    False
+
+        TInst { bottom, top } ->
+            case bottom.ty of
+                TyAll varName ty1 ->
+                    Ok ()
+                        |> check ( "ctxs are same", bottom.ctx == top.ctx )
+                        |> check ( "terms are same", bottom.term == top.term )
+                        |> check ( "type is subtype", Result.Extra.isOk <| unifyType bottom.ctx bottom.ty top.ctx top.ty )
                         |> check ( "type is generalized", generalizeTypeTop top.ctx top.ty varName == bottom.ty )
                         |> Result.map (\_ -> True)
                         |> Result.withDefault False
@@ -489,6 +505,30 @@ tryRule t =
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
                                 (TGen
+                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                    , top =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
+                                        }
+                                    }
+                                )
+                                |> (\checks ->
+                                        if checks then
+                                            "OK"
+
+                                        else
+                                            "NOK"
+                                   )
+
+                        _ ->
+                            "Top rule Error"
+
+                Model.TInst ->
+                    case children of
+                        [ Node (Result.Ok c1) _ ] ->
+                            checkRule
+                                (TInst
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top =
                                         { ctx = c1.ctx

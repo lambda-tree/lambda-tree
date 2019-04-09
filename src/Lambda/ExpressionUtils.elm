@@ -188,6 +188,69 @@ tymap onvar onname ctx typeT =
 -- ---------------------------
 
 
+type alias Substitution =
+    List ( Ty, String )
+
+
+
+{-
+   -- subst only works when tyall are on top levels and for unifyType purposes
+   subst : Substitution -> Ty -> Ty
+   subst context ss ty =
+       let
+           substOne ctx ty1 varName ty = case ty of
+               TyVar x n -> if index2name I ctx x ==
+       ss
+        |> List.foldr (\(ty1, varName) -> substOne context ty1 varName)
+
+   --    Debug.todo "Implement substitution application"
+-}
+
+
+unifyType : Context -> Ty -> Context -> Ty -> Result String Substitution
+unifyType ctx1 ty1 ctx2 ty2 =
+    Debug.todo "Unimplemented!"
+
+
+
+{-
+   case ( ty1, ty2 ) of
+       ( TyVar x _, _ ) ->
+           index2name I ctx1 x
+               |> Result.fromMaybe ("Variable " ++ Debug.toString ty1 ++ " not found in context")
+               |> Result.map (\name -> [ ( ty2, name ) ])
+
+       ( _, TyVar x _ ) ->
+           index2name I ctx2 x
+               |> Result.fromMaybe ("Variable " ++ Debug.toString ty1 ++ " not found in context")
+               |> Result.map (\name -> [ ( ty1, name ) ])
+
+       ( TyName name1, TyName name2 ) ->
+           if name1 == name2 then
+               Ok []
+
+           else
+               Err <| "Type names '" ++ name1 ++ "' & '" ++ name2 ++ "' are not compatible"
+
+       ( TyArr ty11 ty12, TyArr ty21 ty22 ) ->
+           unifyType ctx1 ty11 ctx2 ty21
+               |> Result.andThen
+                   (\justS1 ->
+                       unifyType ctx1 (subst justS1 ty12) ctx2 (subst justS1 ty22)
+                           |> Result.andThen (\justS2 -> Ok <| justS2 ++ justS1)
+                   )
+
+       ( TyAll name1 ty11, _ ) ->
+           unifyType (addbinding ctx1 name1 TyVarBind) ty11 ctx2 ty2
+
+       ( _, TyAll name2 ty21 ) ->
+           unifyType ctx1 ty1 (addbinding ctx1 name2 TyVarBind) ty21
+
+       ( _, _ ) ->
+           Err ""
+-}
+
+
 degeneralizeTypeTop : Context -> Ty -> Ty
 degeneralizeTypeTop ctx ty =
     case ty of

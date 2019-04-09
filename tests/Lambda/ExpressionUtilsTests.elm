@@ -342,3 +342,32 @@ generalizeTypeTopTest =
                                 )
                         )
         ]
+
+
+
+{-
+   unifyTypeTest : Test
+   unifyTypeTest =
+       describe "unifyType"
+           [ test "Should unify types" <|
+               \_ ->
+                   unifyType [] (TyName "TyVar1") [] (TyName "TyVar1")
+                       |> Expect.equal (Ok [])
+           , test "Should unify types 2" <|
+               \_ ->
+                   unifyType [] (TyAll "TyVar1" <| TyVar 0 1) [] (TyName "TyVar2")
+                       |> Expect.equal (Ok [ ( TyName "TyVar2", -1 ) ])
+           , test "Should unify types 3" <|
+               \_ ->
+                   unifyType [] (TyName "TyVar2") [] (TyAll "TyVar1" <| TyVar 0 1)
+                       |> Expect.equal (Ok [ ( TyName "TyVar2", -1 ) ])
+           , test "Should unify types 4" <|
+               \_ ->
+                   unifyType
+                       []
+                       (TyArr (TyName "TyVar2") (TyName "TyVar2"))
+                       []
+                       (TyAll "TyVar1" <| TyArr (TyVar 0 1) (TyVar 0 1))
+                       |> Expect.equal (Ok [ ( TyName "TyVar2", "TyVar1" ) ])
+           ]
+-}

@@ -1,10 +1,10 @@
 module Lambda.ParserTests exposing (..)
 
 import Expect exposing (Expectation)
-import Test exposing (..)
+import Lambda.Parse exposing (..)
 import Parser
 import Result
-import Lambda.Parse exposing (..)
+import Test exposing (..)
 
 
 termExprTest : Test
@@ -40,10 +40,9 @@ termExprTest =
                     |> Expect.equal
                         (Result.Ok <|
                             TmApp
-                                ((TmApp
+                                (TmApp
                                     (TmVar "termVar1")
                                     (TmVar "termVar2")
-                                 )
                                 )
                                 (TmVar "termVar3")
                         )
@@ -271,6 +270,16 @@ typeExprTest =
             \_ ->
                 Parser.run typeExpr "forall TypeVar1. TypeVar1"
                     |> Expect.equal (Result.Ok <| TyAll "TypeVar1" (TyVar "TypeVar1"))
+        , test "should parse type generalization with list" <|
+            \_ ->
+                Parser.run typeExpr "forall TypeVar1, TypeVar2, TypeVar3. TypeVar1 -> TypeVar2 -> TypeVar3"
+                    |> Expect.equal
+                        (Result.Ok <|
+                            TyAll "TypeVar1" <|
+                                TyAll "TypeVar2" <|
+                                    TyAll "TypeVar3" <|
+                                        (TyArr (TyVar "TypeVar1") <| TyArr (TyVar "TypeVar2") (TyVar "TypeVar3"))
+                        )
         , test "should parse complex expr." <|
             \_ ->
                 Parser.run typeExpr "forall TypeVar1. forall TypeVar2. TypeVar1 -> (TypeVar1 -> TypeVar2) -> TypeVar2"

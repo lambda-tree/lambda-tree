@@ -213,19 +213,53 @@ typeExpr =
         |> andThen (\subExpr -> arrowExprHelp [ subExpr ])
 
 
+tyAllVars : Parser (List String)
+tyAllVars =
+    succeed identity
+        |= sequence
+            { start = ""
+            , separator = ","
+            , end = ""
+            , spaces = spaces
+            , item = typeVar
+            , trailing = Forbidden
+            }
+        |> andThen checkAbsVars
+
+
+checkAbsVars : List String -> Parser (List String)
+checkAbsVars vars =
+    if List.length vars == 0 then
+        problem "No variable"
+
+    else
+        succeed vars
+
+
+tyAll : Parser (Ty -> Ty)
+tyAll =
+    succeed identity
+        |. forAllSymbol
+        |. spaces
+        |= tyAllVars
+        |. spaces
+        |. symbol "."
+        |. spaces
+        |> andThen
+            (List.map TyAll
+                >> List.foldl (\tyAllVar acc -> \f -> acc (tyAllVar f)) (\x -> x)
+                >> succeed
+            )
+
+
 {-| Type sub expression
 TODO: Mark brackets with new value constructor?
 -}
 typeSubExpr : Parser Ty
 typeSubExpr =
     oneOf
-        [ succeed TyAll
-            |. forAllSymbol
-            |. spaces
-            |= typeVar
-            |. spaces
-            |. symbol "."
-            |. spaces
+        [ succeed (<|)
+            |= tyAll
             |= lazy (\_ -> typeExpr)
         , succeed identity
             |= map TyVar typeVar

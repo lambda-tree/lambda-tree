@@ -3,6 +3,7 @@ module Lambda.ExpressionUtils exposing (..)
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (addbinding, ctxlength, getbinding, index2name)
 import Lambda.Expression exposing (..)
+import Set exposing (Set)
 
 
 {-| Shift indices by `d` if idx is greater than `c` in term `t`
@@ -191,67 +192,129 @@ tymap onvar onname ctx typeT =
 -- ---------------------------
 
 
-type alias Substitution =
+{-| Return free variables of type (for H-M)
+
+Doesn't take ctx -> doesn't return TyVars that are already bound in ctx
+In H-M if a var is free in type, it uses the TyName enum, not the TyVar
+
+-}
+ftvTy : Ty -> Set String
+ftvTy ty =
+    case ty of
+        TyName s ->
+            Set.singleton s
+
+        TyArr ty1 ty2 ->
+            ftvTy ty1
+                |> Set.union (ftvTy ty2)
+
+        TyVar _ _ ->
+            Set.empty
+
+        TyAll _ ty1 ->
+            ftvTy ty1
+
+        TyConst _ ->
+            Set.empty
+
+
+ftvCtx : Context -> Set String
+ftvCtx ctx =
+    ctx
+        |> List.map
+            (\( s, b ) ->
+                case b of
+                    VarBind ty ->
+                        ftvTy ty
+
+                    TyVarBind ->
+                        Set.singleton s
+
+                    _ ->
+                        Set.empty
+            )
+        |> List.foldl Set.union Set.empty
+
+
+{-| Substitution of Ty for free type variable
+-}
+type alias SubstitutionFtv =
     List ( Ty, String )
 
 
-
-{-
-   -- subst only works when tyall are on top levels and for unifyType purposes
-   subst : Substitution -> Ty -> Ty
-   subst context ss ty =
-       let
-           substOne ctx ty1 varName ty = case ty of
-               TyVar x n -> if index2name I ctx x ==
-       ss
-        |> List.foldr (\(ty1, varName) -> substOne context ty1 varName)
-
-   --    Debug.todo "Implement substitution application"
+{-| Applies free variable substitution on type
 -}
+substFtv : SubstitutionFtv -> Ty -> Ty
+substFtv ss tyTop =
+    let
+        substOne tyS varName ty =
+            case ty of
+                TyName name ->
+                    if varName == name then
+                        tyS
+
+                    else
+                        ty
+
+                TyArr ty1 ty2 ->
+                    TyArr (substOne tyS varName ty1) (substOne tyS varName ty2)
+
+                _ ->
+                    ty
+    in
+    ss
+        |> List.foldr (\( tyS, varName ) -> substOne tyS varName) tyTop
 
 
-unifyType : Context -> Ty -> Context -> Ty -> Result String Substitution
-unifyType ctx1 ty1 ctx2 ty2 =
-    Debug.todo "Unimplemented!"
-
-
-
-{-
-   case ( ty1, ty2 ) of
-       ( TyVar x _, _ ) ->
-           index2name I ctx1 x
-               |> Result.fromMaybe ("Variable " ++ Debug.toString ty1 ++ " not found in context")
-               |> Result.map (\name -> [ ( ty2, name ) ])
-
-       ( _, TyVar x _ ) ->
-           index2name I ctx2 x
-               |> Result.fromMaybe ("Variable " ++ Debug.toString ty1 ++ " not found in context")
-               |> Result.map (\name -> [ ( ty1, name ) ])
-
-       ( TyName name1, TyName name2 ) ->
-           if name1 == name2 then
-               Ok []
-
-           else
-               Err <| "Type names '" ++ name1 ++ "' & '" ++ name2 ++ "' are not compatible"
-
-       ( TyArr ty11 ty12, TyArr ty21 ty22 ) ->
-           unifyType ctx1 ty11 ctx2 ty21
-               |> Result.andThen
-                   (\justS1 ->
-                       unifyType ctx1 (subst justS1 ty12) ctx2 (subst justS1 ty22)
-                           |> Result.andThen (\justS2 -> Ok <| justS2 ++ justS1)
-                   )
-
-       ( TyAll name1 ty11, _ ) ->
-           unifyType (addbinding ctx1 name1 TyVarBind) ty11 ctx2 ty2
-
-       ( _, TyAll name2 ty21 ) ->
-           unifyType ctx1 ty1 (addbinding ctx1 name2 TyVarBind) ty21
-
-       ( _, _ ) ->
-           Err ""
+{-| Substitutes primarily to the vars of first expression
 -}
+unifyType : Ty -> Ty -> Result String SubstitutionFtv
+unifyType ty1 ty2 =
+    case ( ty1, ty2 ) of
+        ( TyName name1, TyName name2 ) ->
+            if name1 == name2 then
+                Ok []
+
+            else
+                Ok [ ( ty2, name1 ) ]
+
+        ( TyName name, _ ) ->
+            if Set.member name (ftvTy ty2) then
+                Err <| "Variable " ++ name ++ " is free in type 2"
+
+            else
+                Ok [ ( ty2, name ) ]
+
+        ( _, TyName name ) ->
+            if Set.member name (ftvTy ty1) then
+                Err <| "Variable " ++ name ++ " is free in type 1"
+
+            else
+                Ok [ ( ty1, name ) ]
+
+        ( TyConst c1, TyConst c2 ) ->
+            if c1 == c2 then
+                Ok []
+
+            else
+                Err <| "Type constants '" ++ Debug.toString c1 ++ "' & '" ++ Debug.toString c2 ++ "' are not compatible"
+
+        ( TyArr ty11 ty12, TyArr ty21 ty22 ) ->
+            unifyType ty11 ty21
+                |> Result.andThen
+                    (\justS1 ->
+                        unifyType (substFtv justS1 ty12) (substFtv justS1 ty22)
+                            |> Result.andThen (\justS2 -> Ok <| justS2 ++ justS1)
+                    )
+
+        ( TyAll name1 _, _ ) ->
+            Err <| "Types should be degeneralized. TyAll '" ++ name1 ++ "' found"
+
+        ( _, TyAll name2 _ ) ->
+            Err <| "Types should be degeneralized. TyAll '" ++ name2 ++ "' found"
+
+        ( _, _ ) ->
+            Err ""
 
 
 degeneralizeTypeTop : Context -> Ty -> Ty
@@ -271,6 +334,103 @@ degeneralizeTypeTop ctx ty =
 
         _ ->
             ty
+
+
+degeneralizeType : Context -> Ty -> Ty
+degeneralizeType ctx ty =
+    case ty of
+        TyAll _ _ ->
+            degeneralizeTypeTop ctx ty |> degeneralizeType ctx
+
+        _ ->
+            ty
+
+
+freshVarName : Set String -> String -> String
+freshVarName freeVars varName =
+    let
+        countedFreshVarName : Set String -> String -> Int -> String
+        countedFreshVarName fv vn counter =
+            let
+                countedVarName =
+                    varName
+                        ++ (if counter == 0 then
+                                ""
+
+                            else
+                                String.fromInt counter
+                           )
+            in
+            if Set.member countedVarName freeVars then
+                countedFreshVarName fv vn (counter + 1)
+
+            else
+                countedVarName
+    in
+    countedFreshVarName freeVars varName 0
+
+
+renameBoundVarsWithFresh : Set String -> Ty -> Ty
+renameBoundVarsWithFresh freeVars ty =
+    case ty of
+        TyAll varName ty1 ->
+            let
+                fresh =
+                    freshVarName freeVars varName
+            in
+            TyAll fresh <| renameBoundVarsWithFresh (Set.insert fresh freeVars) ty1
+
+        TyArr ty1 ty2 ->
+            TyArr
+                (renameBoundVarsWithFresh freeVars ty1)
+                (renameBoundVarsWithFresh freeVars ty2)
+
+        _ ->
+            ty
+
+
+topBoundVars : Ty -> Set String
+topBoundVars ty =
+    case ty of
+        TyAll varName ty1 ->
+            Set.insert varName <| topBoundVars ty1
+
+        _ ->
+            Set.empty
+
+
+isSpecializedType : Context -> Ty -> Ty -> Result String Bool
+isSpecializedType ctx tyGen tySpec =
+    let
+        degeneralizedTyGen =
+            degeneralizeType ctx tyGen
+
+        renamedTySpec =
+            renameBoundVarsWithFresh
+                (ftvTy degeneralizedTyGen
+                    |> Set.union (ftvTy tySpec)
+                    |> Set.union (ftvCtx ctx)
+                )
+                tySpec
+
+        degeneralizedTySpec =
+            degeneralizeType ctx renamedTySpec
+
+        unification =
+            unifyType degeneralizedTyGen degeneralizedTySpec
+    in
+    unification
+        |> Result.map
+            (\u ->
+                u
+                    |> List.all
+                        (\( tyS, varName ) ->
+                            -- substitution must be into the generic type
+                            Set.member varName (ftvTy degeneralizedTyGen)
+                                -- var must be bound var of the generic type
+                                && Set.member varName (topBoundVars tyGen)
+                        )
+            )
 
 
 generalizeTypeTop : Context -> Ty -> String -> Ty
@@ -296,6 +456,9 @@ generalizeTypeTop ctx ty varName =
     TyAll varName ty1
 
 
+{-| Type equivalency of 2 types. Might be in different contexts.
+Useful for e.g. comparing type of variable in ctx with type of whole expression
+-}
 equalTypes : Context -> Ty -> Context -> Ty -> Bool
 equalTypes ctx1 ty1 ctx2 ty2 =
     let
@@ -347,45 +510,3 @@ equalTypes ctx1 ty1 ctx2 ty2 =
 
         _ ->
             False
-
-
-
-{-
-   equalTypesExact : Context -> Ty -> Context -> Ty -> Bool
-   equalTypesExact ctx1 ty1 ctx2 ty2 =
-       case ( ty1, ty2 ) of
-           ( TyName s1, TyName s2 ) ->
-               s1 == s2
-
-           ( TyAll s1 ty11, TyAll s2 ty21 ) ->
-               (s1 == s2)
-                   && equalTypes
-                       (addbinding ctx1 s1 TyVarBind)
-                       ty11
-                       (addbinding ctx2 s2 TyVarBind)
-                       ty21
-
-           ( TyArr ty11 ty12, TyArr ty21 ty22 ) ->
-               equalTypes
-                   ctx1
-                   ty11
-                   ctx2
-                   ty21
-                   && equalTypes
-                       ctx1
-                       ty12
-                       ctx2
-                       ty22
-
-           ( TyVar i1 l1, TyVar i2 l2 ) ->
-               (getbinding ctx1 (i1 + (ctxlength ctx1 - l1))
-                   == getbinding ctx2 (i2 + (ctxlength ctx2 - l2))
-               )
-                   && (index2name I ctx1 (i1 + (ctxlength ctx1 - l1))
-                           == index2name I ctx2 (i2 + (ctxlength ctx2 - l2))
-                      )
-                   && (l2 - l1 == i2 - i1)
-
-           _ ->
-               False
--}

@@ -4,6 +4,7 @@ import Expect exposing (Expectation)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (..)
+import Set
 import Test exposing (..)
 
 
@@ -351,6 +352,278 @@ generalizeTypeTopTest =
                                     (TyVar 0 4)
                                 )
                         )
+        ]
+
+
+degeneralizeTypeTest : Test
+degeneralizeTypeTest =
+    describe "degeneralizeType"
+        [ test "Should degeneralize empty context single var type" <|
+            \_ ->
+                degeneralizeType [] (TyAll "TyVar1" <| TyVar 0 1)
+                    |> Expect.equal (TyName "TyVar1")
+        , test "Should degeneralize full context single var type" <|
+            \_ ->
+                degeneralizeType
+                    [ ( "X", TyVarBind )
+                    , ( "y", VarBind <| TyVar 0 1 )
+                    , ( "Z", TyVarBind )
+                    ]
+                    (TyAll "TyVar1" <| TyVar 0 4)
+                    |> Expect.equal (TyName "TyVar1")
+        , test "Should degeneralize full context multiple var type" <|
+            \_ ->
+                degeneralizeType
+                    [ ( "X", TyVarBind )
+                    , ( "y", VarBind <| TyVar 0 1 )
+                    , ( "Z", TyVarBind )
+                    ]
+                    (TyAll "TyVar1" <| TyArr (TyVar 1 4) (TyArr (TyConst TyBool) (TyVar 0 4)))
+                    |> Expect.equal (TyArr (TyVar 0 3) (TyArr (TyConst TyBool) (TyName "TyVar1")))
+        , test "Should degeneralize full context multiple bound vars" <|
+            \_ ->
+                degeneralizeType
+                    [ ( "X", TyVarBind )
+                    , ( "y", VarBind <| TyVar 0 1 )
+                    , ( "Z", TyVarBind )
+                    ]
+                    (TyAll "TyVar1" <|
+                        TyAll "TyVar2" <|
+                            TyAll "TyVar3" <|
+                                TyArr (TyVar 3 6) (TyArr (TyVar 2 6) (TyVar 0 6))
+                    )
+                    |> Expect.equal (TyArr (TyVar 0 3) (TyArr (TyName "TyVar1") (TyName "TyVar3")))
+        ]
+
+
+ftvTyTest : Test
+ftvTyTest =
+    describe "ftvTy"
+        [ test "Should return free type variables of type" <|
+            \_ ->
+                ftvTy
+                    (TyAll "TyVar1" <|
+                        TyArr
+                            (TyVar 0 1)
+                            (TyArr
+                                (TyName "A")
+                                (TyArr (TyName "B") (TyName "C"))
+                            )
+                    )
+                    |> Expect.equal (Set.fromList [ "A", "B", "C" ])
+        ]
+
+
+ftvCtxTest : Test
+ftvCtxTest =
+    describe "ftvCtx"
+        [ test "Should return free type variables of ctx" <|
+            \_ ->
+                ftvCtx
+                    [ ( "TyVarX", TyVarBind )
+                    , ( "termVar1", VarBind <| TyVar 0 1 )
+                    , ( "termVar2", VarBind <| TyName "X" )
+                    , ( "termVar3"
+                      , VarBind <|
+                            (TyAll "TyVar1" <|
+                                TyArr
+                                    (TyVar 0 1)
+                                    (TyArr
+                                        (TyName "A")
+                                        (TyArr (TyName "B") (TyName "C"))
+                                    )
+                            )
+                      )
+                    ]
+                    |> Expect.equal (Set.fromList [ "A", "B", "C", "TyVarX", "X" ])
+        ]
+
+
+substTest : Test
+substTest =
+    describe "subst"
+        [ test "Should substitute tyS for the free variable in simple case" <|
+            \_ ->
+                substFtv
+                    [ ( TyArr
+                            (TyName "Y")
+                            (TyName "Z")
+                      , "X"
+                      )
+                    ]
+                    (TyName "X")
+                    |> Expect.equal (TyArr (TyName "Y") (TyName "Z"))
+        , test "Should substitute tyS for the free variable in TyArr" <|
+            \_ ->
+                substFtv
+                    [ ( TyArr (TyName "Y") (TyName "Z"), "X" ) ]
+                    (TyArr (TyName "X") (TyName "X"))
+                    |> Expect.equal
+                        (TyArr
+                            (TyArr
+                                (TyName "Y")
+                                (TyName "Z")
+                            )
+                            (TyArr
+                                (TyName "Y")
+                                (TyName "Z")
+                            )
+                        )
+        ]
+
+
+unifyTypeTest : Test
+unifyTypeTest =
+    describe "unifyType"
+        [ test "Should unify types 1" <|
+            \_ ->
+                unifyType
+                    (TyName "X")
+                    (TyName "Y")
+                    |> Expect.equal (Ok [ ( TyName "Y", "X" ) ])
+        , test "Should unify types 2" <|
+            \_ ->
+                unifyType
+                    (TyArr (TyName "X") (TyName "X"))
+                    (TyArr (TyConst TyBool) (TyConst TyBool))
+                    |> Expect.equal (Ok [ ( TyConst TyBool, "X" ) ])
+        , test "Should unify types 3" <|
+            \_ ->
+                unifyType
+                    (TyArr (TyName "X") (TyArr (TyName "Y") (TyName "X")))
+                    (TyArr (TyConst TyBool) (TyArr (TyName "Z") (TyConst TyBool)))
+                    |> Expect.equal (Ok [ ( TyName "Z", "Y" ), ( TyConst TyBool, "X" ) ])
+        , test "Should unify types 4" <|
+            \_ ->
+                unifyType
+                    (TyArr (TyConst TyBool) (TyArr (TyName "Y") (TyConst TyBool)))
+                    (TyArr (TyConst TyBool) (TyArr (TyName "Z") (TyConst TyBool)))
+                    |> Expect.equal (Ok [ ( TyName "Z", "Y" ) ])
+        , test "Should unify types 5" <|
+            \_ ->
+                unifyType
+                    (TyArr (TyConst TyBool) (TyArr (TyConst TyBool) (TyConst TyBool)))
+                    (TyArr (TyConst TyBool) (TyArr (TyConst TyBool) (TyConst TyBool)))
+                    |> Expect.equal (Ok [])
+        , test "Should unify types 6" <|
+            \_ ->
+                unifyType
+                    (TyArr (TyConst TyBool) (TyConst TyBool))
+                    (TyArr (TyName "A") (TyName "A"))
+                    |> Expect.equal (Ok [ ( TyConst TyBool, "A" ) ])
+        , test "Should unify types 7" <|
+            \_ ->
+                unifyType
+                    (TyArr (TyName "A") (TyName "A"))
+                    (TyArr (TyConst TyBool) (TyConst TyBool))
+                    |> Expect.equal (Ok [ ( TyConst TyBool, "A" ) ])
+        ]
+
+
+freshVarNameTest : Test
+freshVarNameTest =
+    describe "freshVarName"
+        [ test "Should return same var if not in free vars" <|
+            \_ ->
+                freshVarName
+                    (Set.fromList [ "Y" ])
+                    "X"
+                    |> Expect.equal "X"
+        , test "Should return fresh counted var if in free vars 1" <|
+            \_ ->
+                freshVarName
+                    (Set.fromList [ "Y", "X" ])
+                    "X"
+                    |> Expect.equal "X1"
+        , test "Should return fresh counted var if in free vars 2" <|
+            \_ ->
+                freshVarName
+                    (Set.fromList [ "Y", "X", "X1", "X2", "X3" ])
+                    "X"
+                    |> Expect.equal "X4"
+        ]
+
+
+renameBoundVarsWithFreshTest : Test
+renameBoundVarsWithFreshTest =
+    describe "renameBoundVarsWithFresh"
+        [ test "Should return same type if not in free vars" <|
+            \_ ->
+                renameBoundVarsWithFresh
+                    (Set.fromList [ "Y" ])
+                    (TyAll "X" <| TyVar 0 1)
+                    |> Expect.equal (TyAll "X" <| TyVar 0 1)
+        , test "Should return fresh counted var if in free vars 1" <|
+            \_ ->
+                renameBoundVarsWithFresh
+                    (Set.fromList [ "Y", "X" ])
+                    (TyAll "X" <| TyVar 0 1)
+                    |> Expect.equal (TyAll "X1" <| TyVar 0 1)
+        , test "Should return fresh counted var if in free vars 2" <|
+            \_ ->
+                renameBoundVarsWithFresh
+                    (Set.fromList [ "Y", "X", "X1", "X2", "X3" ])
+                    (TyAll "X" <| TyVar 0 1)
+                    |> Expect.equal (TyAll "X4" <| TyVar 0 1)
+        , test "Should return fresh counted var if in free vars multiple vars 1" <|
+            \_ ->
+                renameBoundVarsWithFresh
+                    (Set.fromList [ "Y", "X", "X1", "X2", "X3" ])
+                    (TyAll "X" <| TyAll "Z" <| TyAll "Y" <| TyArr (TyVar 0 3) (TyVar 2 3))
+                    |> Expect.equal (TyAll "X4" <| TyAll "Z" <| TyAll "Y1" <| TyArr (TyVar 0 3) (TyVar 2 3))
+        ]
+
+
+isSpecializedTypeTest : Test
+isSpecializedTypeTest =
+    describe "isSpecializedType"
+        [ test "Should be true if both equally generic" <|
+            \_ ->
+                isSpecializedType []
+                    (TyAll "X" <| TyArr (TyVar 0 1) (TyVar 0 1))
+                    (TyAll "Y" <| TyArr (TyVar 0 1) (TyVar 0 1))
+                    |> Expect.equal (Ok <| True)
+        , test "Should be true if second is more strictly specialized 1" <|
+            \_ ->
+                isSpecializedType []
+                    (TyAll "X" <| TyArr (TyVar 0 1) (TyVar 0 1))
+                    (TyArr (TyConst TyBool) (TyConst TyBool))
+                    |> Expect.equal (Ok <| True)
+        , test "Should be false if first is more strictly specialized" <|
+            \_ ->
+                isSpecializedType []
+                    (TyArr (TyConst TyBool) (TyConst TyBool))
+                    (TyAll "X" <| TyArr (TyVar 0 1) (TyVar 0 1))
+                    |> Expect.equal (Ok <| False)
+        , test "Should be true if second is more strictly specialized 2" <|
+            \_ ->
+                isSpecializedType []
+                    (TyAll "X" <| TyArr (TyVar 0 1) (TyVar 0 1))
+                    (TyAll "X" <|
+                        TyAll "Y" <|
+                            TyArr
+                                (TyArr (TyVar 0 1) (TyVar 0 1))
+                                (TyArr (TyVar 0 1) (TyVar 0 1))
+                    )
+                    |> Expect.equal (Ok <| True)
+        , test "Should be true if second is more strictly specialized 3" <|
+            \_ ->
+                isSpecializedType []
+                    (TyAll "X" <| TyArr (TyVar 0 1) (TyVar 0 1))
+                    (TyArr (TyName "X") (TyName "X"))
+                    |> Expect.equal (Ok <| True)
+        , test "Should be false if substitution must be into a free variable" <|
+            \_ ->
+                isSpecializedType []
+                    (TyArr (TyName "X") (TyName "X"))
+                    (TyAll "X" <| TyArr (TyVar 0 1) (TyVar 0 1))
+                    |> Expect.equal (Ok <| False)
+        , test "Should be false if substituting to non bound variable" <|
+            \_ ->
+                isSpecializedType []
+                    (TyAll "X" <| TyArr (TyName "Y") (TyName "Y"))
+                    (TyArr (TyName "X") (TyName "X"))
+                    |> Expect.equal (Ok <| False)
         ]
 
 

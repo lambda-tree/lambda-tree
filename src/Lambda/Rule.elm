@@ -3,12 +3,11 @@ module Lambda.Rule exposing (..)
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
-import Lambda.ExpressionUtils exposing (degeneralizeTypeTop, equalTypes, generalizeTypeTop, typeSubstTop, unifyType)
+import Lambda.ExpressionUtils exposing (degeneralizeTypeTop, equalTypes, generalizeTypeTop, isSpecializedType, typeSubstTop)
 import Lambda.ParseTransform exposing (ParseTransformError)
 import Maybe exposing (..)
 import Model exposing (Rule, TreeModel)
 import Result
-import Result.Extra
 import Utils.Tree exposing (Tree(..))
 
 
@@ -192,18 +191,12 @@ checkRule rule =
                     False
 
         TInst { bottom, top } ->
-            case bottom.ty of
-                TyAll varName ty1 ->
-                    Ok ()
-                        |> check ( "ctxs are same", bottom.ctx == top.ctx )
-                        |> check ( "terms are same", bottom.term == top.term )
-                        |> check ( "type is subtype", Result.Extra.isOk <| unifyType bottom.ctx bottom.ty top.ctx top.ty )
-                        |> check ( "type is generalized", generalizeTypeTop top.ctx top.ty varName == bottom.ty )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
-
-                _ ->
-                    False
+            Ok ()
+                |> check ( "ctxs are same", bottom.ctx == top.ctx )
+                |> check ( "terms are same", bottom.term == top.term )
+                |> check ( "type is subtype", isSpecializedType top.ctx top.ty bottom.ty == Ok True )
+                |> Result.map (\_ -> True)
+                |> Result.withDefault False
 
 
 check : ( String, Bool ) -> Result String () -> Result String ()

@@ -205,7 +205,7 @@ checkRuleTest =
                         }
                     )
                     |> Expect.equal True
-        , test "TGen {TypeVar1, TypeVar2} |- (ΛTypeVar3. λtermVar3: TypeVar3. termVar3) [TypeVar1->TypeVar2]" <|
+        , test "TGen {} |- (λtermVar1. termVar1) : Forall TypeVar1. TypeVar1 -> TypeVar1" <|
             \_ ->
                 checkRule
                     (TGen
@@ -218,6 +218,40 @@ checkRuleTest =
                             { ctx = []
                             , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)
                             , ty = TyArr (TyName "TypeVar1") (TyName "TypeVar1")
+                            }
+                        }
+                    )
+                    |> Expect.equal True
+        , test "TInst {} |- (λtermVar1. termVar1) : Bool -> Bool" <|
+            \_ ->
+                checkRule
+                    (TInst
+                        { bottom =
+                            { ctx = []
+                            , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)
+                            , ty = TyArr (TyConst TyBool) (TyConst TyBool)
+                            }
+                        , top =
+                            { ctx = []
+                            , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)
+                            , ty = TyAll "TypeVar1" <| TyArr (TyVar 0 1) (TyVar 0 1)
+                            }
+                        }
+                    )
+                    |> Expect.equal True
+        , test "TInst {} |- (λtermVar1. termVar1) : A -> A" <|
+            \_ ->
+                checkRule
+                    (TInst
+                        { bottom =
+                            { ctx = []
+                            , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)
+                            , ty = TyArr (TyName "A") (TyName "A")
+                            }
+                        , top =
+                            { ctx = []
+                            , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)
+                            , ty = TyAll "A" <| TyArr (TyVar 0 1) (TyVar 0 1)
                             }
                         }
                     )

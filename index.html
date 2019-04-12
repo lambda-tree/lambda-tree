@@ -4467,7 +4467,7 @@ function _Browser_load(url)
 	}));
 }
 var author$project$Model$NoRule = {$: 'NoRule'};
-var author$project$Model$Node = F2(
+var author$project$Utils$Tree$Node = F2(
 	function (a, b) {
 		return {$: 'Node', a: a, b: b};
 	});
@@ -4552,7 +4552,7 @@ var elm$core$Set$toList = function (_n0) {
 	return elm$core$Dict$keys(dict);
 };
 var author$project$Model$emptyTree = A2(
-	author$project$Model$Node,
+	author$project$Utils$Tree$Node,
 	{ctx: '', rule: author$project$Model$NoRule, term: '', ty: ''},
 	_List_Nil);
 var author$project$Init$init = {tree: author$project$Model$emptyTree, zoomLevel: 100};
@@ -4630,7 +4630,7 @@ var author$project$Update$addNode = F3(
 			switch (rule.$) {
 				case 'TTrue':
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{rule: rule}),
@@ -4638,7 +4638,7 @@ var author$project$Update$addNode = F3(
 							[author$project$Model$emptyTree]));
 				case 'TFalse':
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{rule: rule}),
@@ -4646,7 +4646,7 @@ var author$project$Update$addNode = F3(
 							[author$project$Model$emptyTree]));
 				case 'TVar':
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{rule: rule}),
@@ -4654,7 +4654,7 @@ var author$project$Update$addNode = F3(
 							[author$project$Model$emptyTree]));
 				case 'TAbs':
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{rule: rule}),
@@ -4662,7 +4662,7 @@ var author$project$Update$addNode = F3(
 							[author$project$Model$emptyTree]));
 				case 'TApp':
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{rule: rule}),
@@ -4670,15 +4670,55 @@ var author$project$Update$addNode = F3(
 							[author$project$Model$emptyTree, author$project$Model$emptyTree]));
 				case 'TIf':
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{rule: rule}),
 						_List_fromArray(
 							[author$project$Model$emptyTree, author$project$Model$emptyTree, author$project$Model$emptyTree]));
+				case 'TTApp':
+					return A2(
+						author$project$Utils$Tree$Node,
+						_Utils_update(
+							content,
+							{rule: rule}),
+						_List_fromArray(
+							[author$project$Model$emptyTree]));
+				case 'TTAbs':
+					return A2(
+						author$project$Utils$Tree$Node,
+						_Utils_update(
+							content,
+							{rule: rule}),
+						_List_fromArray(
+							[author$project$Model$emptyTree]));
+				case 'TLet':
+					return A2(
+						author$project$Utils$Tree$Node,
+						_Utils_update(
+							content,
+							{rule: rule}),
+						_List_fromArray(
+							[author$project$Model$emptyTree, author$project$Model$emptyTree]));
+				case 'TGen':
+					return A2(
+						author$project$Utils$Tree$Node,
+						_Utils_update(
+							content,
+							{rule: rule}),
+						_List_fromArray(
+							[author$project$Model$emptyTree]));
+				case 'TInst':
+					return A2(
+						author$project$Utils$Tree$Node,
+						_Utils_update(
+							content,
+							{rule: rule}),
+						_List_fromArray(
+							[author$project$Model$emptyTree]));
 				default:
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{rule: rule}),
@@ -4695,7 +4735,7 @@ var author$project$Update$addNode = F3(
 						return _Utils_eq(i, idx) ? A3(author$project$Update$addNode, subPath, t, rule) : t;
 					}),
 				children);
-			return A2(author$project$Model$Node, content, updatedChildren);
+			return A2(author$project$Utils$Tree$Node, content, updatedChildren);
 		}
 	});
 var elm$core$Basics$apR = F2(
@@ -4951,12 +4991,12 @@ var author$project$Update$removeNode = F2(
 		var content = tree.a;
 		var children = tree.b;
 		if (!path.b) {
-			return A2(author$project$Model$Node, content, children);
+			return A2(author$project$Utils$Tree$Node, content, children);
 		} else {
 			if (!path.b.b) {
 				var idx = path.a;
 				return A2(
-					author$project$Model$Node,
+					author$project$Utils$Tree$Node,
 					content,
 					A2(elm_community$list_extra$List$Extra$removeAt, idx, children));
 			} else {
@@ -4969,7 +5009,7 @@ var author$project$Update$removeNode = F2(
 							return _Utils_eq(i, idx) ? A2(author$project$Update$removeNode, subPath, t) : t;
 						}),
 					children);
-				return A2(author$project$Model$Node, content, updatedChildren);
+				return A2(author$project$Utils$Tree$Node, content, updatedChildren);
 			}
 		}
 	});
@@ -5047,21 +5087,21 @@ var author$project$Update$updateTextInPath = F4(
 			switch (kind.$) {
 				case 'CtxKind':
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{ctx: preprocessed}),
 						children);
 				case 'TermKind':
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{term: preprocessed}),
 						children);
 				default:
 					return A2(
-						author$project$Model$Node,
+						author$project$Utils$Tree$Node,
 						_Utils_update(
 							content,
 							{ty: preprocessed}),
@@ -5077,7 +5117,7 @@ var author$project$Update$updateTextInPath = F4(
 						return _Utils_eq(i, idx) ? A4(author$project$Update$updateTextInPath, kind, t, text, subPath) : t;
 					}),
 				children);
-			return A2(author$project$Model$Node, content, updatedChildren);
+			return A2(author$project$Utils$Tree$Node, content, updatedChildren);
 		}
 	});
 var elm$core$Basics$fdiv = _Basics_fdiv;
@@ -7522,6 +7562,14 @@ var author$project$View$Lambda$ExpressionText$lambdaExprText = function (value) 
 				rtfeldman$elm_css$Html$Styled$text(value)
 			]));
 };
+var author$project$View$Lambda$ProofCell$getBackgroundColor = function (result) {
+	var _n0 = result.error;
+	if (_n0.$ === 'Nothing') {
+		return A4(rtfeldman$elm_css$Css$rgba, 0, 0, 0, 0);
+	} else {
+		return A4(rtfeldman$elm_css$Css$rgba, 255, 0, 0, 0.5);
+	}
+};
 var rtfeldman$elm_css$Css$Internal$property = F2(
 	function (key, value) {
 		return rtfeldman$elm_css$Css$Preprocess$AppendProperty(key + (':' + value));
@@ -7645,7 +7693,9 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 								[
 									rtfeldman$elm_css$Css$displayFlex,
 									rtfeldman$elm_css$Css$flex(
-									rtfeldman$elm_css$Css$int(1))
+									rtfeldman$elm_css$Css$int(1)),
+									rtfeldman$elm_css$Css$backgroundColor(
+									author$project$View$Lambda$ProofCell$getBackgroundColor(content.ctx))
 								]),
 							_List_Nil,
 							_List_fromArray(
@@ -7653,7 +7703,7 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 									A3(
 									author$project$View$Lambda$ExpressionInput$lambdaExprInput,
 									true,
-									content.ctx,
+									content.ctx.text,
 									msgCreator(author$project$Model$CtxKind))
 								])),
 							author$project$View$Lambda$ExpressionText$lambdaExprText('⊢'),
@@ -7664,7 +7714,9 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 								[
 									rtfeldman$elm_css$Css$displayFlex,
 									rtfeldman$elm_css$Css$flex(
-									rtfeldman$elm_css$Css$int(2))
+									rtfeldman$elm_css$Css$int(2)),
+									rtfeldman$elm_css$Css$backgroundColor(
+									author$project$View$Lambda$ProofCell$getBackgroundColor(content.term))
 								]),
 							_List_Nil,
 							_List_fromArray(
@@ -7672,7 +7724,7 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 									A3(
 									author$project$View$Lambda$ExpressionInput$lambdaExprInput,
 									false,
-									content.term,
+									content.term.text,
 									msgCreator(author$project$Model$TermKind))
 								])),
 							author$project$View$Lambda$ExpressionText$lambdaExprText(':'),
@@ -7683,7 +7735,9 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 								[
 									rtfeldman$elm_css$Css$displayFlex,
 									rtfeldman$elm_css$Css$flex(
-									rtfeldman$elm_css$Css$int(1))
+									rtfeldman$elm_css$Css$int(1)),
+									rtfeldman$elm_css$Css$backgroundColor(
+									author$project$View$Lambda$ProofCell$getBackgroundColor(content.ty))
 								]),
 							_List_Nil,
 							_List_fromArray(
@@ -7691,7 +7745,7 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 									A3(
 									author$project$View$Lambda$ExpressionInput$lambdaExprInput,
 									false,
-									content.ty,
+									content.ty.text,
 									msgCreator(author$project$Model$TyKind))
 								]))
 						]))
@@ -7700,7 +7754,12 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 var author$project$Model$TAbs = {$: 'TAbs'};
 var author$project$Model$TApp = {$: 'TApp'};
 var author$project$Model$TFalse = {$: 'TFalse'};
+var author$project$Model$TGen = {$: 'TGen'};
 var author$project$Model$TIf = {$: 'TIf'};
+var author$project$Model$TInst = {$: 'TInst'};
+var author$project$Model$TLet = {$: 'TLet'};
+var author$project$Model$TTAbs = {$: 'TTAbs'};
+var author$project$Model$TTApp = {$: 'TTApp'};
 var author$project$Model$TTrue = {$: 'TTrue'};
 var author$project$Model$TVar = {$: 'TVar'};
 var elm$core$Debug$toString = _Debug_toString;
@@ -7749,7 +7808,7 @@ var author$project$View$Lambda$RuleSelector$ruleSelector = function (createMsgCl
 			elm$core$List$map,
 			author$project$View$Lambda$RuleSelector$ruleButton(createMsgClick),
 			_List_fromArray(
-				[author$project$Model$TTrue, author$project$Model$TFalse, author$project$Model$TVar, author$project$Model$TAbs, author$project$Model$TApp, author$project$Model$TIf])));
+				[author$project$Model$TTrue, author$project$Model$TFalse, author$project$Model$TVar, author$project$Model$TAbs, author$project$Model$TApp, author$project$Model$TIf, author$project$Model$TTAbs, author$project$Model$TTApp, author$project$Model$TLet, author$project$Model$TGen, author$project$Model$TInst])));
 };
 var rtfeldman$elm_css$Css$auto = {alignItemsOrAuto: rtfeldman$elm_css$Css$Structure$Compatible, cursor: rtfeldman$elm_css$Css$Structure$Compatible, flexBasis: rtfeldman$elm_css$Css$Structure$Compatible, intOrAuto: rtfeldman$elm_css$Css$Structure$Compatible, justifyContentOrAuto: rtfeldman$elm_css$Css$Structure$Compatible, lengthOrAuto: rtfeldman$elm_css$Css$Structure$Compatible, lengthOrAutoOrCoverOrContain: rtfeldman$elm_css$Css$Structure$Compatible, lengthOrNumberOrAutoOrNoneOrContent: rtfeldman$elm_css$Css$Structure$Compatible, overflow: rtfeldman$elm_css$Css$Structure$Compatible, pointerEvents: rtfeldman$elm_css$Css$Structure$Compatible, tableLayout: rtfeldman$elm_css$Css$Structure$Compatible, textRendering: rtfeldman$elm_css$Css$Structure$Compatible, touchAction: rtfeldman$elm_css$Css$Structure$Compatible, value: 'auto'};
 var rtfeldman$elm_css$Css$height = rtfeldman$elm_css$Css$prop1('height');
@@ -7810,12 +7869,43 @@ var author$project$View$Lambda$Tree$hairline = F2(
 						]))
 				]));
 	});
+var author$project$Lambda$Rule$TAbs = function (a) {
+	return {$: 'TAbs', a: a};
+};
+var author$project$Lambda$Rule$TApp = function (a) {
+	return {$: 'TApp', a: a};
+};
+var author$project$Lambda$Rule$TGen = function (a) {
+	return {$: 'TGen', a: a};
+};
 var author$project$Lambda$Rule$TIf = function (a) {
 	return {$: 'TIf', a: a};
+};
+var author$project$Lambda$Rule$TInst = function (a) {
+	return {$: 'TInst', a: a};
+};
+var author$project$Lambda$Rule$TLet = function (a) {
+	return {$: 'TLet', a: a};
+};
+var author$project$Lambda$Rule$TTAbs = function (a) {
+	return {$: 'TTAbs', a: a};
+};
+var author$project$Lambda$Rule$TTApp = function (a) {
+	return {$: 'TTApp', a: a};
+};
+var author$project$Lambda$Rule$TTrue = function (a) {
+	return {$: 'TTrue', a: a};
 };
 var author$project$Lambda$Rule$TVar = function (a) {
 	return {$: 'TVar', a: a};
 };
+var author$project$Lambda$ContextUtils$addbinding = F3(
+	function (ctx, x, bind) {
+		return A2(
+			elm$core$List$cons,
+			_Utils_Tuple2(x, bind),
+			ctx);
+	});
 var elm$core$Tuple$second = function (_n0) {
 	var y = _n0.b;
 	return y;
@@ -7832,150 +7922,1419 @@ var author$project$Lambda$ContextUtils$getbinding = F2(
 			elm$core$Tuple$second,
 			A2(elm_community$list_extra$List$Extra$getAt, x, ctx));
 	});
-var author$project$Lambda$Expression$TyName = function (a) {
-	return {$: 'TyName', a: a};
-};
-var author$project$Lambda$ContextUtils$addbinding = F3(
-	function (ctx, x, bind) {
-		return A2(
-			elm$core$List$cons,
-			_Utils_Tuple2(x, bind),
-			ctx);
+var elm_community$list_extra$List$Extra$find = F2(
+	function (predicate, list) {
+		find:
+		while (true) {
+			if (!list.b) {
+				return elm$core$Maybe$Nothing;
+			} else {
+				var first = list.a;
+				var rest = list.b;
+				if (predicate(first)) {
+					return elm$core$Maybe$Just(first);
+				} else {
+					var $temp$predicate = predicate,
+						$temp$list = rest;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue find;
+				}
+			}
+		}
 	});
+var elm_community$maybe_extra$Maybe$Extra$isJust = function (m) {
+	if (m.$ === 'Nothing') {
+		return false;
+	} else {
+		return true;
+	}
+};
+var author$project$Lambda$ContextUtils$isnamebound = F2(
+	function (ctx, x) {
+		return elm_community$maybe_extra$Maybe$Extra$isJust(
+			A2(
+				elm_community$list_extra$List$Extra$find,
+				A2(
+					elm$core$Basics$composeR,
+					elm$core$Tuple$first,
+					elm$core$Basics$eq(x)),
+				ctx));
+	});
+var author$project$Lambda$ContextUtils$emptycontext = _List_Nil;
+var author$project$Lambda$ContextUtils$popbinding = function (ctx) {
+	return A2(
+		elm$core$Maybe$withDefault,
+		author$project$Lambda$ContextUtils$emptycontext,
+		elm$core$List$tail(ctx));
+};
+var author$project$Lambda$Expression$TyBool = {$: 'TyBool'};
+var author$project$Lambda$Expression$TyConst = function (a) {
+	return {$: 'TyConst', a: a};
+};
+var author$project$Lambda$Expression$TyVarBind = {$: 'TyVarBind'};
+var author$project$Lambda$Expression$VarBind = function (a) {
+	return {$: 'VarBind', a: a};
+};
 var author$project$Lambda$ContextUtils$ctxlength = function (ctx) {
 	return elm$core$List$length(ctx);
 };
-var author$project$Lambda$Expression$TyVarBind = {$: 'TyVarBind'};
-var author$project$Lambda$ExpressionUtils$equalTypes = F4(
-	function (ctx1, ty1, ctx2, ty2) {
-		equalTypes:
-		while (true) {
-			var _n0 = _Utils_Tuple2(ty1, ty2);
-			_n0$4:
-			while (true) {
-				switch (_n0.a.$) {
-					case 'TyName':
-						if (_n0.b.$ === 'TyName') {
-							var s1 = _n0.a.a;
-							var s2 = _n0.b.a;
-							return _Utils_eq(s1, s2);
-						} else {
-							break _n0$4;
-						}
-					case 'TyAll':
-						if (_n0.b.$ === 'TyAll') {
-							var _n1 = _n0.a;
-							var s1 = _n1.a;
-							var ty11 = _n1.b;
-							var _n2 = _n0.b;
-							var s2 = _n2.a;
-							var ty21 = _n2.b;
-							var $temp$ctx1 = A3(author$project$Lambda$ContextUtils$addbinding, ctx1, s1, author$project$Lambda$Expression$TyVarBind),
-								$temp$ty1 = ty11,
-								$temp$ctx2 = A3(author$project$Lambda$ContextUtils$addbinding, ctx2, s2, author$project$Lambda$Expression$TyVarBind),
-								$temp$ty2 = ty21;
-							ctx1 = $temp$ctx1;
-							ty1 = $temp$ty1;
-							ctx2 = $temp$ctx2;
-							ty2 = $temp$ty2;
-							continue equalTypes;
-						} else {
-							break _n0$4;
-						}
+var author$project$Lambda$Expression$TyName = function (a) {
+	return {$: 'TyName', a: a};
+};
+var author$project$Lambda$Expression$TyVar = F2(
+	function (a, b) {
+		return {$: 'TyVar', a: a, b: b};
+	});
+var author$project$Lambda$Expression$TyAll = F2(
+	function (a, b) {
+		return {$: 'TyAll', a: a, b: b};
+	});
+var author$project$Lambda$Expression$TyArr = F2(
+	function (a, b) {
+		return {$: 'TyArr', a: a, b: b};
+	});
+var author$project$Lambda$ExpressionUtils$tymap = F4(
+	function (onvar, onname, ctx, typeT) {
+		var walk = F2(
+			function (c, tyT) {
+				switch (tyT.$) {
+					case 'TyVar':
+						var x = tyT.a;
+						var n = tyT.b;
+						return A3(onvar, c, x, n);
 					case 'TyArr':
-						if (_n0.b.$ === 'TyArr') {
-							var _n3 = _n0.a;
-							var ty11 = _n3.a;
-							var ty12 = _n3.b;
-							var _n4 = _n0.b;
-							var ty21 = _n4.a;
-							var ty22 = _n4.b;
-							return A4(author$project$Lambda$ExpressionUtils$equalTypes, ctx1, ty11, ctx2, ty21) && A4(author$project$Lambda$ExpressionUtils$equalTypes, ctx1, ty12, ctx2, ty22);
-						} else {
-							break _n0$4;
-						}
+						var tyT1 = tyT.a;
+						var tyT2 = tyT.b;
+						return A2(
+							author$project$Lambda$Expression$TyArr,
+							A2(walk, c, tyT1),
+							A2(walk, c, tyT2));
+					case 'TyAll':
+						var tyX = tyT.a;
+						var tyT2 = tyT.b;
+						return A2(
+							author$project$Lambda$Expression$TyAll,
+							tyX,
+							A2(walk, c + 1, tyT2));
+					case 'TyName':
+						var s = tyT.a;
+						return A2(onname, c, s);
 					default:
-						if (_n0.b.$ === 'TyVar') {
-							var _n5 = _n0.a;
-							var i1 = _n5.a;
-							var l1 = _n5.b;
-							var _n6 = _n0.b;
-							var i2 = _n6.a;
-							var l2 = _n6.b;
-							var _n7 = _Utils_Tuple2(
-								A2(
-									author$project$Lambda$ContextUtils$getbinding,
-									ctx1,
-									i1 + (author$project$Lambda$ContextUtils$ctxlength(ctx1) - l1)),
-								A2(
-									author$project$Lambda$ContextUtils$getbinding,
-									ctx2,
-									i2 + (author$project$Lambda$ContextUtils$ctxlength(ctx2) - l2)));
-							if ((((_n7.a.$ === 'Just') && (_n7.a.a.$ === 'TyVarBind')) && (_n7.b.$ === 'Just')) && (_n7.b.a.$ === 'TyVarBind')) {
-								var _n8 = _n7.a.a;
-								var _n9 = _n7.b.a;
-								return _Utils_eq(l2 - l1, i2 - i1);
-							} else {
-								return false;
-							}
-						} else {
-							break _n0$4;
-						}
+						return tyT;
 				}
-			}
-			return false;
+			});
+		return A2(walk, ctx, typeT);
+	});
+var elm$core$Basics$ge = _Utils_ge;
+var author$project$Lambda$ExpressionUtils$typeShiftAbove = F3(
+	function (d, c, tyT) {
+		var shiftVar = F3(
+			function (cc, x, n) {
+				return (_Utils_cmp(x, cc) > -1) ? A2(author$project$Lambda$Expression$TyVar, x + d, n + d) : A2(author$project$Lambda$Expression$TyVar, x, n + d);
+			});
+		return A4(
+			author$project$Lambda$ExpressionUtils$tymap,
+			shiftVar,
+			function (_n0) {
+				return author$project$Lambda$Expression$TyName;
+			},
+			c,
+			tyT);
+	});
+var author$project$Lambda$ExpressionUtils$typeShift = F2(
+	function (d, tyT) {
+		return A3(author$project$Lambda$ExpressionUtils$typeShiftAbove, d, 0, tyT);
+	});
+var author$project$Lambda$ExpressionUtils$degeneralizeTypeTop = F2(
+	function (ctx, ty) {
+		if (ty.$ === 'TyAll') {
+			var varName = ty.a;
+			var ty1 = ty.b;
+			var onvar = F3(
+				function (c, x, n) {
+					return (!((c - author$project$Lambda$ContextUtils$ctxlength(ctx)) - x)) ? author$project$Lambda$Expression$TyName(varName) : A2(author$project$Lambda$Expression$TyVar, x, n);
+				});
+			return A2(
+				author$project$Lambda$ExpressionUtils$typeShift,
+				-1,
+				A4(
+					author$project$Lambda$ExpressionUtils$tymap,
+					onvar,
+					function (_n1) {
+						return author$project$Lambda$Expression$TyName;
+					},
+					author$project$Lambda$ContextUtils$ctxlength(ctx),
+					ty1));
+		} else {
+			return ty;
 		}
 	});
-var author$project$Lambda$Rule$checkRule = function (rule) {
-	if (rule.$ === 'TVar') {
-		var bottom = rule.a.bottom;
-		var top = rule.a.top;
-		return _Utils_eq(
-			bottom.ctx,
-			A2(elm$core$Debug$log, 'topCtx', top.ctx)) && (_Utils_eq(
-			A2(elm$core$Debug$log, 'bottomTerm', bottom.term),
-			A2(elm$core$Debug$log, 'topTerm', top.term)) && (_Utils_eq(
-			A2(elm$core$Debug$log, 'bottomTy', bottom.ty),
-			A2(elm$core$Debug$log, 'topTy', top.ty)) && function () {
-			var _n1 = bottom.term;
-			if (_n1.$ === 'TmVar') {
-				var x = _n1.b;
-				var _n2 = A2(author$project$Lambda$ContextUtils$getbinding, top.ctx, x);
-				if ((_n2.$ === 'Just') && (_n2.a.$ === 'VarBind')) {
-					var ty1 = _n2.a.a;
-					return A4(author$project$Lambda$ExpressionUtils$equalTypes, top.ctx, ty1, bottom.ctx, bottom.ty);
-				} else {
-					return false;
-				}
-			} else {
-				return false;
-			}
-		}()));
-	} else {
-		var bottom = rule.a.bottom;
-		var top1 = rule.a.top1;
-		var top2 = rule.a.top2;
-		var top3 = rule.a.top3;
-		var _n3 = bottom.term;
-		if (_n3.$ === 'TmIf') {
-			var t1 = _n3.b;
-			var t2 = _n3.c;
-			var t3 = _n3.d;
+var author$project$Lambda$ExpressionUtils$equalTypes = F4(
+	function (ctx1, ty1, ctx2, ty2) {
+		var ctxlengthDiff = author$project$Lambda$ContextUtils$ctxlength(ctx1) - author$project$Lambda$ContextUtils$ctxlength(ctx2);
+		var _n0 = A2(
+			elm$core$Debug$log,
+			'equalTypes (ctx1, ty1)',
+			_Utils_Tuple2(ctx1, ty1));
+		var _n1 = A2(
+			elm$core$Debug$log,
+			'equalTypes (ctx2, ty2)',
+			_Utils_Tuple2(ctx2, ty2));
+		return (ctxlengthDiff > 0) ? (_Utils_eq(
+			A2(elm$core$List$drop, ctxlengthDiff, ctx1),
+			ctx2) && _Utils_eq(
+			ty1,
+			A2(author$project$Lambda$ExpressionUtils$typeShift, ctxlengthDiff, ty2))) : (_Utils_eq(
+			A2(elm$core$List$drop, -ctxlengthDiff, ctx2),
+			ctx1) && _Utils_eq(
+			A2(author$project$Lambda$ExpressionUtils$typeShift, -ctxlengthDiff, ty1),
+			ty2));
+	});
+var author$project$Lambda$ExpressionUtils$generalizeTypeTop = F3(
+	function (ctx, ty, varName) {
+		var onvar = F3(
+			function (_n0, x, n) {
+				return A2(author$project$Lambda$Expression$TyVar, x, n);
+			});
+		var onname = F2(
+			function (c, name) {
+				return _Utils_eq(name, varName) ? A2(
+					author$project$Lambda$Expression$TyVar,
+					c - author$project$Lambda$ContextUtils$ctxlength(ctx),
+					c + 1) : author$project$Lambda$Expression$TyName(name);
+			});
+		var ty1 = A4(
+			author$project$Lambda$ExpressionUtils$tymap,
+			onvar,
+			onname,
+			author$project$Lambda$ContextUtils$ctxlength(ctx),
+			A2(author$project$Lambda$ExpressionUtils$typeShift, 1, ty));
+		return A2(author$project$Lambda$Expression$TyAll, varName, ty1);
+	});
+var author$project$Lambda$ExpressionUtils$degeneralizeType = F2(
+	function (ctx, ty) {
+		if (ty.$ === 'TyAll') {
 			return A2(
-				elm$core$List$all,
-				elm$core$Basics$eq(bottom.ctx),
-				_List_fromArray(
-					[top1.ctx, top2.ctx, top3.ctx])) && (_Utils_eq(top1.term, t1) && (A4(
-				author$project$Lambda$ExpressionUtils$equalTypes,
-				top1.ctx,
-				top1.ty,
-				bottom.ctx,
-				author$project$Lambda$Expression$TyName('Bool')) && (_Utils_eq(top2.term, t2) && (A4(author$project$Lambda$ExpressionUtils$equalTypes, top2.ctx, top2.ty, bottom.ctx, bottom.ty) && (_Utils_eq(top3.term, t3) && A4(author$project$Lambda$ExpressionUtils$equalTypes, top3.ctx, top3.ty, bottom.ctx, bottom.ty))))));
+				author$project$Lambda$ExpressionUtils$degeneralizeType,
+				ctx,
+				A2(author$project$Lambda$ExpressionUtils$degeneralizeTypeTop, ctx, ty));
 		} else {
-			return false;
+			return ty;
+		}
+	});
+var elm$core$Set$Set_elm_builtin = function (a) {
+	return {$: 'Set_elm_builtin', a: a};
+};
+var elm$core$Set$empty = elm$core$Set$Set_elm_builtin(elm$core$Dict$empty);
+var elm$core$Dict$singleton = F2(
+	function (key, value) {
+		return A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, key, value, elm$core$Dict$RBEmpty_elm_builtin, elm$core$Dict$RBEmpty_elm_builtin);
+	});
+var elm$core$Set$singleton = function (key) {
+	return elm$core$Set$Set_elm_builtin(
+		A2(elm$core$Dict$singleton, key, _Utils_Tuple0));
+};
+var elm$core$Dict$foldl = F3(
+	function (func, acc, dict) {
+		foldl:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return acc;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$func = func,
+					$temp$acc = A3(
+					func,
+					key,
+					value,
+					A3(elm$core$Dict$foldl, func, acc, left)),
+					$temp$dict = right;
+				func = $temp$func;
+				acc = $temp$acc;
+				dict = $temp$dict;
+				continue foldl;
+			}
+		}
+	});
+var elm$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3(elm$core$Dict$foldl, elm$core$Dict$insert, t2, t1);
+	});
+var elm$core$Set$union = F2(
+	function (_n0, _n1) {
+		var dict1 = _n0.a;
+		var dict2 = _n1.a;
+		return elm$core$Set$Set_elm_builtin(
+			A2(elm$core$Dict$union, dict1, dict2));
+	});
+var author$project$Lambda$ExpressionUtils$ftvTy = function (ty) {
+	ftvTy:
+	while (true) {
+		switch (ty.$) {
+			case 'TyName':
+				var s = ty.a;
+				return elm$core$Set$singleton(s);
+			case 'TyArr':
+				var ty1 = ty.a;
+				var ty2 = ty.b;
+				return A2(
+					elm$core$Set$union,
+					author$project$Lambda$ExpressionUtils$ftvTy(ty2),
+					author$project$Lambda$ExpressionUtils$ftvTy(ty1));
+			case 'TyVar':
+				return elm$core$Set$empty;
+			case 'TyAll':
+				var ty1 = ty.b;
+				var $temp$ty = ty1;
+				ty = $temp$ty;
+				continue ftvTy;
+			default:
+				return elm$core$Set$empty;
 		}
 	}
 };
+var author$project$Lambda$ExpressionUtils$ftvCtx = function (ctx) {
+	return A3(
+		elm$core$List$foldl,
+		elm$core$Set$union,
+		elm$core$Set$empty,
+		A2(
+			elm$core$List$map,
+			function (_n0) {
+				var s = _n0.a;
+				var b = _n0.b;
+				switch (b.$) {
+					case 'VarBind':
+						var ty = b.a;
+						return author$project$Lambda$ExpressionUtils$ftvTy(ty);
+					case 'TyVarBind':
+						return elm$core$Set$singleton(s);
+					default:
+						return elm$core$Set$empty;
+				}
+			},
+			ctx));
+};
+var elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _n1 = A2(elm$core$Basics$compare, targetKey, key);
+				switch (_n1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _n0 = A2(elm$core$Dict$get, key, dict);
+		if (_n0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var elm$core$Set$member = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return A2(elm$core$Dict$member, key, dict);
+	});
+var author$project$Lambda$ExpressionUtils$freshVarName = F2(
+	function (freeVars, varName) {
+		var countedFreshVarName = F3(
+			function (fv, vn, counter) {
+				countedFreshVarName:
+				while (true) {
+					var countedVarName = _Utils_ap(
+						varName,
+						(!counter) ? '' : elm$core$String$fromInt(counter));
+					if (A2(elm$core$Set$member, countedVarName, freeVars)) {
+						var $temp$fv = fv,
+							$temp$vn = vn,
+							$temp$counter = counter + 1;
+						fv = $temp$fv;
+						vn = $temp$vn;
+						counter = $temp$counter;
+						continue countedFreshVarName;
+					} else {
+						return countedVarName;
+					}
+				}
+			});
+		return A3(countedFreshVarName, freeVars, varName, 0);
+	});
+var elm$core$Set$insert = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return elm$core$Set$Set_elm_builtin(
+			A3(elm$core$Dict$insert, key, _Utils_Tuple0, dict));
+	});
+var author$project$Lambda$ExpressionUtils$renameBoundVarsWithFresh = F2(
+	function (freeVars, ty) {
+		switch (ty.$) {
+			case 'TyAll':
+				var varName = ty.a;
+				var ty1 = ty.b;
+				var fresh = A2(author$project$Lambda$ExpressionUtils$freshVarName, freeVars, varName);
+				return A2(
+					author$project$Lambda$Expression$TyAll,
+					fresh,
+					A2(
+						author$project$Lambda$ExpressionUtils$renameBoundVarsWithFresh,
+						A2(elm$core$Set$insert, fresh, freeVars),
+						ty1));
+			case 'TyArr':
+				var ty1 = ty.a;
+				var ty2 = ty.b;
+				return A2(
+					author$project$Lambda$Expression$TyArr,
+					A2(author$project$Lambda$ExpressionUtils$renameBoundVarsWithFresh, freeVars, ty1),
+					A2(author$project$Lambda$ExpressionUtils$renameBoundVarsWithFresh, freeVars, ty2));
+			default:
+				return ty;
+		}
+	});
+var author$project$Lambda$ExpressionUtils$topBoundVars = function (ty) {
+	if (ty.$ === 'TyAll') {
+		var varName = ty.a;
+		var ty1 = ty.b;
+		return A2(
+			elm$core$Set$insert,
+			varName,
+			author$project$Lambda$ExpressionUtils$topBoundVars(ty1));
+	} else {
+		return elm$core$Set$empty;
+	}
+};
+var author$project$Lambda$ExpressionUtils$substFtv = F2(
+	function (ss, tyTop) {
+		var substOne = F3(
+			function (tyS, varName, ty) {
+				switch (ty.$) {
+					case 'TyName':
+						var name = ty.a;
+						return _Utils_eq(varName, name) ? tyS : ty;
+					case 'TyArr':
+						var ty1 = ty.a;
+						var ty2 = ty.b;
+						return A2(
+							author$project$Lambda$Expression$TyArr,
+							A3(substOne, tyS, varName, ty1),
+							A3(substOne, tyS, varName, ty2));
+					default:
+						return ty;
+				}
+			});
+		return A3(
+			elm$core$List$foldr,
+			function (_n1) {
+				var tyS = _n1.a;
+				var varName = _n1.b;
+				return A2(substOne, tyS, varName);
+			},
+			tyTop,
+			ss);
+	});
+var elm$core$Result$andThen = F2(
+	function (callback, result) {
+		if (result.$ === 'Ok') {
+			var value = result.a;
+			return callback(value);
+		} else {
+			var msg = result.a;
+			return elm$core$Result$Err(msg);
+		}
+	});
+var author$project$Lambda$ExpressionUtils$unifyType = F2(
+	function (ty1, ty2) {
+		var _n0 = _Utils_Tuple2(ty1, ty2);
+		_n0$1:
+		while (true) {
+			_n0$2:
+			while (true) {
+				_n0$5:
+				while (true) {
+					_n0$6:
+					while (true) {
+						_n0$7:
+						while (true) {
+							switch (_n0.a.$) {
+								case 'TyName':
+									switch (_n0.b.$) {
+										case 'TyName':
+											var name1 = _n0.a.a;
+											var name2 = _n0.b.a;
+											return _Utils_eq(name1, name2) ? elm$core$Result$Ok(_List_Nil) : elm$core$Result$Ok(
+												_List_fromArray(
+													[
+														_Utils_Tuple2(ty2, name1)
+													]));
+										case 'TyAll':
+											break _n0$1;
+										default:
+											break _n0$1;
+									}
+								case 'TyConst':
+									switch (_n0.b.$) {
+										case 'TyName':
+											break _n0$2;
+										case 'TyConst':
+											var c1 = _n0.a.a;
+											var c2 = _n0.b.a;
+											return _Utils_eq(c1, c2) ? elm$core$Result$Ok(_List_Nil) : elm$core$Result$Err(
+												'Type constants \'' + (elm$core$Debug$toString(c1) + ('\' & \'' + (elm$core$Debug$toString(c2) + '\' are not compatible'))));
+										case 'TyAll':
+											break _n0$6;
+										default:
+											break _n0$7;
+									}
+								case 'TyArr':
+									switch (_n0.b.$) {
+										case 'TyName':
+											break _n0$2;
+										case 'TyArr':
+											var _n1 = _n0.a;
+											var ty11 = _n1.a;
+											var ty12 = _n1.b;
+											var _n2 = _n0.b;
+											var ty21 = _n2.a;
+											var ty22 = _n2.b;
+											return A2(
+												elm$core$Result$andThen,
+												function (justS1) {
+													return A2(
+														elm$core$Result$andThen,
+														function (justS2) {
+															return elm$core$Result$Ok(
+																_Utils_ap(justS2, justS1));
+														},
+														A2(
+															author$project$Lambda$ExpressionUtils$unifyType,
+															A2(author$project$Lambda$ExpressionUtils$substFtv, justS1, ty12),
+															A2(author$project$Lambda$ExpressionUtils$substFtv, justS1, ty22)));
+												},
+												A2(author$project$Lambda$ExpressionUtils$unifyType, ty11, ty21));
+										case 'TyAll':
+											break _n0$6;
+										default:
+											break _n0$7;
+									}
+								case 'TyAll':
+									switch (_n0.b.$) {
+										case 'TyName':
+											break _n0$2;
+										case 'TyAll':
+											break _n0$5;
+										default:
+											break _n0$5;
+									}
+								default:
+									switch (_n0.b.$) {
+										case 'TyName':
+											break _n0$2;
+										case 'TyAll':
+											break _n0$6;
+										default:
+											break _n0$7;
+									}
+							}
+						}
+						return elm$core$Result$Err('');
+					}
+					var _n4 = _n0.b;
+					var name2 = _n4.a;
+					return elm$core$Result$Err('Types should be degeneralized. TyAll \'' + (name2 + '\' found'));
+				}
+				var _n3 = _n0.a;
+				var name1 = _n3.a;
+				return elm$core$Result$Err('Types should be degeneralized. TyAll \'' + (name1 + '\' found'));
+			}
+			var name = _n0.b.a;
+			return A2(
+				elm$core$Set$member,
+				name,
+				author$project$Lambda$ExpressionUtils$ftvTy(ty1)) ? elm$core$Result$Err('Variable ' + (name + ' is free in type 1')) : elm$core$Result$Ok(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(ty1, name)
+					]));
+		}
+		var name = _n0.a.a;
+		return A2(
+			elm$core$Set$member,
+			name,
+			author$project$Lambda$ExpressionUtils$ftvTy(ty2)) ? elm$core$Result$Err('Variable ' + (name + ' is free in type 2')) : elm$core$Result$Ok(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(ty2, name)
+				]));
+	});
+var elm$core$Result$map = F2(
+	function (func, ra) {
+		if (ra.$ === 'Ok') {
+			var a = ra.a;
+			return elm$core$Result$Ok(
+				func(a));
+		} else {
+			var e = ra.a;
+			return elm$core$Result$Err(e);
+		}
+	});
+var author$project$Lambda$ExpressionUtils$isSpecializedType = F3(
+	function (ctx, tyGen, tySpec) {
+		var degeneralizedTyGen = A2(author$project$Lambda$ExpressionUtils$degeneralizeType, ctx, tyGen);
+		var renamedTySpec = A2(
+			author$project$Lambda$ExpressionUtils$renameBoundVarsWithFresh,
+			A2(
+				elm$core$Set$union,
+				author$project$Lambda$ExpressionUtils$ftvCtx(ctx),
+				A2(
+					elm$core$Set$union,
+					author$project$Lambda$ExpressionUtils$ftvTy(tySpec),
+					author$project$Lambda$ExpressionUtils$ftvTy(degeneralizedTyGen))),
+			tySpec);
+		var degeneralizedTySpec = A2(author$project$Lambda$ExpressionUtils$degeneralizeType, ctx, renamedTySpec);
+		var unification = A2(author$project$Lambda$ExpressionUtils$unifyType, degeneralizedTyGen, degeneralizedTySpec);
+		return A2(
+			elm$core$Result$map,
+			function (u) {
+				return A2(
+					elm$core$List$all,
+					function (_n0) {
+						var tyS = _n0.a;
+						var varName = _n0.b;
+						return A2(
+							elm$core$Set$member,
+							varName,
+							author$project$Lambda$ExpressionUtils$ftvTy(degeneralizedTyGen)) && A2(
+							elm$core$Set$member,
+							varName,
+							author$project$Lambda$ExpressionUtils$topBoundVars(tyGen));
+					},
+					u);
+			},
+			unification);
+	});
+var author$project$Lambda$ExpressionUtils$typeSubst = F3(
+	function (tyS, jIdx, tyT) {
+		var substVar = F3(
+			function (j, x, n) {
+				return _Utils_eq(x, j) ? A2(author$project$Lambda$ExpressionUtils$typeShift, j, tyS) : A2(author$project$Lambda$Expression$TyVar, x, n);
+			});
+		return A4(
+			author$project$Lambda$ExpressionUtils$tymap,
+			substVar,
+			function (_n0) {
+				return author$project$Lambda$Expression$TyName;
+			},
+			jIdx,
+			tyT);
+	});
+var author$project$Lambda$ExpressionUtils$typeSubstTop = F2(
+	function (tyS, tyT) {
+		return A2(
+			author$project$Lambda$ExpressionUtils$typeShift,
+			-1,
+			A3(
+				author$project$Lambda$ExpressionUtils$typeSubst,
+				A2(author$project$Lambda$ExpressionUtils$typeShift, 1, tyS),
+				0,
+				tyT));
+	});
+var author$project$Lambda$Rule$check = F2(
+	function (condition, previous) {
+		return A2(
+			elm$core$Result$andThen,
+			function (_n0) {
+				var error = condition.a;
+				var conditionResult = condition.b;
+				var _n2 = A2(elm$core$Debug$log, 'CHECK: ' + error, conditionResult);
+				return conditionResult ? elm$core$Result$Ok(_Utils_Tuple0) : elm$core$Result$Err(error);
+			},
+			previous);
+	});
+var elm$core$Result$withDefault = F2(
+	function (def, result) {
+		if (result.$ === 'Ok') {
+			var a = result.a;
+			return a;
+		} else {
+			return def;
+		}
+	});
+var author$project$Lambda$Rule$checkRule = function (rule) {
+	switch (rule.$) {
+		case 'TVar':
+			var bottom = rule.a.bottom;
+			var top = rule.a.top;
+			return A2(
+				elm$core$Result$withDefault,
+				false,
+				A2(
+					elm$core$Result$map,
+					function (_n3) {
+						return true;
+					},
+					A2(
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'checkRule: types of vars are same',
+							function () {
+								var _n1 = bottom.term;
+								if (_n1.$ === 'TmVar') {
+									var x = _n1.b;
+									var _n2 = A2(author$project$Lambda$ContextUtils$getbinding, top.ctx, x);
+									if ((_n2.$ === 'Just') && (_n2.a.$ === 'VarBind')) {
+										var ty1 = _n2.a.a;
+										return A4(
+											author$project$Lambda$ExpressionUtils$equalTypes,
+											A2(elm$core$List$drop, x + 1, top.ctx),
+											ty1,
+											bottom.ctx,
+											bottom.ty);
+									} else {
+										return false;
+									}
+								} else {
+									return false;
+								}
+							}()),
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'checkRule: tySame',
+								_Utils_eq(bottom.ty, top.ty)),
+							A2(
+								author$project$Lambda$Rule$check,
+								_Utils_Tuple2(
+									'checkRule: termSame',
+									_Utils_eq(bottom.term, top.term)),
+								A2(
+									author$project$Lambda$Rule$check,
+									_Utils_Tuple2(
+										'checkRule: ctxSame',
+										_Utils_eq(bottom.ctx, top.ctx)),
+									elm$core$Result$Ok(_Utils_Tuple0)))))));
+		case 'TIf':
+			var bottom = rule.a.bottom;
+			var top1 = rule.a.top1;
+			var top2 = rule.a.top2;
+			var top3 = rule.a.top3;
+			var _n4 = bottom.term;
+			if (_n4.$ === 'TmIf') {
+				var t1 = _n4.b;
+				var t2 = _n4.c;
+				var t3 = _n4.d;
+				return A2(
+					elm$core$List$all,
+					elm$core$Basics$eq(bottom.ctx),
+					_List_fromArray(
+						[top1.ctx, top2.ctx, top3.ctx])) && (_Utils_eq(top1.term, t1) && (A4(
+					author$project$Lambda$ExpressionUtils$equalTypes,
+					top1.ctx,
+					top1.ty,
+					bottom.ctx,
+					author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool)) && (_Utils_eq(top2.term, t2) && (A4(author$project$Lambda$ExpressionUtils$equalTypes, top2.ctx, top2.ty, bottom.ctx, bottom.ty) && (_Utils_eq(top3.term, t3) && A4(author$project$Lambda$ExpressionUtils$equalTypes, top3.ctx, top3.ty, bottom.ctx, bottom.ty))))));
+			} else {
+				return false;
+			}
+		case 'TTrue':
+			var bottom = rule.a.bottom;
+			var top = rule.a.top;
+			var _n5 = bottom.term;
+			if ((_n5.$ === 'TmConst') && (_n5.b.$ === 'TmTrue')) {
+				var _n6 = _n5.b;
+				return _Utils_eq(bottom.ctx, top.ctx) && (_Utils_eq(top.term, bottom.term) && A4(
+					author$project$Lambda$ExpressionUtils$equalTypes,
+					top.ctx,
+					top.ty,
+					bottom.ctx,
+					author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool)));
+			} else {
+				return false;
+			}
+		case 'TFalse':
+			var bottom = rule.a.bottom;
+			var top = rule.a.top;
+			var _n7 = bottom.term;
+			if ((_n7.$ === 'TmConst') && (_n7.b.$ === 'TmFalse')) {
+				var _n8 = _n7.b;
+				return _Utils_eq(bottom.ctx, top.ctx) && (_Utils_eq(top.term, bottom.term) && A4(
+					author$project$Lambda$ExpressionUtils$equalTypes,
+					top.ctx,
+					top.ty,
+					bottom.ctx,
+					author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool)));
+			} else {
+				return false;
+			}
+		case 'TAbs':
+			var bottom = rule.a.bottom;
+			var top = rule.a.top;
+			var _n9 = _Utils_Tuple2(bottom.term, bottom.ty);
+			if ((_n9.a.$ === 'TmAbs') && (_n9.b.$ === 'TyArr')) {
+				var _n10 = _n9.a;
+				var varName = _n10.b;
+				var ty = _n10.c;
+				var t = _n10.d;
+				var _n11 = _n9.b;
+				var ty1 = _n11.a;
+				var ty2 = _n11.b;
+				return A2(
+					elm$core$Result$withDefault,
+					false,
+					A2(
+						elm$core$Result$map,
+						function (_n12) {
+							return true;
+						},
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'arg type is correct',
+								A2(
+									elm$core$Maybe$withDefault,
+									true,
+									A2(
+										elm$core$Maybe$map,
+										function (justTy) {
+											return A4(author$project$Lambda$ExpressionUtils$equalTypes, bottom.ctx, justTy, bottom.ctx, ty1);
+										},
+										ty))),
+							A2(
+								author$project$Lambda$Rule$check,
+								_Utils_Tuple2(
+									'return type is correct',
+									A4(author$project$Lambda$ExpressionUtils$equalTypes, top.ctx, top.ty, bottom.ctx, ty2)),
+								A2(
+									author$project$Lambda$Rule$check,
+									_Utils_Tuple2(
+										'terms are same',
+										_Utils_eq(top.term, t)),
+									A2(
+										author$project$Lambda$Rule$check,
+										_Utils_Tuple2(
+											'var is added to ctx with correct type',
+											_Utils_eq(
+												top.ctx,
+												A3(
+													author$project$Lambda$ContextUtils$addbinding,
+													bottom.ctx,
+													varName,
+													author$project$Lambda$Expression$VarBind(ty1)))),
+										A2(
+											author$project$Lambda$Rule$check,
+											_Utils_Tuple2(
+												'ctxs are same',
+												_Utils_eq(
+													author$project$Lambda$ContextUtils$popbinding(top.ctx),
+													bottom.ctx)),
+											elm$core$Result$Ok(_Utils_Tuple0))))))));
+			} else {
+				return false;
+			}
+		case 'TApp':
+			var bottom = rule.a.bottom;
+			var top1 = rule.a.top1;
+			var top2 = rule.a.top2;
+			var _n13 = _Utils_Tuple2(bottom.term, top1.ty);
+			if ((_n13.a.$ === 'TmApp') && (_n13.b.$ === 'TyArr')) {
+				var _n14 = _n13.a;
+				var t1 = _n14.b;
+				var t2 = _n14.c;
+				var _n15 = _n13.b;
+				var ty1 = _n15.a;
+				var ty2 = _n15.b;
+				return A2(
+					elm$core$List$all,
+					elm$core$Basics$eq(bottom.ctx),
+					_List_fromArray(
+						[top1.ctx, top2.ctx])) && (_Utils_eq(top1.term, t1) && (_Utils_eq(top2.term, t2) && (A4(author$project$Lambda$ExpressionUtils$equalTypes, top1.ctx, ty1, top2.ctx, top2.ty) && A4(author$project$Lambda$ExpressionUtils$equalTypes, top1.ctx, ty2, bottom.ctx, bottom.ty))));
+			} else {
+				return false;
+			}
+		case 'TTAbs':
+			var bottom = rule.a.bottom;
+			var top = rule.a.top;
+			var _n16 = _Utils_Tuple2(bottom.term, bottom.ty);
+			if ((_n16.a.$ === 'TmTAbs') && (_n16.b.$ === 'TyAll')) {
+				var _n17 = _n16.a;
+				var tyVarName1 = _n17.b;
+				var t = _n17.c;
+				var _n18 = _n16.b;
+				var tyVarName2 = _n18.a;
+				var ty = _n18.b;
+				return A2(
+					elm$core$Result$withDefault,
+					false,
+					A2(
+						elm$core$Result$map,
+						function (_n19) {
+							return true;
+						},
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'5 - typesEqual',
+								_Utils_eq(ty, top.ty)),
+							A2(
+								author$project$Lambda$Rule$check,
+								_Utils_Tuple2(
+									'4 - termsEqual',
+									_Utils_eq(top.term, t)),
+								A2(
+									author$project$Lambda$Rule$check,
+									_Utils_Tuple2(
+										'3 - isFree',
+										!A2(author$project$Lambda$ContextUtils$isnamebound, bottom.ctx, tyVarName1)),
+									A2(
+										author$project$Lambda$Rule$check,
+										_Utils_Tuple2(
+											'2 - isAddedToContext',
+											_Utils_eq(
+												A3(author$project$Lambda$ContextUtils$addbinding, bottom.ctx, tyVarName1, author$project$Lambda$Expression$TyVarBind),
+												top.ctx)),
+										A2(
+											author$project$Lambda$Rule$check,
+											_Utils_Tuple2(
+												'1 - typeVariablesSame',
+												_Utils_eq(tyVarName1, tyVarName2)),
+											elm$core$Result$Ok(_Utils_Tuple0))))))));
+			} else {
+				return false;
+			}
+		case 'TTApp':
+			var bottom = rule.a.bottom;
+			var top = rule.a.top;
+			var _n20 = _Utils_Tuple2(bottom.term, top.ty);
+			if ((_n20.a.$ === 'TmTApp') && (_n20.b.$ === 'TyAll')) {
+				var _n21 = _n20.a;
+				var t = _n21.b;
+				var ty2 = _n21.c;
+				var _n22 = _n20.b;
+				var ty1 = _n22.b;
+				return _Utils_eq(bottom.ctx, top.ctx) && (_Utils_eq(top.term, t) && _Utils_eq(
+					bottom.ty,
+					A2(author$project$Lambda$ExpressionUtils$typeSubstTop, ty2, ty1)));
+			} else {
+				return false;
+			}
+		case 'TLet':
+			var bottom = rule.a.bottom;
+			var top1 = rule.a.top1;
+			var top2 = rule.a.top2;
+			var _n23 = bottom.term;
+			if (_n23.$ === 'TmLet') {
+				var varName = _n23.b;
+				var t1 = _n23.c;
+				var t2 = _n23.d;
+				return A2(
+					elm$core$Result$withDefault,
+					false,
+					A2(
+						elm$core$Result$map,
+						function (_n24) {
+							return true;
+						},
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'bound terms are same',
+								_Utils_eq(t1, top1.term)),
+							A2(
+								author$project$Lambda$Rule$check,
+								_Utils_Tuple2(
+									'in expr terms are same',
+									_Utils_eq(t2, top2.term)),
+								A2(
+									author$project$Lambda$Rule$check,
+									_Utils_Tuple2(
+										'in expr types are same',
+										_Utils_eq(bottom.ty, top2.ty)),
+									A2(
+										author$project$Lambda$Rule$check,
+										_Utils_Tuple2(
+											'variable is added to ctx with correct type binding',
+											_Utils_eq(
+												top2.ctx,
+												A3(
+													author$project$Lambda$ContextUtils$addbinding,
+													bottom.ctx,
+													varName,
+													author$project$Lambda$Expression$VarBind(top1.ty)))),
+										A2(
+											author$project$Lambda$Rule$check,
+											_Utils_Tuple2(
+												'bottom & top1 ctxs are same',
+												_Utils_eq(bottom.ctx, top1.ctx)),
+											elm$core$Result$Ok(_Utils_Tuple0))))))));
+			} else {
+				return false;
+			}
+		case 'TGen':
+			var bottom = rule.a.bottom;
+			var top = rule.a.top;
+			var _n25 = bottom.ty;
+			if (_n25.$ === 'TyAll') {
+				var varName = _n25.a;
+				var ty1 = _n25.b;
+				return A2(
+					elm$core$Result$withDefault,
+					false,
+					A2(
+						elm$core$Result$map,
+						function (_n26) {
+							return true;
+						},
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'type is generalized',
+								_Utils_eq(
+									A3(author$project$Lambda$ExpressionUtils$generalizeTypeTop, top.ctx, top.ty, varName),
+									bottom.ty)),
+							A2(
+								author$project$Lambda$Rule$check,
+								_Utils_Tuple2(
+									'type is degeneralized',
+									_Utils_eq(
+										A2(author$project$Lambda$ExpressionUtils$degeneralizeTypeTop, bottom.ctx, bottom.ty),
+										top.ty)),
+								A2(
+									author$project$Lambda$Rule$check,
+									_Utils_Tuple2(
+										'var is not a free var of ctx',
+										!A2(author$project$Lambda$ContextUtils$isnamebound, bottom.ctx, varName)),
+									A2(
+										author$project$Lambda$Rule$check,
+										_Utils_Tuple2(
+											'terms are same',
+											_Utils_eq(bottom.term, top.term)),
+										A2(
+											author$project$Lambda$Rule$check,
+											_Utils_Tuple2(
+												'ctxs are same',
+												_Utils_eq(bottom.ctx, top.ctx)),
+											elm$core$Result$Ok(_Utils_Tuple0))))))));
+			} else {
+				return false;
+			}
+		default:
+			var bottom = rule.a.bottom;
+			var top = rule.a.top;
+			return A2(
+				elm$core$Result$withDefault,
+				false,
+				A2(
+					elm$core$Result$map,
+					function (_n27) {
+						return true;
+					},
+					A2(
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'type is subtype',
+							_Utils_eq(
+								A3(author$project$Lambda$ExpressionUtils$isSpecializedType, top.ctx, top.ty, bottom.ty),
+								elm$core$Result$Ok(true))),
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'terms are same',
+								_Utils_eq(bottom.term, top.term)),
+							A2(
+								author$project$Lambda$Rule$check,
+								_Utils_Tuple2(
+									'ctxs are same',
+									_Utils_eq(bottom.ctx, top.ctx)),
+								elm$core$Result$Ok(_Utils_Tuple0))))));
+	}
+};
+var author$project$Utils$Tree$map = F2(
+	function (f, t) {
+		var x = t.a;
+		var nodes = t.b;
+		return A2(
+			author$project$Utils$Tree$Node,
+			f(x),
+			A2(
+				elm$core$List$map,
+				author$project$Utils$Tree$map(f),
+				nodes));
+	});
+var author$project$Lambda$Rule$tryRule = function (t) {
+	var erasedErrorTree = A2(
+		author$project$Utils$Tree$map,
+		function (_n32) {
+			var ctx = _n32.ctx;
+			var term = _n32.term;
+			var ty = _n32.ty;
+			var rule = _n32.rule;
+			var _n33 = _Utils_Tuple3(ctx, term, ty);
+			if (((_n33.a.$ === 'Ok') && (_n33.b.$ === 'Ok')) && (_n33.c.$ === 'Ok')) {
+				var ctx_ = _n33.a.a;
+				var term_ = _n33.b.a;
+				var ty_ = _n33.c.a;
+				return elm$core$Result$Ok(
+					{ctx: ctx_, rule: rule, term: term_, ty: ty_});
+			} else {
+				return elm$core$Result$Err('Field is missing');
+			}
+		},
+		t);
+	if (erasedErrorTree.a.$ === 'Ok') {
+		var r = erasedErrorTree.a.a;
+		var children = erasedErrorTree.b;
+		var _n1 = r.rule;
+		switch (_n1.$) {
+			case 'TVar':
+				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
+					var _n3 = children.a;
+					var c1 = _n3.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TVar(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TIf':
+				if ((((((children.b && (children.a.a.$ === 'Ok')) && children.b.b) && (children.b.a.a.$ === 'Ok')) && children.b.b.b) && (children.b.b.a.a.$ === 'Ok')) && (!children.b.b.b.b)) {
+					var _n5 = children.a;
+					var c1 = _n5.a.a;
+					var _n6 = children.b;
+					var _n7 = _n6.a;
+					var c2 = _n7.a.a;
+					var _n8 = _n6.b;
+					var _n9 = _n8.a;
+					var c3 = _n9.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TIf(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top1: {ctx: c1.ctx, term: c1.term, ty: c1.ty},
+									top2: {ctx: c2.ctx, term: c2.term, ty: c2.ty},
+									top3: {ctx: c3.ctx, term: c3.term, ty: c3.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TTrue':
+				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
+					var _n11 = children.a;
+					var c1 = _n11.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TTrue(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TFalse':
+				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
+					var _n13 = children.a;
+					var c1 = _n13.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TTrue(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TAbs':
+				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
+					var _n15 = children.a;
+					var c1 = _n15.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TAbs(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TTAbs':
+				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
+					var _n17 = children.a;
+					var c1 = _n17.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TTAbs(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TApp':
+				if ((((children.b && (children.a.a.$ === 'Ok')) && children.b.b) && (children.b.a.a.$ === 'Ok')) && (!children.b.b.b)) {
+					var _n19 = children.a;
+					var c1 = _n19.a.a;
+					var _n20 = children.b;
+					var _n21 = _n20.a;
+					var c2 = _n21.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TApp(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top1: {ctx: c1.ctx, term: c1.term, ty: c1.ty},
+									top2: {ctx: c2.ctx, term: c2.term, ty: c2.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TTApp':
+				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
+					var _n23 = children.a;
+					var c1 = _n23.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TTApp(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TLet':
+				if ((((children.b && (children.a.a.$ === 'Ok')) && children.b.b) && (children.b.a.a.$ === 'Ok')) && (!children.b.b.b)) {
+					var _n25 = children.a;
+					var c1 = _n25.a.a;
+					var _n26 = children.b;
+					var _n27 = _n26.a;
+					var c2 = _n27.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TLet(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top1: {ctx: c1.ctx, term: c1.term, ty: c1.ty},
+									top2: {ctx: c2.ctx, term: c2.term, ty: c2.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TGen':
+				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
+					var _n29 = children.a;
+					var c1 = _n29.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TGen(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			case 'TInst':
+				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
+					var _n31 = children.a;
+					var c1 = _n31.a.a;
+					return function (checks) {
+						return checks ? 'OK' : 'NOK';
+					}(
+						author$project$Lambda$Rule$checkRule(
+							author$project$Lambda$Rule$TInst(
+								{
+									bottom: {ctx: r.ctx, term: r.term, ty: r.ty},
+									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
+								})));
+				} else {
+					return 'Top rule Error';
+				}
+			default:
+				return 'Unimplemented Rule';
+		}
+	} else {
+		return 'Bottom rule error';
+	}
+};
+var author$project$Utils$Tree$listZipWith = F3(
+	function (f, l1, l2) {
+		var _n0 = _Utils_Tuple2(l1, l2);
+		if (_n0.a.b && _n0.b.b) {
+			var _n1 = _n0.a;
+			var h1 = _n1.a;
+			var t1 = _n1.b;
+			var _n2 = _n0.b;
+			var h2 = _n2.a;
+			var t2 = _n2.b;
+			return A2(
+				elm$core$List$cons,
+				A2(f, h1, h2),
+				A3(author$project$Utils$Tree$listZipWith, f, t1, t2));
+		} else {
+			return _List_Nil;
+		}
+	});
+var author$project$Utils$Tree$zipWithExtra = F3(
+	function (f, t1, t2) {
+		var _n0 = _Utils_Tuple2(t1, t2);
+		var _n1 = _n0.a;
+		var x1 = _n1.a;
+		var ns1 = _n1.b;
+		var _n2 = _n0.b;
+		var x2 = _n2.a;
+		var ns2 = _n2.b;
+		return A2(
+			author$project$Utils$Tree$Node,
+			A4(f, x1, t1, x2, t2),
+			A3(
+				author$project$Utils$Tree$listZipWith,
+				author$project$Utils$Tree$zipWithExtra(f),
+				ns1,
+				ns2));
+	});
+var author$project$Lambda$Parse$transformError = A2(
+	elm$core$Basics$composeR,
+	elm$core$List$head,
+	A2(
+		elm$core$Basics$composeR,
+		elm$core$Maybe$map(
+			function (deadEnd) {
+				return {col: deadEnd.col, row: deadEnd.row};
+			}),
+		elm$core$Maybe$withDefault(
+			{col: 0, row: 0})));
+var elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return elm$core$Result$Err(
+				f(e));
+		}
+	});
+var elm$parser$Parser$DeadEnd = F3(
+	function (row, col, problem) {
+		return {col: col, problem: problem, row: row};
+	});
+var elm$parser$Parser$problemToDeadEnd = function (p) {
+	return A3(elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
+};
+var elm$parser$Parser$Advanced$bagToList = F2(
+	function (bag, list) {
+		bagToList:
+		while (true) {
+			switch (bag.$) {
+				case 'Empty':
+					return list;
+				case 'AddRight':
+					var bag1 = bag.a;
+					var x = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2(elm$core$List$cons, x, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+				default:
+					var bag1 = bag.a;
+					var bag2 = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2(elm$parser$Parser$Advanced$bagToList, bag2, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$run = F2(
+	function (_n0, src) {
+		var parse = _n0.a;
+		var _n1 = parse(
+			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
+		if (_n1.$ === 'Good') {
+			var value = _n1.b;
+			return elm$core$Result$Ok(value);
+		} else {
+			var bag = _n1.b;
+			return elm$core$Result$Err(
+				A2(elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
+		}
+	});
+var elm$parser$Parser$run = F2(
+	function (parser, source) {
+		var _n0 = A2(elm$parser$Parser$Advanced$run, parser, source);
+		if (_n0.$ === 'Ok') {
+			var a = _n0.a;
+			return elm$core$Result$Ok(a);
+		} else {
+			var problems = _n0.a;
+			return elm$core$Result$Err(
+				A2(elm$core$List$map, elm$parser$Parser$problemToDeadEnd, problems));
+		}
+	});
+var author$project$Lambda$Parse$runParser = F2(
+	function (parser, text) {
+		return A2(
+			elm$core$Result$mapError,
+			author$project$Lambda$Parse$transformError,
+			A2(elm$parser$Parser$run, parser, text));
+	});
 var author$project$Lambda$Parse$TyContext = function (a) {
 	return {$: 'TyContext', a: a};
 };
@@ -7985,10 +9344,6 @@ var author$project$Lambda$Parse$TyVarBind = function (a) {
 var author$project$Lambda$Parse$VarBind = F2(
 	function (a, b) {
 		return {$: 'VarBind', a: a, b: b};
-	});
-var author$project$Lambda$Parse$TyAll = F2(
-	function (a, b) {
-		return {$: 'TyAll', a: a, b: b};
 	});
 var author$project$Lambda$Parse$TyVar = function (a) {
 	return {$: 'TyVar', a: a};
@@ -8160,6 +9515,10 @@ var author$project$Lambda$Parse$checkIfNoOperands = function (maybeResult) {
 		return elm$parser$Parser$problem('operator has no operands');
 	}
 };
+var author$project$Lambda$Parse$TyAll = F2(
+	function (a, b) {
+		return {$: 'TyAll', a: a, b: b};
+	});
 var elm$parser$Parser$ExpectingKeyword = function (a) {
 	return {$: 'ExpectingKeyword', a: a};
 };
@@ -8208,70 +9567,18 @@ var author$project$Lambda$Parse$forAllSymbol = elm$parser$Parser$oneOf(
 			elm$parser$Parser$keyword('Forall'),
 			elm$parser$Parser$keyword('ForAll')
 		]));
+var author$project$Lambda$Parse$checkAbsVars = function (vars) {
+	return (!elm$core$List$length(vars)) ? elm$parser$Parser$problem('No variable') : elm$parser$Parser$succeed(vars);
+};
 var author$project$Lambda$Parse$keywords = _Utils_ap(
 	_List_fromArray(
 		['Lambda', 'lambda', 'let', 'Let', 'in', 'In', 'forall', 'Forall', 'forAll', 'ForAll']),
 	_List_fromArray(
 		['if', 'If', 'then', 'Then', 'else', 'Else']));
-var elm$core$Set$Set_elm_builtin = function (a) {
-	return {$: 'Set_elm_builtin', a: a};
-};
-var elm$core$Set$empty = elm$core$Set$Set_elm_builtin(elm$core$Dict$empty);
-var elm$core$Set$insert = F2(
-	function (key, _n0) {
-		var dict = _n0.a;
-		return elm$core$Set$Set_elm_builtin(
-			A3(elm$core$Dict$insert, key, _Utils_Tuple0, dict));
-	});
 var elm$core$Set$fromList = function (list) {
 	return A3(elm$core$List$foldl, elm$core$Set$insert, elm$core$Set$empty, list);
 };
 var elm$parser$Parser$ExpectingVariable = {$: 'ExpectingVariable'};
-var elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _n1 = A2(elm$core$Basics$compare, targetKey, key);
-				switch (_n1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
-var elm$core$Dict$member = F2(
-	function (key, dict) {
-		var _n0 = A2(elm$core$Dict$get, key, dict);
-		if (_n0.$ === 'Just') {
-			return true;
-		} else {
-			return false;
-		}
-	});
-var elm$core$Set$member = F2(
-	function (key, _n0) {
-		var dict = _n0.a;
-		return A2(elm$core$Dict$member, key, dict);
-	});
 var elm$core$String$slice = _String_slice;
 var elm$parser$Parser$Advanced$varHelp = F7(
 	function (isGood, offset, row, col, src, indent, context) {
@@ -8350,6 +9657,7 @@ var author$project$Lambda$Parse$typeVar = elm$parser$Parser$variable(
 		reserved: elm$core$Set$fromList(author$project$Lambda$Parse$keywords),
 		start: elm$core$Char$isUpper
 	});
+var elm$parser$Parser$Forbidden = {$: 'Forbidden'};
 var elm$parser$Parser$Advanced$andThen = F2(
 	function (callback, _n0) {
 		var parseA = _n0.a;
@@ -8381,10 +9689,6 @@ var elm$parser$Parser$Advanced$andThen = F2(
 			});
 	});
 var elm$parser$Parser$andThen = elm$parser$Parser$Advanced$andThen;
-var elm$core$Basics$always = F2(
-	function (a, _n0) {
-		return a;
-	});
 var elm$parser$Parser$Advanced$map2 = F3(
 	function (func, _n0, _n1) {
 		var parseA = _n0.a;
@@ -8418,254 +9722,11 @@ var elm$parser$Parser$Advanced$map2 = F3(
 				}
 			});
 	});
-var elm$parser$Parser$Advanced$ignorer = F2(
-	function (keepParser, ignoreParser) {
-		return A3(elm$parser$Parser$Advanced$map2, elm$core$Basics$always, keepParser, ignoreParser);
-	});
-var elm$parser$Parser$ignorer = elm$parser$Parser$Advanced$ignorer;
 var elm$parser$Parser$Advanced$keeper = F2(
 	function (parseFunc, parseArg) {
 		return A3(elm$parser$Parser$Advanced$map2, elm$core$Basics$apL, parseFunc, parseArg);
 	});
 var elm$parser$Parser$keeper = elm$parser$Parser$Advanced$keeper;
-var elm$parser$Parser$Advanced$lazy = function (thunk) {
-	return elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			var _n0 = thunk(_Utils_Tuple0);
-			var parse = _n0.a;
-			return parse(s);
-		});
-};
-var elm$parser$Parser$lazy = elm$parser$Parser$Advanced$lazy;
-var elm$parser$Parser$Advanced$map = F2(
-	function (func, _n0) {
-		var parse = _n0.a;
-		return elm$parser$Parser$Advanced$Parser(
-			function (s0) {
-				var _n1 = parse(s0);
-				if (_n1.$ === 'Good') {
-					var p = _n1.a;
-					var a = _n1.b;
-					var s1 = _n1.c;
-					return A3(
-						elm$parser$Parser$Advanced$Good,
-						p,
-						func(a),
-						s1);
-				} else {
-					var p = _n1.a;
-					var x = _n1.b;
-					return A2(elm$parser$Parser$Advanced$Bad, p, x);
-				}
-			});
-	});
-var elm$parser$Parser$map = elm$parser$Parser$Advanced$map;
-var elm$parser$Parser$Advanced$chompWhileHelp = F5(
-	function (isGood, offset, row, col, s0) {
-		chompWhileHelp:
-		while (true) {
-			var newOffset = A3(elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.src);
-			if (_Utils_eq(newOffset, -1)) {
-				return A3(
-					elm$parser$Parser$Advanced$Good,
-					_Utils_cmp(s0.offset, offset) < 0,
-					_Utils_Tuple0,
-					{col: col, context: s0.context, indent: s0.indent, offset: offset, row: row, src: s0.src});
-			} else {
-				if (_Utils_eq(newOffset, -2)) {
-					var $temp$isGood = isGood,
-						$temp$offset = offset + 1,
-						$temp$row = row + 1,
-						$temp$col = 1,
-						$temp$s0 = s0;
-					isGood = $temp$isGood;
-					offset = $temp$offset;
-					row = $temp$row;
-					col = $temp$col;
-					s0 = $temp$s0;
-					continue chompWhileHelp;
-				} else {
-					var $temp$isGood = isGood,
-						$temp$offset = newOffset,
-						$temp$row = row,
-						$temp$col = col + 1,
-						$temp$s0 = s0;
-					isGood = $temp$isGood;
-					offset = $temp$offset;
-					row = $temp$row;
-					col = $temp$col;
-					s0 = $temp$s0;
-					continue chompWhileHelp;
-				}
-			}
-		}
-	});
-var elm$parser$Parser$Advanced$chompWhile = function (isGood) {
-	return elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			return A5(elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.offset, s.row, s.col, s);
-		});
-};
-var elm$parser$Parser$Advanced$spaces = elm$parser$Parser$Advanced$chompWhile(
-	function (c) {
-		return _Utils_eq(
-			c,
-			_Utils_chr(' ')) || (_Utils_eq(
-			c,
-			_Utils_chr('\n')) || _Utils_eq(
-			c,
-			_Utils_chr('\r')));
-	});
-var elm$parser$Parser$spaces = elm$parser$Parser$Advanced$spaces;
-var author$project$Lambda$Parse$arrowExprHelp = function (revOps) {
-	return elm$parser$Parser$oneOf(
-		_List_fromArray(
-			[
-				A2(
-				elm$parser$Parser$andThen,
-				function (op) {
-					return author$project$Lambda$Parse$arrowExprHelp(
-						A2(elm$core$List$cons, op, revOps));
-				},
-				A2(
-					elm$parser$Parser$keeper,
-					A2(
-						elm$parser$Parser$ignorer,
-						A2(
-							elm$parser$Parser$ignorer,
-							elm$parser$Parser$succeed(elm$core$Basics$identity),
-							author$project$Lambda$Parse$arrowSymbol),
-						elm$parser$Parser$spaces),
-					author$project$Lambda$Parse$cyclic$typeSubExpr())),
-				elm$parser$Parser$lazy(
-				function (_n2) {
-					return author$project$Lambda$Parse$checkIfNoOperands(
-						author$project$Lambda$Parse$arrowExprFinalize(revOps));
-				})
-			]));
-};
-function author$project$Lambda$Parse$cyclic$typeExpr() {
-	return A2(
-		elm$parser$Parser$andThen,
-		function (subExpr) {
-			return author$project$Lambda$Parse$arrowExprHelp(
-				_List_fromArray(
-					[subExpr]));
-		},
-		A2(
-			elm$parser$Parser$keeper,
-			A2(
-				elm$parser$Parser$ignorer,
-				elm$parser$Parser$succeed(elm$core$Basics$identity),
-				elm$parser$Parser$spaces),
-			author$project$Lambda$Parse$cyclic$typeSubExpr()));
-}
-function author$project$Lambda$Parse$cyclic$typeSubExpr() {
-	return elm$parser$Parser$oneOf(
-		_List_fromArray(
-			[
-				A2(
-				elm$parser$Parser$keeper,
-				A2(
-					elm$parser$Parser$keeper,
-					A2(
-						elm$parser$Parser$ignorer,
-						A2(
-							elm$parser$Parser$ignorer,
-							elm$parser$Parser$succeed(author$project$Lambda$Parse$TyAll),
-							author$project$Lambda$Parse$forAllSymbol),
-						elm$parser$Parser$spaces),
-					A2(
-						elm$parser$Parser$ignorer,
-						A2(
-							elm$parser$Parser$ignorer,
-							A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$typeVar, elm$parser$Parser$spaces),
-							elm$parser$Parser$symbol('.')),
-						elm$parser$Parser$spaces)),
-				elm$parser$Parser$lazy(
-					function (_n0) {
-						return author$project$Lambda$Parse$cyclic$typeExpr();
-					})),
-				A2(
-				elm$parser$Parser$keeper,
-				elm$parser$Parser$succeed(elm$core$Basics$identity),
-				A2(
-					elm$parser$Parser$ignorer,
-					A2(elm$parser$Parser$map, author$project$Lambda$Parse$TyVar, author$project$Lambda$Parse$typeVar),
-					elm$parser$Parser$spaces)),
-				A2(
-				elm$parser$Parser$keeper,
-				A2(
-					elm$parser$Parser$ignorer,
-					A2(
-						elm$parser$Parser$ignorer,
-						elm$parser$Parser$succeed(elm$core$Basics$identity),
-						elm$parser$Parser$symbol('(')),
-					elm$parser$Parser$spaces),
-				A2(
-					elm$parser$Parser$ignorer,
-					A2(
-						elm$parser$Parser$ignorer,
-						A2(
-							elm$parser$Parser$ignorer,
-							elm$parser$Parser$lazy(
-								function (_n1) {
-									return author$project$Lambda$Parse$cyclic$typeExpr();
-								}),
-							elm$parser$Parser$spaces),
-						elm$parser$Parser$symbol(')')),
-					elm$parser$Parser$spaces))
-			]));
-}
-try {
-	var author$project$Lambda$Parse$typeExpr = author$project$Lambda$Parse$cyclic$typeExpr();
-	author$project$Lambda$Parse$cyclic$typeExpr = function () {
-		return author$project$Lambda$Parse$typeExpr;
-	};
-	var author$project$Lambda$Parse$typeSubExpr = author$project$Lambda$Parse$cyclic$typeSubExpr();
-	author$project$Lambda$Parse$cyclic$typeSubExpr = function () {
-		return author$project$Lambda$Parse$typeSubExpr;
-	};
-} catch ($) {
-throw 'Some top-level definitions from `Lambda.Parse` are causing infinite recursion:\n\n  ┌─────┐\n  │    arrowExprHelp\n  │     ↓\n  │    typeExpr\n  │     ↓\n  │    typeSubExpr\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.0/halting-problem to learn how to fix it!';}
-var author$project$Lambda$Parse$maybeTypeAnnotation = elm$parser$Parser$oneOf(
-	_List_fromArray(
-		[
-			A2(
-			elm$parser$Parser$keeper,
-			A2(
-				elm$parser$Parser$ignorer,
-				A2(
-					elm$parser$Parser$ignorer,
-					elm$parser$Parser$succeed(elm$core$Maybe$Just),
-					elm$parser$Parser$symbol(':')),
-				elm$parser$Parser$spaces),
-			author$project$Lambda$Parse$typeExpr),
-			elm$parser$Parser$succeed(elm$core$Maybe$Nothing)
-		]));
-var author$project$Lambda$Parse$termVar = elm$parser$Parser$variable(
-	{
-		inner: function (c) {
-			return elm$core$Char$isAlphaNum(c) || _Utils_eq(
-				c,
-				_Utils_chr('_'));
-		},
-		reserved: elm$core$Set$fromList(author$project$Lambda$Parse$keywords),
-		start: elm$core$Char$isLower
-	});
-var author$project$Lambda$Parse$binding = elm$parser$Parser$oneOf(
-	_List_fromArray(
-		[
-			A2(
-			elm$parser$Parser$keeper,
-			A2(
-				elm$parser$Parser$keeper,
-				elm$parser$Parser$succeed(author$project$Lambda$Parse$VarBind),
-				A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$termVar, elm$parser$Parser$spaces)),
-			author$project$Lambda$Parse$maybeTypeAnnotation),
-			A2(elm$parser$Parser$map, author$project$Lambda$Parse$TyVarBind, author$project$Lambda$Parse$typeVar)
-		]));
-var elm$parser$Parser$Optional = {$: 'Optional'};
 var elm$parser$Parser$Advanced$Forbidden = {$: 'Forbidden'};
 var elm$parser$Parser$Advanced$Mandatory = {$: 'Mandatory'};
 var elm$parser$Parser$Advanced$Optional = {$: 'Optional'};
@@ -8688,6 +9749,14 @@ var elm$parser$Parser$toToken = function (str) {
 		str,
 		elm$parser$Parser$Expecting(str));
 };
+var elm$core$Basics$always = F2(
+	function (a, _n0) {
+		return a;
+	});
+var elm$parser$Parser$Advanced$ignorer = F2(
+	function (keepParser, ignoreParser) {
+		return A3(elm$parser$Parser$Advanced$map2, elm$core$Basics$always, keepParser, ignoreParser);
+	});
 var elm$parser$Parser$Advanced$loopHelp = F4(
 	function (p, state, callback, s0) {
 		loopHelp:
@@ -8726,6 +9795,28 @@ var elm$parser$Parser$Advanced$loop = F2(
 		return elm$parser$Parser$Advanced$Parser(
 			function (s) {
 				return A4(elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
+			});
+	});
+var elm$parser$Parser$Advanced$map = F2(
+	function (func, _n0) {
+		var parse = _n0.a;
+		return elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _n1 = parse(s0);
+				if (_n1.$ === 'Good') {
+					var p = _n1.a;
+					var a = _n1.b;
+					var s1 = _n1.c;
+					return A3(
+						elm$parser$Parser$Advanced$Good,
+						p,
+						func(a),
+						s1);
+				} else {
+					var p = _n1.a;
+					var x = _n1.b;
+					return A2(elm$parser$Parser$Advanced$Bad, p, x);
+				}
 			});
 	});
 var elm$parser$Parser$Advanced$Done = function (a) {
@@ -8918,6 +10009,255 @@ var elm$parser$Parser$sequence = function (i) {
 			trailing: elm$parser$Parser$toAdvancedTrailing(i.trailing)
 		});
 };
+var elm$parser$Parser$Advanced$chompWhileHelp = F5(
+	function (isGood, offset, row, col, s0) {
+		chompWhileHelp:
+		while (true) {
+			var newOffset = A3(elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.src);
+			if (_Utils_eq(newOffset, -1)) {
+				return A3(
+					elm$parser$Parser$Advanced$Good,
+					_Utils_cmp(s0.offset, offset) < 0,
+					_Utils_Tuple0,
+					{col: col, context: s0.context, indent: s0.indent, offset: offset, row: row, src: s0.src});
+			} else {
+				if (_Utils_eq(newOffset, -2)) {
+					var $temp$isGood = isGood,
+						$temp$offset = offset + 1,
+						$temp$row = row + 1,
+						$temp$col = 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				} else {
+					var $temp$isGood = isGood,
+						$temp$offset = newOffset,
+						$temp$row = row,
+						$temp$col = col + 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				}
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$chompWhile = function (isGood) {
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A5(elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.offset, s.row, s.col, s);
+		});
+};
+var elm$parser$Parser$Advanced$spaces = elm$parser$Parser$Advanced$chompWhile(
+	function (c) {
+		return _Utils_eq(
+			c,
+			_Utils_chr(' ')) || (_Utils_eq(
+			c,
+			_Utils_chr('\n')) || _Utils_eq(
+			c,
+			_Utils_chr('\r')));
+	});
+var elm$parser$Parser$spaces = elm$parser$Parser$Advanced$spaces;
+var author$project$Lambda$Parse$tyAllVars = A2(
+	elm$parser$Parser$andThen,
+	author$project$Lambda$Parse$checkAbsVars,
+	A2(
+		elm$parser$Parser$keeper,
+		elm$parser$Parser$succeed(elm$core$Basics$identity),
+		elm$parser$Parser$sequence(
+			{end: '', item: author$project$Lambda$Parse$typeVar, separator: ',', spaces: elm$parser$Parser$spaces, start: '', trailing: elm$parser$Parser$Forbidden})));
+var elm$parser$Parser$ignorer = elm$parser$Parser$Advanced$ignorer;
+var author$project$Lambda$Parse$tyAll = A2(
+	elm$parser$Parser$andThen,
+	A2(
+		elm$core$Basics$composeR,
+		elm$core$List$map(author$project$Lambda$Parse$TyAll),
+		A2(
+			elm$core$Basics$composeR,
+			A2(
+				elm$core$List$foldl,
+				F2(
+					function (tyAllVar, acc) {
+						return function (f) {
+							return acc(
+								tyAllVar(f));
+						};
+					}),
+				function (x) {
+					return x;
+				}),
+			elm$parser$Parser$succeed)),
+	A2(
+		elm$parser$Parser$keeper,
+		A2(
+			elm$parser$Parser$ignorer,
+			A2(
+				elm$parser$Parser$ignorer,
+				elm$parser$Parser$succeed(elm$core$Basics$identity),
+				author$project$Lambda$Parse$forAllSymbol),
+			elm$parser$Parser$spaces),
+		A2(
+			elm$parser$Parser$ignorer,
+			A2(
+				elm$parser$Parser$ignorer,
+				A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$tyAllVars, elm$parser$Parser$spaces),
+				elm$parser$Parser$symbol('.')),
+			elm$parser$Parser$spaces)));
+var elm$parser$Parser$Advanced$lazy = function (thunk) {
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _n0 = thunk(_Utils_Tuple0);
+			var parse = _n0.a;
+			return parse(s);
+		});
+};
+var elm$parser$Parser$lazy = elm$parser$Parser$Advanced$lazy;
+var elm$parser$Parser$map = elm$parser$Parser$Advanced$map;
+var author$project$Lambda$Parse$arrowExprHelp = function (revOps) {
+	return elm$parser$Parser$oneOf(
+		_List_fromArray(
+			[
+				A2(
+				elm$parser$Parser$andThen,
+				function (op) {
+					return author$project$Lambda$Parse$arrowExprHelp(
+						A2(elm$core$List$cons, op, revOps));
+				},
+				A2(
+					elm$parser$Parser$keeper,
+					A2(
+						elm$parser$Parser$ignorer,
+						A2(
+							elm$parser$Parser$ignorer,
+							elm$parser$Parser$succeed(elm$core$Basics$identity),
+							author$project$Lambda$Parse$arrowSymbol),
+						elm$parser$Parser$spaces),
+					author$project$Lambda$Parse$cyclic$typeSubExpr())),
+				elm$parser$Parser$lazy(
+				function (_n2) {
+					return author$project$Lambda$Parse$checkIfNoOperands(
+						author$project$Lambda$Parse$arrowExprFinalize(revOps));
+				})
+			]));
+};
+function author$project$Lambda$Parse$cyclic$typeExpr() {
+	return A2(
+		elm$parser$Parser$andThen,
+		function (subExpr) {
+			return author$project$Lambda$Parse$arrowExprHelp(
+				_List_fromArray(
+					[subExpr]));
+		},
+		A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$ignorer,
+				elm$parser$Parser$succeed(elm$core$Basics$identity),
+				elm$parser$Parser$spaces),
+			author$project$Lambda$Parse$cyclic$typeSubExpr()));
+}
+function author$project$Lambda$Parse$cyclic$typeSubExpr() {
+	return elm$parser$Parser$oneOf(
+		_List_fromArray(
+			[
+				A2(
+				elm$parser$Parser$keeper,
+				A2(
+					elm$parser$Parser$keeper,
+					elm$parser$Parser$succeed(elm$core$Basics$apL),
+					author$project$Lambda$Parse$tyAll),
+				elm$parser$Parser$lazy(
+					function (_n0) {
+						return author$project$Lambda$Parse$cyclic$typeExpr();
+					})),
+				A2(
+				elm$parser$Parser$keeper,
+				elm$parser$Parser$succeed(elm$core$Basics$identity),
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(elm$parser$Parser$map, author$project$Lambda$Parse$TyVar, author$project$Lambda$Parse$typeVar),
+					elm$parser$Parser$spaces)),
+				A2(
+				elm$parser$Parser$keeper,
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						elm$parser$Parser$succeed(elm$core$Basics$identity),
+						elm$parser$Parser$symbol('(')),
+					elm$parser$Parser$spaces),
+				A2(
+					elm$parser$Parser$ignorer,
+					A2(
+						elm$parser$Parser$ignorer,
+						A2(
+							elm$parser$Parser$ignorer,
+							elm$parser$Parser$lazy(
+								function (_n1) {
+									return author$project$Lambda$Parse$cyclic$typeExpr();
+								}),
+							elm$parser$Parser$spaces),
+						elm$parser$Parser$symbol(')')),
+					elm$parser$Parser$spaces))
+			]));
+}
+try {
+	var author$project$Lambda$Parse$typeExpr = author$project$Lambda$Parse$cyclic$typeExpr();
+	author$project$Lambda$Parse$cyclic$typeExpr = function () {
+		return author$project$Lambda$Parse$typeExpr;
+	};
+	var author$project$Lambda$Parse$typeSubExpr = author$project$Lambda$Parse$cyclic$typeSubExpr();
+	author$project$Lambda$Parse$cyclic$typeSubExpr = function () {
+		return author$project$Lambda$Parse$typeSubExpr;
+	};
+} catch ($) {
+throw 'Some top-level definitions from `Lambda.Parse` are causing infinite recursion:\n\n  ┌─────┐\n  │    arrowExprHelp\n  │     ↓\n  │    typeExpr\n  │     ↓\n  │    typeSubExpr\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.0/halting-problem to learn how to fix it!';}
+var author$project$Lambda$Parse$maybeTypeAnnotation = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$ignorer,
+				A2(
+					elm$parser$Parser$ignorer,
+					elm$parser$Parser$succeed(elm$core$Maybe$Just),
+					elm$parser$Parser$symbol(':')),
+				elm$parser$Parser$spaces),
+			author$project$Lambda$Parse$typeExpr),
+			elm$parser$Parser$succeed(elm$core$Maybe$Nothing)
+		]));
+var author$project$Lambda$Parse$termVar = elm$parser$Parser$variable(
+	{
+		inner: function (c) {
+			return elm$core$Char$isAlphaNum(c) || _Utils_eq(
+				c,
+				_Utils_chr('_'));
+		},
+		reserved: elm$core$Set$fromList(author$project$Lambda$Parse$keywords),
+		start: elm$core$Char$isLower
+	});
+var author$project$Lambda$Parse$binding = elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			elm$parser$Parser$keeper,
+			A2(
+				elm$parser$Parser$keeper,
+				elm$parser$Parser$succeed(author$project$Lambda$Parse$VarBind),
+				A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$termVar, elm$parser$Parser$spaces)),
+			author$project$Lambda$Parse$maybeTypeAnnotation),
+			A2(elm$parser$Parser$map, author$project$Lambda$Parse$TyVarBind, author$project$Lambda$Parse$typeVar)
+		]));
+var elm$parser$Parser$Optional = {$: 'Optional'};
 var author$project$Lambda$Parse$typeContext = A2(
 	elm$parser$Parser$keeper,
 	A2(
@@ -8929,68 +10269,31 @@ var author$project$Lambda$Parse$typeContext = A2(
 		elm$parser$Parser$sequence(
 			{end: '', item: author$project$Lambda$Parse$binding, separator: ',', spaces: elm$parser$Parser$spaces, start: '', trailing: elm$parser$Parser$Optional}),
 		elm$parser$Parser$spaces));
-var elm$parser$Parser$DeadEnd = F3(
-	function (row, col, problem) {
-		return {col: col, problem: problem, row: row};
-	});
-var elm$parser$Parser$problemToDeadEnd = function (p) {
-	return A3(elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
+var elm$parser$Parser$ExpectingEnd = {$: 'ExpectingEnd'};
+var elm$core$String$length = _String_length;
+var elm$parser$Parser$Advanced$end = function (x) {
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return _Utils_eq(
+				elm$core$String$length(s.src),
+				s.offset) ? A3(elm$parser$Parser$Advanced$Good, false, _Utils_Tuple0, s) : A2(
+				elm$parser$Parser$Advanced$Bad,
+				false,
+				A2(elm$parser$Parser$Advanced$fromState, s, x));
+		});
 };
-var elm$parser$Parser$Advanced$bagToList = F2(
-	function (bag, list) {
-		bagToList:
-		while (true) {
-			switch (bag.$) {
-				case 'Empty':
-					return list;
-				case 'AddRight':
-					var bag1 = bag.a;
-					var x = bag.b;
-					var $temp$bag = bag1,
-						$temp$list = A2(elm$core$List$cons, x, list);
-					bag = $temp$bag;
-					list = $temp$list;
-					continue bagToList;
-				default:
-					var bag1 = bag.a;
-					var bag2 = bag.b;
-					var $temp$bag = bag1,
-						$temp$list = A2(elm$parser$Parser$Advanced$bagToList, bag2, list);
-					bag = $temp$bag;
-					list = $temp$list;
-					continue bagToList;
-			}
-		}
-	});
-var elm$parser$Parser$Advanced$run = F2(
-	function (_n0, src) {
-		var parse = _n0.a;
-		var _n1 = parse(
-			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
-		if (_n1.$ === 'Good') {
-			var value = _n1.b;
-			return elm$core$Result$Ok(value);
-		} else {
-			var bag = _n1.b;
-			return elm$core$Result$Err(
-				A2(elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
-		}
-	});
-var elm$parser$Parser$run = F2(
-	function (parser, source) {
-		var _n0 = A2(elm$parser$Parser$Advanced$run, parser, source);
-		if (_n0.$ === 'Ok') {
-			var a = _n0.a;
-			return elm$core$Result$Ok(a);
-		} else {
-			var problems = _n0.a;
-			return elm$core$Result$Err(
-				A2(elm$core$List$map, elm$parser$Parser$problemToDeadEnd, problems));
-		}
-	});
-var author$project$Lambda$Parse$parseCtx = function (text) {
-	return A2(elm$parser$Parser$run, author$project$Lambda$Parse$typeContext, text);
-};
+var elm$parser$Parser$end = elm$parser$Parser$Advanced$end(elm$parser$Parser$ExpectingEnd);
+var author$project$Lambda$Parse$parseCtx = author$project$Lambda$Parse$runParser(
+	A2(
+		elm$parser$Parser$keeper,
+		A2(
+			elm$parser$Parser$ignorer,
+			elm$parser$Parser$succeed(elm$core$Basics$identity),
+			elm$parser$Parser$spaces),
+		A2(
+			elm$parser$Parser$ignorer,
+			A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$typeContext, elm$parser$Parser$spaces),
+			elm$parser$Parser$end)));
 var author$project$Lambda$Parse$TmAbs = F3(
 	function (a, b, c) {
 		return {$: 'TmAbs', a: a, b: b, c: c};
@@ -9303,23 +10606,35 @@ try {
 	};
 } catch ($) {
 throw 'Some top-level definitions from `Lambda.Parse` are causing infinite recursion:\n\n  ┌─────┐\n  │    termExpr\n  │     ↓\n  │    appExprHelp\n  │     ↓\n  │    termSubExpr\n  │     ↓\n  │    ifExpr\n  │     ↓\n  │    letExpr\n  │     ↓\n  │    termAbs\n  │     ↓\n  │    typeAbs\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.0/halting-problem to learn how to fix it!';}
-var author$project$Lambda$Parse$parseTerm = function (text) {
-	return A2(elm$parser$Parser$run, author$project$Lambda$Parse$termExpr, text);
-};
-var author$project$Lambda$Parse$parseType = function (text) {
-	return A2(elm$parser$Parser$run, author$project$Lambda$Parse$typeExpr, text);
-};
+var author$project$Lambda$Parse$parseTerm = author$project$Lambda$Parse$runParser(
+	A2(
+		elm$parser$Parser$keeper,
+		A2(
+			elm$parser$Parser$ignorer,
+			elm$parser$Parser$succeed(elm$core$Basics$identity),
+			elm$parser$Parser$spaces),
+		A2(
+			elm$parser$Parser$ignorer,
+			A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$termExpr, elm$parser$Parser$spaces),
+			elm$parser$Parser$end)));
+var author$project$Lambda$Parse$parseType = author$project$Lambda$Parse$runParser(
+	A2(
+		elm$parser$Parser$keeper,
+		A2(
+			elm$parser$Parser$ignorer,
+			elm$parser$Parser$succeed(elm$core$Basics$identity),
+			elm$parser$Parser$spaces),
+		A2(
+			elm$parser$Parser$ignorer,
+			A2(elm$parser$Parser$ignorer, author$project$Lambda$Parse$typeExpr, elm$parser$Parser$spaces),
+			elm$parser$Parser$end)));
 var author$project$Lambda$ContextUtils$addbindingTup = F2(
 	function (ctx, tup) {
 		var x = tup.a;
 		var bind = tup.b;
 		return A3(author$project$Lambda$ContextUtils$addbinding, ctx, x, bind);
 	});
-var author$project$Lambda$ContextUtils$emptycontext = _List_Nil;
 var author$project$Lambda$Expression$NameBind = {$: 'NameBind'};
-var author$project$Lambda$Expression$VarBind = function (a) {
-	return {$: 'VarBind', a: a};
-};
 var elm_community$list_extra$List$Extra$findIndexHelp = F3(
 	function (index, predicate, list) {
 		findIndexHelp:
@@ -9355,50 +10670,7 @@ var author$project$Lambda$ContextUtils$name2index = F3(
 			ctx);
 	});
 var author$project$Lambda$Expression$I = {$: 'I'};
-var author$project$Lambda$Expression$TyAll = F2(
-	function (a, b) {
-		return {$: 'TyAll', a: a, b: b};
-	});
-var author$project$Lambda$Expression$TyArr = F2(
-	function (a, b) {
-		return {$: 'TyArr', a: a, b: b};
-	});
-var author$project$Lambda$Expression$TyVar = F2(
-	function (a, b) {
-		return {$: 'TyVar', a: a, b: b};
-	});
-var author$project$Lambda$ParseTransform$IndexNotFound = function (a) {
-	return {$: 'IndexNotFound', a: a};
-};
-var toastal$either$Either$Left = function (a) {
-	return {$: 'Left', a: a};
-};
-var toastal$either$Either$Right = function (a) {
-	return {$: 'Right', a: a};
-};
-var toastal$either$Either$andThen = F2(
-	function (f, e) {
-		if (e.$ === 'Right') {
-			var b = e.a;
-			return f(b);
-		} else {
-			var a = e.a;
-			return toastal$either$Either$Left(a);
-		}
-	});
-var toastal$either$Either$andThenRight = toastal$either$Either$andThen;
-var toastal$either$Either$map = F2(
-	function (f, e) {
-		if (e.$ === 'Right') {
-			var b = e.a;
-			return toastal$either$Either$Right(
-				f(b));
-		} else {
-			var a = e.a;
-			return toastal$either$Either$Left(a);
-		}
-	});
-var toastal$either$Either$mapRight = toastal$either$Either$map;
+var author$project$Lambda$Expression$TyInt = {$: 'TyInt'};
 var author$project$Lambda$ParseTransform$fromParseType = F2(
 	function (ctx, ty) {
 		switch (ty.$) {
@@ -9407,45 +10679,33 @@ var author$project$Lambda$ParseTransform$fromParseType = F2(
 				var _n1 = A3(author$project$Lambda$ContextUtils$name2index, author$project$Lambda$Expression$I, ctx, name);
 				if (_n1.$ === 'Just') {
 					var index = _n1.a;
-					return toastal$either$Either$Right(
-						A2(
-							author$project$Lambda$Expression$TyVar,
-							index,
-							author$project$Lambda$ContextUtils$ctxlength(ctx)));
+					return A2(
+						author$project$Lambda$Expression$TyVar,
+						index,
+						author$project$Lambda$ContextUtils$ctxlength(ctx));
 				} else {
 					switch (name) {
 						case 'Bool':
-							return toastal$either$Either$Right(
-								author$project$Lambda$Expression$TyName('Bool'));
+							return author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool);
 						case 'Int':
-							return toastal$either$Either$Right(
-								author$project$Lambda$Expression$TyName('Int'));
+							return author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyInt);
 						default:
-							return toastal$either$Either$Left(
-								author$project$Lambda$ParseTransform$IndexNotFound(name));
+							return author$project$Lambda$Expression$TyName(name);
 					}
 				}
 			case 'TyArr':
 				var ty1 = ty.a;
 				var ty2 = ty.b;
 				return A2(
-					toastal$either$Either$andThenRight,
-					function (t1) {
-						return A2(
-							toastal$either$Either$andThenRight,
-							function (t2) {
-								return toastal$either$Either$Right(
-									A2(author$project$Lambda$Expression$TyArr, t1, t2));
-							},
-							A2(author$project$Lambda$ParseTransform$fromParseType, ctx, ty2));
-					},
-					A2(author$project$Lambda$ParseTransform$fromParseType, ctx, ty1));
+					author$project$Lambda$Expression$TyArr,
+					A2(author$project$Lambda$ParseTransform$fromParseType, ctx, ty1),
+					A2(author$project$Lambda$ParseTransform$fromParseType, ctx, ty2));
 			default:
 				var name = ty.a;
 				var ty1 = ty.b;
 				return A2(
-					toastal$either$Either$mapRight,
-					author$project$Lambda$Expression$TyAll(name),
+					author$project$Lambda$Expression$TyAll,
+					name,
 					A2(
 						author$project$Lambda$ParseTransform$fromParseType,
 						A3(author$project$Lambda$ContextUtils$addbinding, ctx, name, author$project$Lambda$Expression$TyVarBind),
@@ -9457,7 +10717,7 @@ var author$project$Lambda$ParseTransform$fromParseContext = function (ctx) {
 	return A3(
 		elm$core$List$foldl,
 		function (binding) {
-			return toastal$either$Either$andThen(
+			return elm$core$Result$andThen(
 				function (someCtx) {
 					var transformed = function () {
 						if (binding.$ === 'VarBind') {
@@ -9467,40 +10727,24 @@ var author$project$Lambda$ParseTransform$fromParseContext = function (ctx) {
 								name,
 								A2(
 									elm$core$Maybe$withDefault,
-									toastal$either$Either$Right(author$project$Lambda$Expression$NameBind),
+									author$project$Lambda$Expression$NameBind,
 									A2(
 										elm$core$Maybe$map,
-										toastal$either$Either$mapRight(author$project$Lambda$Expression$VarBind),
+										author$project$Lambda$Expression$VarBind,
 										A2(
 											elm$core$Maybe$map,
 											author$project$Lambda$ParseTransform$fromParseType(someCtx),
 											maybeType))));
 						} else {
 							var name = binding.a;
-							return _Utils_Tuple2(
-								name,
-								toastal$either$Either$Right(author$project$Lambda$Expression$TyVarBind));
+							return _Utils_Tuple2(name, author$project$Lambda$Expression$TyVarBind);
 						}
 					}();
-					var eitherTransformed = function () {
-						if (transformed.b.$ === 'Right') {
-							var name = transformed.a;
-							var smt = transformed.b.a;
-							return toastal$either$Either$Right(
-								_Utils_Tuple2(name, smt));
-						} else {
-							var name = transformed.a;
-							var err = transformed.b.a;
-							return toastal$either$Either$Left(err);
-						}
-					}();
-					return A2(
-						toastal$either$Either$mapRight,
-						author$project$Lambda$ContextUtils$addbindingTup(someCtx),
-						eitherTransformed);
+					return elm$core$Result$Ok(
+						A2(author$project$Lambda$ContextUtils$addbindingTup, someCtx, transformed));
 				});
 		},
-		toastal$either$Either$Right(author$project$Lambda$ContextUtils$emptycontext),
+		elm$core$Result$Ok(author$project$Lambda$ContextUtils$emptycontext),
 		bindings);
 };
 var author$project$Lambda$Expression$TmAbs = F4(
@@ -9511,9 +10755,18 @@ var author$project$Lambda$Expression$TmApp = F3(
 	function (a, b, c) {
 		return {$: 'TmApp', a: a, b: b, c: c};
 	});
+var author$project$Lambda$Expression$TmConst = F2(
+	function (a, b) {
+		return {$: 'TmConst', a: a, b: b};
+	});
+var author$project$Lambda$Expression$TmFalse = {$: 'TmFalse'};
 var author$project$Lambda$Expression$TmIf = F4(
 	function (a, b, c, d) {
 		return {$: 'TmIf', a: a, b: b, c: c, d: d};
+	});
+var author$project$Lambda$Expression$TmLet = F4(
+	function (a, b, c, d) {
+		return {$: 'TmLet', a: a, b: b, c: c, d: d};
 	});
 var author$project$Lambda$Expression$TmTAbs = F3(
 	function (a, b, c) {
@@ -9523,15 +10776,13 @@ var author$project$Lambda$Expression$TmTApp = F3(
 	function (a, b, c) {
 		return {$: 'TmTApp', a: a, b: b, c: c};
 	});
+var author$project$Lambda$Expression$TmTrue = {$: 'TmTrue'};
 var author$project$Lambda$Expression$TmVar = F3(
 	function (a, b, c) {
 		return {$: 'TmVar', a: a, b: b, c: c};
 	});
-var author$project$Lambda$ParseTransform$NotImplemented = function (a) {
-	return {$: 'NotImplemented', a: a};
-};
-var author$project$Lambda$ParseTransform$TypeMissing = function (a) {
-	return {$: 'TypeMissing', a: a};
+var author$project$Lambda$ParseTransform$IndexNotFound = function (a) {
+	return {$: 'IndexNotFound', a: a};
 };
 var author$project$Lambda$ParseTransform$fromParseTerm = F2(
 	function (ctx, t) {
@@ -9541,56 +10792,54 @@ var author$project$Lambda$ParseTransform$fromParseTerm = F2(
 				var _n1 = A3(author$project$Lambda$ContextUtils$name2index, author$project$Lambda$Expression$I, ctx, name);
 				if (_n1.$ === 'Just') {
 					var index = _n1.a;
-					return toastal$either$Either$Right(
+					return elm$core$Result$Ok(
 						A3(
 							author$project$Lambda$Expression$TmVar,
 							author$project$Lambda$Expression$I,
 							index,
 							author$project$Lambda$ContextUtils$ctxlength(ctx)));
 				} else {
-					return toastal$either$Either$Left(
-						author$project$Lambda$ParseTransform$IndexNotFound(name));
+					switch (name) {
+						case 'true':
+							return elm$core$Result$Ok(
+								A2(author$project$Lambda$Expression$TmConst, author$project$Lambda$Expression$I, author$project$Lambda$Expression$TmTrue));
+						case 'false':
+							return elm$core$Result$Ok(
+								A2(author$project$Lambda$Expression$TmConst, author$project$Lambda$Expression$I, author$project$Lambda$Expression$TmFalse));
+						default:
+							return elm$core$Result$Err(
+								author$project$Lambda$ParseTransform$IndexNotFound(name));
+					}
 				}
 			case 'TmAbs':
 				var name = t.a;
 				var maybeTy = t.b;
 				var t1 = t.c;
+				var resultTyT = A2(
+					elm$core$Maybe$map,
+					author$project$Lambda$ParseTransform$fromParseType(ctx),
+					maybeTy);
+				var binding = A2(
+					elm$core$Maybe$withDefault,
+					author$project$Lambda$Expression$NameBind,
+					A2(elm$core$Maybe$map, author$project$Lambda$Expression$VarBind, resultTyT));
 				return A2(
-					toastal$either$Either$andThenRight,
-					function (ty) {
-						return A2(
-							toastal$either$Either$andThenRight,
-							function (t1t) {
-								return toastal$either$Either$Right(
-									A4(author$project$Lambda$Expression$TmAbs, author$project$Lambda$Expression$I, name, ty, t1t));
-							},
-							A2(
-								author$project$Lambda$ParseTransform$fromParseTerm,
-								A3(
-									author$project$Lambda$ContextUtils$addbinding,
-									ctx,
-									name,
-									author$project$Lambda$Expression$VarBind(ty)),
-								t1));
-					},
+					elm$core$Result$map,
+					A3(author$project$Lambda$Expression$TmAbs, author$project$Lambda$Expression$I, name, resultTyT),
 					A2(
-						elm$core$Maybe$withDefault,
-						toastal$either$Either$Left(
-							author$project$Lambda$ParseTransform$TypeMissing(name)),
-						A2(
-							elm$core$Maybe$map,
-							author$project$Lambda$ParseTransform$fromParseType(ctx),
-							maybeTy)));
+						author$project$Lambda$ParseTransform$fromParseTerm,
+						A3(author$project$Lambda$ContextUtils$addbinding, ctx, name, binding),
+						t1));
 			case 'TmApp':
 				var t1 = t.a;
 				var t2 = t.b;
 				return A2(
-					toastal$either$Either$andThenRight,
+					elm$core$Result$andThen,
 					function (t1t) {
 						return A2(
-							toastal$either$Either$andThenRight,
+							elm$core$Result$andThen,
 							function (t2t) {
-								return toastal$either$Either$Right(
+								return elm$core$Result$Ok(
 									A3(author$project$Lambda$Expression$TmApp, author$project$Lambda$Expression$I, t1t, t2t));
 							},
 							A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t2));
@@ -9600,7 +10849,7 @@ var author$project$Lambda$ParseTransform$fromParseTerm = F2(
 				var name = t.a;
 				var t1 = t.b;
 				return A2(
-					toastal$either$Either$mapRight,
+					elm$core$Result$map,
 					A2(author$project$Lambda$Expression$TmTAbs, author$project$Lambda$Expression$I, name),
 					A2(
 						author$project$Lambda$ParseTransform$fromParseTerm,
@@ -9610,14 +10859,12 @@ var author$project$Lambda$ParseTransform$fromParseTerm = F2(
 				var t1 = t.a;
 				var ty1 = t.b;
 				return A2(
-					toastal$either$Either$andThenRight,
+					elm$core$Result$map,
 					function (t1t) {
-						return A2(
-							toastal$either$Either$andThenRight,
-							function (ty1t) {
-								return toastal$either$Either$Right(
-									A3(author$project$Lambda$Expression$TmTApp, author$project$Lambda$Expression$I, t1t, ty1t));
-							},
+						return A3(
+							author$project$Lambda$Expression$TmTApp,
+							author$project$Lambda$Expression$I,
+							t1t,
 							A2(author$project$Lambda$ParseTransform$fromParseType, ctx, ty1));
 					},
 					A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t1));
@@ -9626,15 +10873,15 @@ var author$project$Lambda$ParseTransform$fromParseTerm = F2(
 				var t2 = t.b;
 				var t3 = t.c;
 				return A2(
-					toastal$either$Either$andThenRight,
+					elm$core$Result$andThen,
 					function (t1t) {
 						return A2(
-							toastal$either$Either$andThenRight,
+							elm$core$Result$andThen,
 							function (t2t) {
 								return A2(
-									toastal$either$Either$andThenRight,
+									elm$core$Result$andThen,
 									function (t3t) {
-										return toastal$either$Either$Right(
+										return elm$core$Result$Ok(
 											A4(author$project$Lambda$Expression$TmIf, author$project$Lambda$Expression$I, t1t, t2t, t3t));
 									},
 									A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t3));
@@ -9646,263 +10893,128 @@ var author$project$Lambda$ParseTransform$fromParseTerm = F2(
 				var name = t.a;
 				var t1 = t.b;
 				var t2 = t.c;
-				return toastal$either$Either$Left(
-					author$project$Lambda$ParseTransform$NotImplemented('Let'));
-		}
-	});
-var elm$core$Result$andThen = F2(
-	function (callback, result) {
-		if (result.$ === 'Ok') {
-			var value = result.a;
-			return callback(value);
-		} else {
-			var msg = result.a;
-			return elm$core$Result$Err(msg);
-		}
-	});
-var elm$core$Result$map = F2(
-	function (func, ra) {
-		if (ra.$ === 'Ok') {
-			var a = ra.a;
-			return elm$core$Result$Ok(
-				func(a));
-		} else {
-			var e = ra.a;
-			return elm$core$Result$Err(e);
-		}
-	});
-var toastal$either$Either$andMap = F2(
-	function (e, e1) {
-		if (e1.$ === 'Right') {
-			var f = e1.a;
-			return A2(toastal$either$Either$map, f, e);
-		} else {
-			var x = e1.a;
-			return toastal$either$Either$Left(x);
-		}
-	});
-var toastal$either$Either$map3 = F4(
-	function (f, e, e1, e2) {
-		return A2(
-			toastal$either$Either$andMap,
-			e2,
-			A2(
-				toastal$either$Either$andMap,
-				e1,
-				A2(toastal$either$Either$map, f, e)));
-	});
-var author$project$Lambda$Rule$getCtxTermTy = F3(
-	function (ctx, term, ty) {
-		return function (r) {
-			if (r.$ === 'Ok') {
-				if (r.a.$ === 'Left') {
-					var smt = r.a.a;
-					return elm$core$Result$Err('Parse Error');
-				} else {
-					var smt = r.a.a;
-					return elm$core$Result$Ok(smt);
-				}
-			} else {
-				var smt = r.a;
-				return elm$core$Result$Err('Parse Result Error');
-			}
-		}(
-			A2(
-				elm$core$Result$map,
-				function (_n0) {
-					var x = _n0.a;
-					var y = _n0.b;
-					var z = _n0.c;
-					return A4(
-						toastal$either$Either$map3,
-						F3(
-							function (a, b, c) {
-								return _Utils_Tuple3(a, b, c);
-							}),
-						x,
-						y,
-						z);
-				},
-				A2(
+				return A2(
 					elm$core$Result$andThen,
-					function (ctx1) {
+					function (t1t) {
 						return A2(
 							elm$core$Result$andThen,
-							function (term1) {
-								return A2(
-									elm$core$Result$andThen,
-									function (ty1) {
-										return elm$core$Result$Ok(
-											_Utils_Tuple3(
-												author$project$Lambda$ParseTransform$fromParseContext(ctx1),
-												A2(
-													toastal$either$Either$andThen,
-													function (parsedCtx) {
-														return A2(author$project$Lambda$ParseTransform$fromParseTerm, parsedCtx, term1);
-													},
-													author$project$Lambda$ParseTransform$fromParseContext(ctx1)),
-												A2(
-													toastal$either$Either$andThen,
-													function (parsedCtx) {
-														return A2(author$project$Lambda$ParseTransform$fromParseType, parsedCtx, ty1);
-													},
-													author$project$Lambda$ParseTransform$fromParseContext(ctx1))));
-									},
-									author$project$Lambda$Parse$parseType(ty));
+							function (t2t) {
+								return elm$core$Result$Ok(
+									A4(author$project$Lambda$Expression$TmLet, author$project$Lambda$Expression$I, name, t1t, t2t));
 							},
-							author$project$Lambda$Parse$parseTerm(term));
+							A2(
+								author$project$Lambda$ParseTransform$fromParseTerm,
+								A3(author$project$Lambda$ContextUtils$addbinding, ctx, name, author$project$Lambda$Expression$NameBind),
+								t2));
 					},
-					author$project$Lambda$Parse$parseCtx(ctx))));
-	});
-var author$project$Lambda$Rule$tryRule = function (t) {
-	var ctx = t.a.ctx;
-	var term = t.a.term;
-	var ty = t.a.ty;
-	var rule = t.a.rule;
-	var children = t.b;
-	var _n1 = _Utils_Tuple2(rule, children);
-	_n1$2:
-	while (true) {
-		if (_n1.b.b) {
-			if (!_n1.b.b.b) {
-				if (_n1.a.$ === 'TVar') {
-					var _n2 = _n1.a;
-					var _n3 = _n1.b;
-					var child = _n3.a;
-					var childC = child.a;
-					var top = A3(author$project$Lambda$Rule$getCtxTermTy, childC.ctx, childC.term, childC.ty);
-					var bottom = A3(author$project$Lambda$Rule$getCtxTermTy, ctx, term, ty);
-					return function (r) {
-						if (r.$ === 'Err') {
-							var text = r.a;
-							return text;
-						} else {
-							var checks = r.a;
-							return checks ? 'OK' : 'NOK';
-						}
-					}(
-						A2(
-							elm$core$Result$andThen,
-							function (_n5) {
-								var c1 = _n5.a;
-								var tm1 = _n5.b;
-								var ty1 = _n5.c;
-								return A2(
-									elm$core$Result$andThen,
-									function (_n6) {
-										var c2 = _n6.a;
-										var tm2 = _n6.b;
-										var ty2 = _n6.c;
-										return elm$core$Result$Ok(
-											author$project$Lambda$Rule$checkRule(
-												author$project$Lambda$Rule$TVar(
-													{
-														bottom: {ctx: c1, term: tm1, ty: ty1},
-														top: {ctx: c2, term: tm2, ty: ty2}
-													})));
-									},
-									top);
-							},
-							bottom));
-				} else {
-					break _n1$2;
-				}
-			} else {
-				if (((_n1.a.$ === 'TIf') && _n1.b.b.b.b) && (!_n1.b.b.b.b.b)) {
-					var _n8 = _n1.a;
-					var _n9 = _n1.b;
-					var child1 = _n9.a;
-					var _n10 = _n9.b;
-					var child2 = _n10.a;
-					var _n11 = _n10.b;
-					var child3 = _n11.a;
-					var _n12 = _Utils_Tuple3(child1, child2, child3);
-					var _n13 = _n12.a;
-					var childC1 = _n13.a;
-					var _n14 = _n12.b;
-					var childC2 = _n14.a;
-					var _n15 = _n12.c;
-					var childC3 = _n15.a;
-					var top3 = A3(author$project$Lambda$Rule$getCtxTermTy, childC3.ctx, childC3.term, childC3.ty);
-					var top2 = A3(author$project$Lambda$Rule$getCtxTermTy, childC2.ctx, childC2.term, childC2.ty);
-					var top1 = A3(author$project$Lambda$Rule$getCtxTermTy, childC1.ctx, childC1.term, childC1.ty);
-					var bottom = A3(author$project$Lambda$Rule$getCtxTermTy, ctx, term, ty);
-					return function (r) {
-						if (r.$ === 'Err') {
-							var text = r.a;
-							return text;
-						} else {
-							var checks = r.a;
-							return checks ? 'OK' : 'NOK';
-						}
-					}(
-						A2(
-							elm$core$Result$andThen,
-							function (_n16) {
-								var c1 = _n16.a;
-								var tm1 = _n16.b;
-								var ty1 = _n16.c;
-								return A2(
-									elm$core$Result$andThen,
-									function (_n17) {
-										var ctxC1 = _n17.a;
-										var tmC1 = _n17.b;
-										var tyC1 = _n17.c;
-										return A2(
-											elm$core$Result$andThen,
-											function (_n18) {
-												var ctxC2 = _n18.a;
-												var tmC2 = _n18.b;
-												var tyC2 = _n18.c;
-												return A2(
-													elm$core$Result$andThen,
-													function (_n19) {
-														var ctxC3 = _n19.a;
-														var tmC3 = _n19.b;
-														var tyC3 = _n19.c;
-														return elm$core$Result$Ok(
-															author$project$Lambda$Rule$checkRule(
-																author$project$Lambda$Rule$TIf(
-																	{
-																		bottom: {ctx: c1, term: tm1, ty: ty1},
-																		top1: {ctx: ctxC1, term: tmC1, ty: tyC1},
-																		top2: {ctx: ctxC2, term: tmC2, ty: tyC2},
-																		top3: {ctx: ctxC3, term: tmC3, ty: tyC3}
-																	})));
-													},
-													top3);
-											},
-											top2);
-									},
-									top1);
-							},
-							bottom));
-				} else {
-					break _n1$2;
-				}
-			}
-		} else {
-			break _n1$2;
+					A2(author$project$Lambda$ParseTransform$fromParseTerm, ctx, t1));
 		}
-	}
-	return '';
+	});
+var author$project$Lambda$Rule$ParseError = function (a) {
+	return {$: 'ParseError', a: a};
+};
+var author$project$Lambda$Rule$ParseTransformError = function (a) {
+	return {$: 'ParseTransformError', a: a};
+};
+var author$project$Lambda$Rule$PrerequisiteDataError = {$: 'PrerequisiteDataError'};
+var author$project$ViewModel$getExprTree = function (t) {
+	return A2(
+		author$project$Utils$Tree$map,
+		function (_n0) {
+			var ctx = _n0.ctx;
+			var term = _n0.term;
+			var ty = _n0.ty;
+			var rule = _n0.rule;
+			var ctxExpr = A2(
+				elm$core$Result$andThen,
+				function (parsedCtx) {
+					return A2(
+						elm$core$Result$mapError,
+						author$project$Lambda$Rule$ParseTransformError,
+						author$project$Lambda$ParseTransform$fromParseContext(parsedCtx));
+				},
+				A2(
+					elm$core$Result$mapError,
+					author$project$Lambda$Rule$ParseError,
+					author$project$Lambda$Parse$parseCtx(ctx)));
+			var termExpr = A2(
+				elm$core$Result$andThen,
+				function (parsedTerm) {
+					return A2(
+						elm$core$Result$andThen,
+						function (okContext) {
+							return A2(
+								elm$core$Result$mapError,
+								author$project$Lambda$Rule$ParseTransformError,
+								A2(author$project$Lambda$ParseTransform$fromParseTerm, okContext, parsedTerm));
+						},
+						A2(
+							elm$core$Result$mapError,
+							function (_n2) {
+								return author$project$Lambda$Rule$PrerequisiteDataError;
+							},
+							ctxExpr));
+				},
+				A2(
+					elm$core$Result$mapError,
+					author$project$Lambda$Rule$ParseError,
+					author$project$Lambda$Parse$parseTerm(term)));
+			var tyExpr = A2(
+				elm$core$Result$andThen,
+				function (parsedTy) {
+					return A2(
+						elm$core$Result$map,
+						function (okContext) {
+							return A2(author$project$Lambda$ParseTransform$fromParseType, okContext, parsedTy);
+						},
+						A2(
+							elm$core$Result$mapError,
+							function (_n1) {
+								return author$project$Lambda$Rule$PrerequisiteDataError;
+							},
+							ctxExpr));
+				},
+				A2(
+					elm$core$Result$mapError,
+					author$project$Lambda$Rule$ParseError,
+					author$project$Lambda$Parse$parseType(ty)));
+			return {ctx: ctxExpr, rule: rule, term: termExpr, ty: tyExpr};
+		},
+		t);
 };
 var author$project$ViewModel$getTreeViewData = function (t) {
-	var ctx = t.a.ctx;
-	var term = t.a.term;
-	var ty = t.a.ty;
-	var rule = t.a.rule;
-	var children = t.b;
-	return A2(
-		author$project$Model$Node,
-		{
-			ctx: ctx,
-			result: author$project$Lambda$Rule$tryRule(t),
-			rule: rule,
-			term: term,
-			ty: ty
-		},
-		A2(elm$core$List$map, author$project$ViewModel$getTreeViewData, children));
+	var zipper = F4(
+		function (origNode, _n1, exprNode, exprTree) {
+			var extractError = function (result) {
+				if (result.$ === 'Err') {
+					var e = result.a;
+					return elm$core$Maybe$Just(e);
+				} else {
+					return elm$core$Maybe$Nothing;
+				}
+			};
+			return {
+				ctx: {
+					error: extractError(exprNode.ctx),
+					text: origNode.ctx
+				},
+				result: author$project$Lambda$Rule$tryRule(exprTree),
+				rule: origNode.rule,
+				term: {
+					error: extractError(exprNode.term),
+					text: origNode.term
+				},
+				ty: {
+					error: extractError(exprNode.ty),
+					text: origNode.ty
+				}
+			};
+		});
+	return A3(
+		author$project$Utils$Tree$zipWithExtra,
+		zipper,
+		t,
+		author$project$ViewModel$getExprTree(t));
 };
 var rtfeldman$elm_css$Css$row = {flexDirection: rtfeldman$elm_css$Css$Structure$Compatible, flexDirectionOrWrap: rtfeldman$elm_css$Css$Structure$Compatible, value: 'row'};
 var rtfeldman$elm_css$Css$column = _Utils_update(
@@ -9976,7 +11088,6 @@ var author$project$View$Lambda$Tree$drawTree = function (tree) {
 												[i])));
 								}),
 							children)),
-						(elm$core$List$length(children) <= 1) ? A2(rtfeldman$elm_css$Html$Styled$div, _List_Nil, _List_Nil) : A2(author$project$View$Lambda$Tree$hairline, content.rule, content.result),
 						A4(
 						rtfeldman$elm_css$Html$Styled$styled,
 						rtfeldman$elm_css$Html$Styled$div,
@@ -9999,7 +11110,8 @@ var author$project$View$Lambda$Tree$drawTree = function (tree) {
 		});
 	return A2(
 		drawTreeP,
-		author$project$ViewModel$getTreeViewData(tree),
+		author$project$ViewModel$getTreeViewData(
+			A2(elm$core$Debug$log, 'tree', tree)),
 		_List_Nil);
 };
 var rtfeldman$elm_css$Css$flexStart = rtfeldman$elm_css$Css$prop1('flex-start');
@@ -10394,7 +11506,6 @@ var elm$core$Task$perform = F2(
 			elm$core$Task$Perform(
 				A2(elm$core$Task$map, toMessage, task)));
 	});
-var elm$core$String$length = _String_length;
 var elm$core$String$dropLeft = F2(
 	function (n, string) {
 		return (n < 1) ? string : A3(
@@ -10770,10 +11881,6 @@ var rtfeldman$elm_css$VirtualDom$Styled$accumulateStyledHtml = F2(
 					A2(elm$core$List$cons, vdomNode, nodes),
 					finalStyles);
 		}
-	});
-var elm$core$Dict$singleton = F2(
-	function (key, value) {
-		return A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, key, value, elm$core$Dict$RBEmpty_elm_builtin, elm$core$Dict$RBEmpty_elm_builtin);
 	});
 var rtfeldman$elm_css$VirtualDom$Styled$stylesFromPropertiesHelp = F2(
 	function (candidate, properties) {

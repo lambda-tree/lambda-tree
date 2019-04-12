@@ -34,11 +34,6 @@ drawTree tree =
                             (children
                                 |> List.indexedMap (\i t1 -> drawTreeP t1 (path ++ [ i ]))
                             )
-                        , if List.length children <= 1 then
-                            S.div [] []
-
-                          else
-                            hairline content.rule content.result
                         , styled S.div
                             [ displayFlex, flexDirection column, alignItems stretch ]
                             []

@@ -29,7 +29,7 @@ compilationTest =
 checkRuleTest : Test
 checkRuleTest =
     describe "checkRule"
-        [ test "TVar" <|
+        [ test "TVar simple" <|
             \_ ->
                 checkRule
                     (TVar
@@ -42,6 +42,33 @@ checkRuleTest =
                             { ctx = [ ( "x", VarBind <| TyConst TyBool ) ]
                             , term = TmVar I 0 1
                             , ty = TyConst TyBool
+                            }
+                        }
+                    )
+                    |> Expect.equal True
+        , test "TVar with TyVar reference to context in binding" <|
+            \_ ->
+                checkRule
+                    (TVar
+                        { bottom =
+                            { ctx =
+                                [ ( "Z", TyVarBind )
+                                , ( "x", VarBind <| TyAll "A" <| TyArr (TyVar 0 3) (TyVar 1 3) )
+                                , ( "X", TyVarBind )
+                                , ( "Y", TyVarBind )
+                                ]
+                            , term = TmVar I 1 4
+                            , ty = TyAll "A" <| TyArr (TyVar 0 5) (TyVar 3 5)
+                            }
+                        , top =
+                            { ctx =
+                                [ ( "Z", TyVarBind )
+                                , ( "x", VarBind <| TyAll "A" <| TyArr (TyVar 0 3) (TyVar 1 3) )
+                                , ( "X", TyVarBind )
+                                , ( "Y", TyVarBind )
+                                ]
+                            , term = TmVar I 1 4
+                            , ty = TyAll "A" <| TyArr (TyVar 0 5) (TyVar 3 5)
                             }
                         }
                     )
@@ -120,6 +147,23 @@ checkRuleTest =
                             { ctx = [ ( "x", VarBind <| TyConst TyBool ) ]
                             , term = TmVar I 0 0
                             , ty = TyConst TyBool
+                            }
+                        }
+                    )
+                    |> Expect.equal True
+        , test "TAbs 2" <|
+            \_ ->
+                checkRule
+                    (TAbs
+                        { bottom =
+                            { ctx = [ ( "A", TyVarBind ) ]
+                            , term = TmAbs I "x" (Just <| TyVar 0 1) (TmVar I 0 2)
+                            , ty = TyArr (TyVar 0 1) (TyVar 0 1)
+                            }
+                        , top =
+                            { ctx = [ ( "x", VarBind <| TyVar 0 1 ), ( "A", TyVarBind ) ]
+                            , term = TmVar I 0 2
+                            , ty = TyVar 1 2
                             }
                         }
                     )

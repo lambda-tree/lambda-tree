@@ -467,46 +467,14 @@ equalTypes ctx1 ty1 ctx2 ty2 =
 
         _ =
             Debug.log "equalTypes (ctx2, ty2)" ( ctx2, ty2 )
+
+        ctxlengthDiff =
+            ctxlength ctx1 - ctxlength ctx2
     in
-    case ( ty1, ty2 ) of
-        ( TyConst s1, TyConst s2 ) ->
-            s1 == s2
+    if ctxlengthDiff > 0 then
+        (List.drop ctxlengthDiff ctx1 == ctx2)
+            && (ty1 == typeShift ctxlengthDiff ty2)
 
-        ( TyName s1, TyName s2 ) ->
-            s1 == s2
-
-        ( TyAll s1 ty11, TyAll s2 ty21 ) ->
-            equalTypes
-                (addbinding ctx1 s1 TyVarBind)
-                ty11
-                (addbinding ctx2 s2 TyVarBind)
-                ty21
-
-        ( TyArr ty11 ty12, TyArr ty21 ty22 ) ->
-            equalTypes
-                ctx1
-                ty11
-                ctx2
-                ty21
-                && equalTypes
-                    ctx1
-                    ty12
-                    ctx2
-                    ty22
-
-        ( TyVar i1 l1, TyVar i2 l2 ) ->
-            case ( getbinding ctx1 (i1 + (ctxlength ctx1 - l1)), getbinding ctx2 (i2 + (ctxlength ctx2 - l2)) ) of
-                ( Just TyVarBind, Just TyVarBind ) ->
-                    l2 - l1 == i2 - i1
-
-                ( Just NameBind, Just NameBind ) ->
-                    l2 - l1 == i2 - i1
-
-                ( Just (VarBind varTy1), Just (VarBind varTy2) ) ->
-                    l2 - l1 == i2 - i1
-
-                _ ->
-                    False
-
-        _ ->
-            False
+    else
+        (List.drop -ctxlengthDiff ctx2 == ctx1)
+            && (typeShift -ctxlengthDiff ty1 == ty2)

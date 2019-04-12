@@ -175,14 +175,14 @@ equalTypesTest =
                         False
         , test "Should be true if forall names are same" <|
             \_ ->
-                equalTypes emptycontext (TyAll "x" <| TyConst TyBool) emptycontext (TyAll "x" <| TyConst TyBool)
+                equalTypes emptycontext (TyAll "x" <| TyVar 0 1) emptycontext (TyAll "x" <| TyVar 0 1)
                     |> Expect.equal
                         True
-        , test "Should be true even if forall names are not same" <|
+        , test "Should be false if forall names are not same" <|
             \_ ->
-                equalTypes emptycontext (TyAll "x" <| TyConst TyBool) emptycontext (TyAll "y" <| TyConst TyBool)
+                equalTypes emptycontext (TyAll "x" <| TyVar 0 1) emptycontext (TyAll "y" <| TyVar 0 1)
                     |> Expect.equal
-                        True
+                        False
         , test "Should be true if both TyArr types are same" <|
             \_ ->
                 equalTypes
@@ -219,7 +219,7 @@ equalTypesTest =
                     (TyVar 0 1)
                     |> Expect.equal
                         True
-        , test "Should be false if variables don't exist" <|
+        , test "Should be true even if variables don't exist" <|
             \_ ->
                 equalTypes
                     emptycontext
@@ -227,8 +227,8 @@ equalTypesTest =
                     emptycontext
                     (TyVar 0 1)
                     |> Expect.equal
-                        False
-        , test "Should be true if ctxt var names are different" <|
+                        True
+        , test "Should be false if ctxt var names are different" <|
             \_ ->
                 equalTypes
                     [ ( "x", TyVarBind ) ]
@@ -236,14 +236,25 @@ equalTypesTest =
                     [ ( "y", TyVarBind ) ]
                     (TyVar 0 1)
                     |> Expect.equal
-                        True
+                        False
         , test "Should be true if variables are referencing from different positions of context" <|
             \_ ->
+                equalTypes [ ( "x", VarBind (TyVar 0 1) ), ( "x", TyVarBind ) ] (TyVar 1 2) [ ( "x", TyVarBind ) ] (TyVar 0 1)
+                    |> Expect.equal
+                        True
+        , test "Should be true if variables are referencing from different positions of context 2" <|
+            \_ ->
                 equalTypes
-                    [ ( "x", VarBind (TyVar 0 1) ), ( "x", TyVarBind ) ]
-                    (TyVar 1 2)
-                    [ ( "x", VarBind (TyVar 0 1) ), ( "x", TyVarBind ) ]
-                    (TyVar 0 1)
+                    [ ( "X", TyVarBind )
+                    , ( "Y", TyVarBind )
+                    ]
+                    (TyAll "A" <| TyArr (TyVar 0 3) (TyVar 1 3))
+                    [ ( "Z", TyVarBind )
+                    , ( "x", VarBind <| TyAll "A" <| TyArr (TyVar 0 3) (TyVar 1 3) )
+                    , ( "X", TyVarBind )
+                    , ( "Y", TyVarBind )
+                    ]
+                    (TyAll "A" <| TyArr (TyVar 0 5) (TyVar 3 5))
                     |> Expect.equal
                         True
         ]

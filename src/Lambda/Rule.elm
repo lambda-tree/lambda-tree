@@ -52,22 +52,30 @@ checkRule : TyRule -> Bool
 checkRule rule =
     case rule of
         TVar { bottom, top } ->
-            (bottom.ctx == top.ctx)
-                && (bottom.term == top.term)
-                && (bottom.ty == top.ty)
-                && (case bottom.term of
+            Ok ()
+                |> check ( "checkRule: ctxSame", bottom.ctx == top.ctx )
+                |> check ( "checkRule: termSame", bottom.term == top.term )
+                |> check ( "checkRule: tySame", bottom.ty == top.ty )
+                |> check
+                    ( "checkRule: types of vars are same"
+                    , case bottom.term of
                         TmVar _ x _ ->
                             case getbinding top.ctx x of
                                 Just (VarBind ty1) ->
-                                    -- Doesn't need to be exact equal type since contexts must be identical
-                                    equalTypes top.ctx ty1 bottom.ctx bottom.ty
+                                    equalTypes
+                                        (List.drop (x + 1) top.ctx)
+                                        ty1
+                                        bottom.ctx
+                                        bottom.ty
 
                                 _ ->
                                     False
 
                         _ ->
                             False
-                   )
+                    )
+                |> Result.map (\_ -> True)
+                |> Result.withDefault False
 
         TIf { bottom, top1, top2, top3 } ->
             case bottom.term of

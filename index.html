@@ -8578,401 +8578,451 @@ var author$project$Lambda$Rule$check = F2(
 			},
 			previous);
 	});
-var elm$core$Result$withDefault = F2(
-	function (def, result) {
-		if (result.$ === 'Ok') {
-			var a = result.a;
-			return a;
-		} else {
-			return def;
-		}
-	});
 var author$project$Lambda$Rule$checkRule = function (rule) {
 	switch (rule.$) {
 		case 'TVar':
 			var bottom = rule.a.bottom;
 			var top = rule.a.top;
 			return A2(
-				elm$core$Result$withDefault,
-				false,
+				author$project$Lambda$Rule$check,
+				_Utils_Tuple2(
+					'types of vars are same',
+					function () {
+						var _n1 = bottom.term;
+						if (_n1.$ === 'TmVar') {
+							var x = _n1.b;
+							var _n2 = A2(author$project$Lambda$ContextUtils$getbinding, top.ctx, x);
+							if ((_n2.$ === 'Just') && (_n2.a.$ === 'VarBind')) {
+								var ty1 = _n2.a.a;
+								return A4(
+									author$project$Lambda$ExpressionUtils$equalTypes,
+									A2(elm$core$List$drop, x + 1, top.ctx),
+									ty1,
+									bottom.ctx,
+									bottom.ty);
+							} else {
+								return false;
+							}
+						} else {
+							return false;
+						}
+					}()),
 				A2(
-					elm$core$Result$map,
-					function (_n3) {
-						return true;
-					},
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'tySame',
+						_Utils_eq(bottom.ty, top.ty)),
 					A2(
 						author$project$Lambda$Rule$check,
 						_Utils_Tuple2(
-							'checkRule: types of vars are same',
-							function () {
-								var _n1 = bottom.term;
-								if (_n1.$ === 'TmVar') {
-									var x = _n1.b;
-									var _n2 = A2(author$project$Lambda$ContextUtils$getbinding, top.ctx, x);
-									if ((_n2.$ === 'Just') && (_n2.a.$ === 'VarBind')) {
-										var ty1 = _n2.a.a;
-										return A4(
-											author$project$Lambda$ExpressionUtils$equalTypes,
-											A2(elm$core$List$drop, x + 1, top.ctx),
-											ty1,
-											bottom.ctx,
-											bottom.ty);
-									} else {
-										return false;
-									}
-								} else {
-									return false;
-								}
-							}()),
+							'termSame',
+							_Utils_eq(bottom.term, top.term)),
 						A2(
 							author$project$Lambda$Rule$check,
 							_Utils_Tuple2(
-								'checkRule: tySame',
-								_Utils_eq(bottom.ty, top.ty)),
-							A2(
-								author$project$Lambda$Rule$check,
-								_Utils_Tuple2(
-									'checkRule: termSame',
-									_Utils_eq(bottom.term, top.term)),
-								A2(
-									author$project$Lambda$Rule$check,
-									_Utils_Tuple2(
-										'checkRule: ctxSame',
-										_Utils_eq(bottom.ctx, top.ctx)),
-									elm$core$Result$Ok(_Utils_Tuple0)))))));
+								'ctxSame',
+								_Utils_eq(bottom.ctx, top.ctx)),
+							elm$core$Result$Ok(_Utils_Tuple0)))));
 		case 'TIf':
 			var bottom = rule.a.bottom;
 			var top1 = rule.a.top1;
 			var top2 = rule.a.top2;
 			var top3 = rule.a.top3;
-			var _n4 = bottom.term;
-			if (_n4.$ === 'TmIf') {
-				var t1 = _n4.b;
-				var t2 = _n4.c;
-				var t3 = _n4.d;
+			var _n3 = bottom.term;
+			if (_n3.$ === 'TmIf') {
+				var t1 = _n3.b;
+				var t2 = _n3.c;
+				var t3 = _n3.d;
 				return A2(
-					elm$core$List$all,
-					elm$core$Basics$eq(bottom.ctx),
-					_List_fromArray(
-						[top1.ctx, top2.ctx, top3.ctx])) && (_Utils_eq(top1.term, t1) && (A4(
-					author$project$Lambda$ExpressionUtils$equalTypes,
-					top1.ctx,
-					top1.ty,
-					bottom.ctx,
-					author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool)) && (_Utils_eq(top2.term, t2) && (A4(author$project$Lambda$ExpressionUtils$equalTypes, top2.ctx, top2.ty, bottom.ctx, bottom.ty) && (_Utils_eq(top3.term, t3) && A4(author$project$Lambda$ExpressionUtils$equalTypes, top3.ctx, top3.ty, bottom.ctx, bottom.ty))))));
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'elseTypeSame',
+						A4(author$project$Lambda$ExpressionUtils$equalTypes, top3.ctx, top3.ty, bottom.ctx, bottom.ty)),
+					A2(
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'elseTermSame',
+							_Utils_eq(top3.term, t3)),
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'thenTypeSame',
+								A4(author$project$Lambda$ExpressionUtils$equalTypes, top2.ctx, top2.ty, bottom.ctx, bottom.ty)),
+							A2(
+								author$project$Lambda$Rule$check,
+								_Utils_Tuple2(
+									'thenTermSame',
+									_Utils_eq(top2.term, t2)),
+								A2(
+									author$project$Lambda$Rule$check,
+									_Utils_Tuple2(
+										'ifTypeIsBool',
+										A4(
+											author$project$Lambda$ExpressionUtils$equalTypes,
+											top1.ctx,
+											top1.ty,
+											bottom.ctx,
+											author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool))),
+									A2(
+										author$project$Lambda$Rule$check,
+										_Utils_Tuple2(
+											'ifTermSame',
+											_Utils_eq(top1.term, t1)),
+										A2(
+											author$project$Lambda$Rule$check,
+											_Utils_Tuple2(
+												'allCtxSame',
+												A2(
+													elm$core$List$all,
+													elm$core$Basics$eq(bottom.ctx),
+													_List_fromArray(
+														[top1.ctx, top2.ctx, top3.ctx]))),
+											elm$core$Result$Ok(_Utils_Tuple0))))))));
 			} else {
-				return false;
+				return elm$core$Result$Err('wrongRule');
 			}
 		case 'TTrue':
 			var bottom = rule.a.bottom;
 			var top = rule.a.top;
-			var _n5 = bottom.term;
-			if ((_n5.$ === 'TmConst') && (_n5.b.$ === 'TmTrue')) {
-				var _n6 = _n5.b;
-				return _Utils_eq(bottom.ctx, top.ctx) && (_Utils_eq(top.term, bottom.term) && A4(
-					author$project$Lambda$ExpressionUtils$equalTypes,
-					top.ctx,
-					top.ty,
-					bottom.ctx,
-					author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool)));
+			var _n4 = bottom.term;
+			if ((_n4.$ === 'TmConst') && (_n4.b.$ === 'TmTrue')) {
+				var _n5 = _n4.b;
+				return A2(
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'typeIsBool',
+						A4(
+							author$project$Lambda$ExpressionUtils$equalTypes,
+							top.ctx,
+							top.ty,
+							bottom.ctx,
+							author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool))),
+					A2(
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'termSame',
+							_Utils_eq(top.term, bottom.term)),
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'ctxSame',
+								_Utils_eq(bottom.ctx, top.ctx)),
+							elm$core$Result$Ok(_Utils_Tuple0))));
 			} else {
-				return false;
+				return elm$core$Result$Err('wrongRule');
 			}
 		case 'TFalse':
 			var bottom = rule.a.bottom;
 			var top = rule.a.top;
-			var _n7 = bottom.term;
-			if ((_n7.$ === 'TmConst') && (_n7.b.$ === 'TmFalse')) {
-				var _n8 = _n7.b;
-				return _Utils_eq(bottom.ctx, top.ctx) && (_Utils_eq(top.term, bottom.term) && A4(
-					author$project$Lambda$ExpressionUtils$equalTypes,
-					top.ctx,
-					top.ty,
-					bottom.ctx,
-					author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool)));
+			var _n6 = bottom.term;
+			if ((_n6.$ === 'TmConst') && (_n6.b.$ === 'TmFalse')) {
+				var _n7 = _n6.b;
+				return A2(
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'typeIsBool',
+						A4(
+							author$project$Lambda$ExpressionUtils$equalTypes,
+							top.ctx,
+							top.ty,
+							bottom.ctx,
+							author$project$Lambda$Expression$TyConst(author$project$Lambda$Expression$TyBool))),
+					A2(
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'termSame',
+							_Utils_eq(top.term, bottom.term)),
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'ctxSame',
+								_Utils_eq(bottom.ctx, top.ctx)),
+							elm$core$Result$Ok(_Utils_Tuple0))));
 			} else {
-				return false;
+				return elm$core$Result$Err('wrongRule');
 			}
 		case 'TAbs':
 			var bottom = rule.a.bottom;
 			var top = rule.a.top;
-			var _n9 = _Utils_Tuple2(bottom.term, bottom.ty);
-			if ((_n9.a.$ === 'TmAbs') && (_n9.b.$ === 'TyArr')) {
-				var _n10 = _n9.a;
-				var varName = _n10.b;
-				var ty = _n10.c;
-				var t = _n10.d;
-				var _n11 = _n9.b;
-				var ty1 = _n11.a;
-				var ty2 = _n11.b;
+			var _n8 = _Utils_Tuple2(bottom.term, bottom.ty);
+			if ((_n8.a.$ === 'TmAbs') && (_n8.b.$ === 'TyArr')) {
+				var _n9 = _n8.a;
+				var varName = _n9.b;
+				var ty = _n9.c;
+				var t = _n9.d;
+				var _n10 = _n8.b;
+				var ty1 = _n10.a;
+				var ty2 = _n10.b;
 				return A2(
-					elm$core$Result$withDefault,
-					false,
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'returnTypeLeftSameAsArg',
+						A2(
+							elm$core$Maybe$withDefault,
+							true,
+							A2(
+								elm$core$Maybe$map,
+								function (justTy) {
+									return A4(author$project$Lambda$ExpressionUtils$equalTypes, bottom.ctx, justTy, bottom.ctx, ty1);
+								},
+								ty))),
 					A2(
-						elm$core$Result$map,
-						function (_n12) {
-							return true;
-						},
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'returnTypeRightSameAsTop',
+							A4(author$project$Lambda$ExpressionUtils$equalTypes, top.ctx, top.ty, bottom.ctx, ty2)),
 						A2(
 							author$project$Lambda$Rule$check,
 							_Utils_Tuple2(
-								'arg type is correct',
-								A2(
-									elm$core$Maybe$withDefault,
-									true,
-									A2(
-										elm$core$Maybe$map,
-										function (justTy) {
-											return A4(author$project$Lambda$ExpressionUtils$equalTypes, bottom.ctx, justTy, bottom.ctx, ty1);
-										},
-										ty))),
+								'termSame',
+								_Utils_eq(top.term, t)),
 							A2(
 								author$project$Lambda$Rule$check,
 								_Utils_Tuple2(
-									'return type is correct',
-									A4(author$project$Lambda$ExpressionUtils$equalTypes, top.ctx, top.ty, bottom.ctx, ty2)),
+									'varTypeInCtx',
+									_Utils_eq(
+										top.ctx,
+										A3(
+											author$project$Lambda$ContextUtils$addbinding,
+											bottom.ctx,
+											varName,
+											author$project$Lambda$Expression$VarBind(ty1)))),
 								A2(
 									author$project$Lambda$Rule$check,
 									_Utils_Tuple2(
-										'terms are same',
-										_Utils_eq(top.term, t)),
-									A2(
-										author$project$Lambda$Rule$check,
-										_Utils_Tuple2(
-											'var is added to ctx with correct type',
-											_Utils_eq(
-												top.ctx,
-												A3(
-													author$project$Lambda$ContextUtils$addbinding,
-													bottom.ctx,
-													varName,
-													author$project$Lambda$Expression$VarBind(ty1)))),
-										A2(
-											author$project$Lambda$Rule$check,
-											_Utils_Tuple2(
-												'ctxs are same',
-												_Utils_eq(
-													author$project$Lambda$ContextUtils$popbinding(top.ctx),
-													bottom.ctx)),
-											elm$core$Result$Ok(_Utils_Tuple0))))))));
+										'ctxSame',
+										_Utils_eq(
+											author$project$Lambda$ContextUtils$popbinding(top.ctx),
+											bottom.ctx)),
+									elm$core$Result$Ok(_Utils_Tuple0))))));
 			} else {
-				return false;
+				return elm$core$Result$Err('wrongRule');
 			}
 		case 'TApp':
 			var bottom = rule.a.bottom;
 			var top1 = rule.a.top1;
 			var top2 = rule.a.top2;
-			var _n13 = _Utils_Tuple2(bottom.term, top1.ty);
-			if ((_n13.a.$ === 'TmApp') && (_n13.b.$ === 'TyArr')) {
-				var _n14 = _n13.a;
-				var t1 = _n14.b;
-				var t2 = _n14.c;
-				var _n15 = _n13.b;
-				var ty1 = _n15.a;
-				var ty2 = _n15.b;
+			var _n11 = _Utils_Tuple2(bottom.term, top1.ty);
+			if ((_n11.a.$ === 'TmApp') && (_n11.b.$ === 'TyArr')) {
+				var _n12 = _n11.a;
+				var t1 = _n12.b;
+				var t2 = _n12.c;
+				var _n13 = _n11.b;
+				var ty1 = _n13.a;
+				var ty2 = _n13.b;
 				return A2(
-					elm$core$List$all,
-					elm$core$Basics$eq(bottom.ctx),
-					_List_fromArray(
-						[top1.ctx, top2.ctx])) && (_Utils_eq(top1.term, t1) && (_Utils_eq(top2.term, t2) && (A4(author$project$Lambda$ExpressionUtils$equalTypes, top1.ctx, ty1, top2.ctx, top2.ty) && A4(author$project$Lambda$ExpressionUtils$equalTypes, top1.ctx, ty2, bottom.ctx, bottom.ty))));
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'rightArrowTypeSameAsAppResultType',
+						A4(author$project$Lambda$ExpressionUtils$equalTypes, top1.ctx, ty2, bottom.ctx, bottom.ty)),
+					A2(
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'leftArrowTypeSameAsArgType',
+							A4(author$project$Lambda$ExpressionUtils$equalTypes, top1.ctx, ty1, top2.ctx, top2.ty)),
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'rightTermSame',
+								_Utils_eq(top2.term, t2)),
+							A2(
+								author$project$Lambda$Rule$check,
+								_Utils_Tuple2(
+									'leftTermSame',
+									_Utils_eq(top1.term, t1)),
+								A2(
+									author$project$Lambda$Rule$check,
+									_Utils_Tuple2(
+										'allCtxSame',
+										A2(
+											elm$core$List$all,
+											elm$core$Basics$eq(bottom.ctx),
+											_List_fromArray(
+												[top1.ctx, top2.ctx]))),
+									elm$core$Result$Ok(_Utils_Tuple0))))));
 			} else {
-				return false;
+				return elm$core$Result$Err('wrongRule');
 			}
 		case 'TTAbs':
 			var bottom = rule.a.bottom;
 			var top = rule.a.top;
-			var _n16 = _Utils_Tuple2(bottom.term, bottom.ty);
-			if ((_n16.a.$ === 'TmTAbs') && (_n16.b.$ === 'TyAll')) {
-				var _n17 = _n16.a;
-				var tyVarName1 = _n17.b;
-				var t = _n17.c;
-				var _n18 = _n16.b;
-				var tyVarName2 = _n18.a;
-				var ty = _n18.b;
+			var _n14 = _Utils_Tuple2(bottom.term, bottom.ty);
+			if ((_n14.a.$ === 'TmTAbs') && (_n14.b.$ === 'TyAll')) {
+				var _n15 = _n14.a;
+				var tyVarName1 = _n15.b;
+				var t = _n15.c;
+				var _n16 = _n14.b;
+				var tyVarName2 = _n16.a;
+				var ty = _n16.b;
 				return A2(
-					elm$core$Result$withDefault,
-					false,
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'typesSame',
+						_Utils_eq(ty, top.ty)),
 					A2(
-						elm$core$Result$map,
-						function (_n19) {
-							return true;
-						},
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'termsSame',
+							_Utils_eq(top.term, t)),
 						A2(
 							author$project$Lambda$Rule$check,
 							_Utils_Tuple2(
-								'5 - typesEqual',
-								_Utils_eq(ty, top.ty)),
+								'isFree',
+								!A2(author$project$Lambda$ContextUtils$isnamebound, bottom.ctx, tyVarName1)),
 							A2(
 								author$project$Lambda$Rule$check,
 								_Utils_Tuple2(
-									'4 - termsEqual',
-									_Utils_eq(top.term, t)),
+									'isAddedToContext',
+									_Utils_eq(
+										A3(author$project$Lambda$ContextUtils$addbinding, bottom.ctx, tyVarName1, author$project$Lambda$Expression$TyVarBind),
+										top.ctx)),
 								A2(
 									author$project$Lambda$Rule$check,
 									_Utils_Tuple2(
-										'3 - isFree',
-										!A2(author$project$Lambda$ContextUtils$isnamebound, bottom.ctx, tyVarName1)),
-									A2(
-										author$project$Lambda$Rule$check,
-										_Utils_Tuple2(
-											'2 - isAddedToContext',
-											_Utils_eq(
-												A3(author$project$Lambda$ContextUtils$addbinding, bottom.ctx, tyVarName1, author$project$Lambda$Expression$TyVarBind),
-												top.ctx)),
-										A2(
-											author$project$Lambda$Rule$check,
-											_Utils_Tuple2(
-												'1 - typeVariablesSame',
-												_Utils_eq(tyVarName1, tyVarName2)),
-											elm$core$Result$Ok(_Utils_Tuple0))))))));
+										'typeVariablesSame',
+										_Utils_eq(tyVarName1, tyVarName2)),
+									elm$core$Result$Ok(_Utils_Tuple0))))));
 			} else {
-				return false;
+				return elm$core$Result$Err('wrongRule');
 			}
 		case 'TTApp':
 			var bottom = rule.a.bottom;
 			var top = rule.a.top;
-			var _n20 = _Utils_Tuple2(bottom.term, top.ty);
-			if ((_n20.a.$ === 'TmTApp') && (_n20.b.$ === 'TyAll')) {
-				var _n21 = _n20.a;
-				var t = _n21.b;
-				var ty2 = _n21.c;
-				var _n22 = _n20.b;
-				var ty1 = _n22.b;
-				return _Utils_eq(bottom.ctx, top.ctx) && (_Utils_eq(top.term, t) && _Utils_eq(
-					bottom.ty,
-					A2(author$project$Lambda$ExpressionUtils$typeSubstTop, ty2, ty1)));
+			var _n17 = bottom.term;
+			if (_n17.$ === 'TmTApp') {
+				var t = _n17.b;
+				var ty2 = _n17.c;
+				var _n18 = top.ty;
+				if (_n18.$ === 'TyAll') {
+					var ty1 = _n18.b;
+					return A2(
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'typeSubstitutionCorrect',
+							_Utils_eq(
+								bottom.ty,
+								A2(author$project$Lambda$ExpressionUtils$typeSubstTop, ty2, ty1))),
+						A2(
+							author$project$Lambda$Rule$check,
+							_Utils_Tuple2(
+								'termSame',
+								_Utils_eq(top.term, t)),
+							A2(
+								author$project$Lambda$Rule$check,
+								_Utils_Tuple2(
+									'ctxSame',
+									_Utils_eq(bottom.ctx, top.ctx)),
+								elm$core$Result$Ok(_Utils_Tuple0))));
+				} else {
+					return elm$core$Result$Err('topTypeNotForAll');
+				}
 			} else {
-				return false;
+				return elm$core$Result$Err('wrongRule');
 			}
 		case 'TLet':
 			var bottom = rule.a.bottom;
 			var top1 = rule.a.top1;
 			var top2 = rule.a.top2;
-			var _n23 = bottom.term;
-			if (_n23.$ === 'TmLet') {
-				var varName = _n23.b;
-				var t1 = _n23.c;
-				var t2 = _n23.d;
+			var _n19 = bottom.term;
+			if (_n19.$ === 'TmLet') {
+				var varName = _n19.b;
+				var t1 = _n19.c;
+				var t2 = _n19.d;
 				return A2(
-					elm$core$Result$withDefault,
-					false,
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'bound terms are same',
+						_Utils_eq(t1, top1.term)),
 					A2(
-						elm$core$Result$map,
-						function (_n24) {
-							return true;
-						},
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'in expr types are same',
+							_Utils_eq(bottom.ty, top2.ty)),
 						A2(
 							author$project$Lambda$Rule$check,
 							_Utils_Tuple2(
-								'bound terms are same',
-								_Utils_eq(t1, top1.term)),
+								'in expr terms are same',
+								_Utils_eq(t2, top2.term)),
 							A2(
 								author$project$Lambda$Rule$check,
 								_Utils_Tuple2(
-									'in expr terms are same',
-									_Utils_eq(t2, top2.term)),
+									'variable is added to ctx with correct type binding',
+									_Utils_eq(
+										top2.ctx,
+										A3(
+											author$project$Lambda$ContextUtils$addbinding,
+											bottom.ctx,
+											varName,
+											author$project$Lambda$Expression$VarBind(top1.ty)))),
 								A2(
 									author$project$Lambda$Rule$check,
 									_Utils_Tuple2(
-										'in expr types are same',
-										_Utils_eq(bottom.ty, top2.ty)),
-									A2(
-										author$project$Lambda$Rule$check,
-										_Utils_Tuple2(
-											'variable is added to ctx with correct type binding',
-											_Utils_eq(
-												top2.ctx,
-												A3(
-													author$project$Lambda$ContextUtils$addbinding,
-													bottom.ctx,
-													varName,
-													author$project$Lambda$Expression$VarBind(top1.ty)))),
-										A2(
-											author$project$Lambda$Rule$check,
-											_Utils_Tuple2(
-												'bottom & top1 ctxs are same',
-												_Utils_eq(bottom.ctx, top1.ctx)),
-											elm$core$Result$Ok(_Utils_Tuple0))))))));
+										'bottom & top1 ctxs are same',
+										_Utils_eq(bottom.ctx, top1.ctx)),
+									elm$core$Result$Ok(_Utils_Tuple0))))));
 			} else {
-				return false;
+				return elm$core$Result$Err('wrongRule');
 			}
 		case 'TGen':
 			var bottom = rule.a.bottom;
 			var top = rule.a.top;
-			var _n25 = bottom.ty;
-			if (_n25.$ === 'TyAll') {
-				var varName = _n25.a;
-				var ty1 = _n25.b;
+			var _n20 = bottom.ty;
+			if (_n20.$ === 'TyAll') {
+				var varName = _n20.a;
 				return A2(
-					elm$core$Result$withDefault,
-					false,
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'type is generalized',
+						_Utils_eq(
+							A3(author$project$Lambda$ExpressionUtils$generalizeTypeTop, top.ctx, top.ty, varName),
+							bottom.ty)),
 					A2(
-						elm$core$Result$map,
-						function (_n26) {
-							return true;
-						},
+						author$project$Lambda$Rule$check,
+						_Utils_Tuple2(
+							'type is degeneralized',
+							_Utils_eq(
+								A2(author$project$Lambda$ExpressionUtils$degeneralizeTypeTop, bottom.ctx, bottom.ty),
+								top.ty)),
 						A2(
 							author$project$Lambda$Rule$check,
 							_Utils_Tuple2(
-								'type is generalized',
-								_Utils_eq(
-									A3(author$project$Lambda$ExpressionUtils$generalizeTypeTop, top.ctx, top.ty, varName),
-									bottom.ty)),
+								'var is not a free var of ctx',
+								!A2(author$project$Lambda$ContextUtils$isnamebound, bottom.ctx, varName)),
 							A2(
 								author$project$Lambda$Rule$check,
 								_Utils_Tuple2(
-									'type is degeneralized',
-									_Utils_eq(
-										A2(author$project$Lambda$ExpressionUtils$degeneralizeTypeTop, bottom.ctx, bottom.ty),
-										top.ty)),
+									'terms are same',
+									_Utils_eq(bottom.term, top.term)),
 								A2(
 									author$project$Lambda$Rule$check,
 									_Utils_Tuple2(
-										'var is not a free var of ctx',
-										!A2(author$project$Lambda$ContextUtils$isnamebound, bottom.ctx, varName)),
-									A2(
-										author$project$Lambda$Rule$check,
-										_Utils_Tuple2(
-											'terms are same',
-											_Utils_eq(bottom.term, top.term)),
-										A2(
-											author$project$Lambda$Rule$check,
-											_Utils_Tuple2(
-												'ctxs are same',
-												_Utils_eq(bottom.ctx, top.ctx)),
-											elm$core$Result$Ok(_Utils_Tuple0))))))));
+										'ctxs are same',
+										_Utils_eq(bottom.ctx, top.ctx)),
+									elm$core$Result$Ok(_Utils_Tuple0))))));
 			} else {
-				return false;
+				return elm$core$Result$Err('wrongRule');
 			}
 		default:
 			var bottom = rule.a.bottom;
 			var top = rule.a.top;
 			return A2(
-				elm$core$Result$withDefault,
-				false,
+				author$project$Lambda$Rule$check,
+				_Utils_Tuple2(
+					'type is subtype',
+					_Utils_eq(
+						A3(author$project$Lambda$ExpressionUtils$isSpecializedType, top.ctx, top.ty, bottom.ty),
+						elm$core$Result$Ok(true))),
 				A2(
-					elm$core$Result$map,
-					function (_n27) {
-						return true;
-					},
+					author$project$Lambda$Rule$check,
+					_Utils_Tuple2(
+						'terms are same',
+						_Utils_eq(bottom.term, top.term)),
 					A2(
 						author$project$Lambda$Rule$check,
 						_Utils_Tuple2(
-							'type is subtype',
-							_Utils_eq(
-								A3(author$project$Lambda$ExpressionUtils$isSpecializedType, top.ctx, top.ty, bottom.ty),
-								elm$core$Result$Ok(true))),
-						A2(
-							author$project$Lambda$Rule$check,
-							_Utils_Tuple2(
-								'terms are same',
-								_Utils_eq(bottom.term, top.term)),
-							A2(
-								author$project$Lambda$Rule$check,
-								_Utils_Tuple2(
-									'ctxs are same',
-									_Utils_eq(bottom.ctx, top.ctx)),
-								elm$core$Result$Ok(_Utils_Tuple0))))));
+							'ctxs are same',
+							_Utils_eq(bottom.ctx, top.ctx)),
+						elm$core$Result$Ok(_Utils_Tuple0))));
 	}
 };
 var author$project$Utils$Tree$map = F2(
@@ -8987,7 +9037,23 @@ var author$project$Utils$Tree$map = F2(
 				author$project$Utils$Tree$map(f),
 				nodes));
 	});
+var elm_community$result_extra$Result$Extra$merge = function (r) {
+	if (r.$ === 'Ok') {
+		var rr = r.a;
+		return rr;
+	} else {
+		var rr = r.a;
+		return rr;
+	}
+};
 var author$project$Lambda$Rule$tryRule = function (t) {
+	var getResultMsg = A2(
+		elm$core$Basics$composeR,
+		elm$core$Result$map(
+			function (_n34) {
+				return 'OK';
+			}),
+		elm_community$result_extra$Result$Extra$merge);
 	var erasedErrorTree = A2(
 		author$project$Utils$Tree$map,
 		function (_n32) {
@@ -9016,9 +9082,7 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
 					var _n3 = children.a;
 					var c1 = _n3.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TVar(
 								{
@@ -9026,7 +9090,7 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TIf':
 				if ((((((children.b && (children.a.a.$ === 'Ok')) && children.b.b) && (children.b.a.a.$ === 'Ok')) && children.b.b.b) && (children.b.b.a.a.$ === 'Ok')) && (!children.b.b.b.b)) {
@@ -9038,9 +9102,7 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 					var _n8 = _n6.b;
 					var _n9 = _n8.a;
 					var c3 = _n9.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TIf(
 								{
@@ -9050,15 +9112,13 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top3: {ctx: c3.ctx, term: c3.term, ty: c3.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TTrue':
 				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
 					var _n11 = children.a;
 					var c1 = _n11.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TTrue(
 								{
@@ -9066,15 +9126,13 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TFalse':
 				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
 					var _n13 = children.a;
 					var c1 = _n13.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TTrue(
 								{
@@ -9082,15 +9140,13 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TAbs':
 				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
 					var _n15 = children.a;
 					var c1 = _n15.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TAbs(
 								{
@@ -9098,15 +9154,13 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TTAbs':
 				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
 					var _n17 = children.a;
 					var c1 = _n17.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TTAbs(
 								{
@@ -9114,7 +9168,7 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TApp':
 				if ((((children.b && (children.a.a.$ === 'Ok')) && children.b.b) && (children.b.a.a.$ === 'Ok')) && (!children.b.b.b)) {
@@ -9123,9 +9177,7 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 					var _n20 = children.b;
 					var _n21 = _n20.a;
 					var c2 = _n21.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TApp(
 								{
@@ -9134,15 +9186,13 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top2: {ctx: c2.ctx, term: c2.term, ty: c2.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TTApp':
 				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
 					var _n23 = children.a;
 					var c1 = _n23.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TTApp(
 								{
@@ -9150,7 +9200,7 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TLet':
 				if ((((children.b && (children.a.a.$ === 'Ok')) && children.b.b) && (children.b.a.a.$ === 'Ok')) && (!children.b.b.b)) {
@@ -9159,9 +9209,7 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 					var _n26 = children.b;
 					var _n27 = _n26.a;
 					var c2 = _n27.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TLet(
 								{
@@ -9170,15 +9218,13 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top2: {ctx: c2.ctx, term: c2.term, ty: c2.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TGen':
 				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
 					var _n29 = children.a;
 					var c1 = _n29.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TGen(
 								{
@@ -9186,15 +9232,13 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			case 'TInst':
 				if ((children.b && (children.a.a.$ === 'Ok')) && (!children.b.b)) {
 					var _n31 = children.a;
 					var c1 = _n31.a.a;
-					return function (checks) {
-						return checks ? 'OK' : 'NOK';
-					}(
+					return getResultMsg(
 						author$project$Lambda$Rule$checkRule(
 							author$project$Lambda$Rule$TInst(
 								{
@@ -9202,7 +9246,7 @@ var author$project$Lambda$Rule$tryRule = function (t) {
 									top: {ctx: c1.ctx, term: c1.term, ty: c1.ty}
 								})));
 				} else {
-					return 'Top rule Error';
+					return 'Top rule parse Error';
 				}
 			default:
 				return 'Unimplemented Rule';

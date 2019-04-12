@@ -45,7 +45,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TVar with TyVar reference to context in binding" <|
             \_ ->
                 checkRule
@@ -72,7 +72,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TIf" <|
             \_ ->
                 checkRule
@@ -99,7 +99,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TTrue" <|
             \_ ->
                 checkRule
@@ -116,7 +116,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TFalse" <|
             \_ ->
                 checkRule
@@ -133,7 +133,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TAbs" <|
             \_ ->
                 checkRule
@@ -150,7 +150,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TAbs 2" <|
             \_ ->
                 checkRule
@@ -167,7 +167,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TApp" <|
             \_ ->
                 checkRule
@@ -189,7 +189,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TTAbs {TypeVar1, TypeVar2} |- ΛTypeVar3. λtermVar3: TypeVar3. termVar3" <|
             \_ ->
                 checkRule
@@ -216,7 +216,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TTApp {TypeVar1, TypeVar2} |- (ΛTypeVar3. λtermVar3: TypeVar3. termVar3) [TypeVar1->TypeVar2]" <|
             \_ ->
                 checkRule
@@ -248,7 +248,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TGen {} |- (λtermVar1. termVar1) : Forall TypeVar1. TypeVar1 -> TypeVar1" <|
             \_ ->
                 checkRule
@@ -265,7 +265,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TInst {} |- (λtermVar1. termVar1) : Bool -> Bool" <|
             \_ ->
                 checkRule
@@ -282,7 +282,7 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         , test "TInst {} |- (λtermVar1. termVar1) : A -> A" <|
             \_ ->
                 checkRule
@@ -299,5 +299,5 @@ checkRuleTest =
                             }
                         }
                     )
-                    |> Expect.equal True
+                    |> Expect.equal (Ok ())
         ]

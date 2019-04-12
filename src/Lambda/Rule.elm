@@ -8,6 +8,7 @@ import Lambda.ParseTransform exposing (ParseTransformError)
 import Maybe exposing (..)
 import Model exposing (Rule, TreeModel)
 import Result
+import Result.Extra
 import Utils.Tree exposing (Tree(..))
 
 
@@ -48,7 +49,7 @@ type alias ExprTree =
         }
 
 
-checkRule : TyRule -> Bool
+checkRule : TyRule -> Result String ()
 checkRule rule =
     case rule of
         TVar { bottom, top } ->
@@ -74,8 +75,6 @@ checkRule rule =
                         _ ->
                             False
                     )
-                |> Result.map (\_ -> True)
-                |> Result.withDefault False
 
         TIf { bottom, top1, top2, top3 } ->
             case bottom.term of
@@ -88,11 +87,9 @@ checkRule rule =
                         |> check ( "thenTypeSame", equalTypes top2.ctx top2.ty bottom.ctx bottom.ty )
                         |> check ( "elseTermSame", top3.term == t3 )
                         |> check ( "elseTypeSame", equalTypes top3.ctx top3.ty bottom.ctx bottom.ty )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
 
                 _ ->
-                    False
+                    Err "wrongRule"
 
         TTrue { bottom, top } ->
             case bottom.term of
@@ -101,11 +98,9 @@ checkRule rule =
                         |> check ( "ctxSame", bottom.ctx == top.ctx )
                         |> check ( "termSame", top.term == bottom.term )
                         |> check ( "typeIsBool", equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
 
                 _ ->
-                    False
+                    Err "wrongRule"
 
         TFalse { bottom, top } ->
             case bottom.term of
@@ -114,11 +109,9 @@ checkRule rule =
                         |> check ( "ctxSame", bottom.ctx == top.ctx )
                         |> check ( "termSame", top.term == bottom.term )
                         |> check ( "typeIsBool", equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
 
                 _ ->
-                    False
+                    Err "wrongRule"
 
         TAbs { bottom, top } ->
             case ( bottom.term, bottom.ty ) of
@@ -134,11 +127,9 @@ checkRule rule =
                                 |> Maybe.map (\justTy -> equalTypes bottom.ctx justTy bottom.ctx ty1)
                                 |> Maybe.withDefault True
                             )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
 
                 _ ->
-                    False
+                    Err "wrongRule"
 
         TApp { bottom, top1, top2 } ->
             case ( bottom.term, top1.ty ) of
@@ -149,11 +140,9 @@ checkRule rule =
                         |> check ( "rightTermSame", top2.term == t2 )
                         |> check ( "leftArrowTypeSameAsArgType", equalTypes top1.ctx ty1 top2.ctx top2.ty )
                         |> check ( "rightArrowTypeSameAsAppResultType", equalTypes top1.ctx ty2 bottom.ctx bottom.ty )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
 
                 _ ->
-                    False
+                    Err "wrongRule"
 
         TTAbs { bottom, top } ->
             case ( bottom.term, bottom.ty ) of
@@ -164,24 +153,25 @@ checkRule rule =
                         |> check ( "isFree", not <| isnamebound bottom.ctx tyVarName1 )
                         |> check ( "termsSame", top.term == t )
                         |> check ( "typesSame", ty == top.ty )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
 
                 _ ->
-                    False
+                    Err "wrongRule"
 
         TTApp { bottom, top } ->
-            case ( bottom.term, top.ty ) of
-                ( TmTApp _ t ty2, TyAll _ ty1 ) ->
-                    Ok ()
-                        |> check ( "ctxSame", bottom.ctx == top.ctx )
-                        |> check ( "termSame", top.term == t )
-                        |> check ( "typeSubstitutionCorrect", bottom.ty == typeSubstTop ty2 ty1 )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
+            case bottom.term of
+                TmTApp _ t ty2 ->
+                    case top.ty of
+                        TyAll _ ty1 ->
+                            Ok ()
+                                |> check ( "ctxSame", bottom.ctx == top.ctx )
+                                |> check ( "termSame", top.term == t )
+                                |> check ( "typeSubstitutionCorrect", bottom.ty == typeSubstTop ty2 ty1 )
+
+                        _ ->
+                            Err "topTypeNotForAll"
 
                 _ ->
-                    False
+                    Err "wrongRule"
 
         TLet { bottom, top1, top2 } ->
             case bottom.term of
@@ -192,34 +182,28 @@ checkRule rule =
                         |> check ( "in expr terms are same", t2 == top2.term )
                         |> check ( "in expr types are same", bottom.ty == top2.ty )
                         |> check ( "bound terms are same", t1 == top1.term )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
 
                 _ ->
-                    False
+                    Err "wrongRule"
 
         TGen { bottom, top } ->
             case bottom.ty of
-                TyAll varName ty1 ->
+                TyAll varName _ ->
                     Ok ()
                         |> check ( "ctxs are same", bottom.ctx == top.ctx )
                         |> check ( "terms are same", bottom.term == top.term )
                         |> check ( "var is not a free var of ctx", isnamebound bottom.ctx varName |> not )
                         |> check ( "type is degeneralized", degeneralizeTypeTop bottom.ctx bottom.ty == top.ty )
                         |> check ( "type is generalized", generalizeTypeTop top.ctx top.ty varName == bottom.ty )
-                        |> Result.map (\_ -> True)
-                        |> Result.withDefault False
 
                 _ ->
-                    False
+                    Err "wrongRule"
 
         TInst { bottom, top } ->
             Ok ()
                 |> check ( "ctxs are same", bottom.ctx == top.ctx )
                 |> check ( "terms are same", bottom.term == top.term )
                 |> check ( "type is subtype", isSpecializedType top.ctx top.ty bottom.ty == Ok True )
-                |> Result.map (\_ -> True)
-                |> Result.withDefault False
 
 
 check : ( String, Bool ) -> Result String () -> Result String ()
@@ -260,6 +244,10 @@ tryRule t =
                             _ ->
                                 Result.Err "Field is missing"
                     )
+
+        getResultMsg : Result String () -> String
+        getResultMsg =
+            Result.map (\() -> "OK") >> Result.Extra.merge
     in
     case erasedErrorTree of
         Node (Result.Ok r) children ->
@@ -281,16 +269,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TIf ->
                     case children of
@@ -319,16 +301,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TTrue ->
                     case children of
@@ -347,16 +323,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TFalse ->
                     case children of
@@ -375,16 +345,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TAbs ->
                     case children of
@@ -399,16 +363,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TTAbs ->
                     case children of
@@ -423,16 +381,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TApp ->
                     case children of
@@ -452,16 +404,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TTApp ->
                     case children of
@@ -476,16 +422,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TLet ->
                     case children of
@@ -505,16 +445,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TGen ->
                     case children of
@@ -529,16 +463,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 Model.TInst ->
                     case children of
@@ -553,16 +481,10 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> (\checks ->
-                                        if checks then
-                                            "OK"
-
-                                        else
-                                            "NOK"
-                                   )
+                                |> getResultMsg
 
                         _ ->
-                            "Top rule Error"
+                            "Top rule parse Error"
 
                 _ ->
                     "Unimplemented Rule"

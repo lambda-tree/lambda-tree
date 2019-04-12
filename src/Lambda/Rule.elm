@@ -53,11 +53,11 @@ checkRule rule =
     case rule of
         TVar { bottom, top } ->
             Ok ()
-                |> check ( "checkRule: ctxSame", bottom.ctx == top.ctx )
-                |> check ( "checkRule: termSame", bottom.term == top.term )
-                |> check ( "checkRule: tySame", bottom.ty == top.ty )
+                |> check ( "ctxSame", bottom.ctx == top.ctx )
+                |> check ( "termSame", bottom.term == top.term )
+                |> check ( "tySame", bottom.ty == top.ty )
                 |> check
-                    ( "checkRule: types of vars are same"
+                    ( "types of vars are same"
                     , case bottom.term of
                         TmVar _ x _ ->
                             case getbinding top.ctx x of
@@ -80,13 +80,16 @@ checkRule rule =
         TIf { bottom, top1, top2, top3 } ->
             case bottom.term of
                 TmIf _ t1 t2 t3 ->
-                    List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx, top3.ctx ]
-                        && (top1.term == t1)
-                        && equalTypes top1.ctx top1.ty bottom.ctx (TyConst TyBool)
-                        && (top2.term == t2)
-                        && equalTypes top2.ctx top2.ty bottom.ctx bottom.ty
-                        && (top3.term == t3)
-                        && equalTypes top3.ctx top3.ty bottom.ctx bottom.ty
+                    Ok ()
+                        |> check ( "allCtxSame", List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx, top3.ctx ] )
+                        |> check ( "ifTermSame", top1.term == t1 )
+                        |> check ( "ifTypeIsBool", equalTypes top1.ctx top1.ty bottom.ctx (TyConst TyBool) )
+                        |> check ( "thenTermSame", top2.term == t2 )
+                        |> check ( "thenTypeSame", equalTypes top2.ctx top2.ty bottom.ctx bottom.ty )
+                        |> check ( "elseTermSame", top3.term == t3 )
+                        |> check ( "elseTypeSame", equalTypes top3.ctx top3.ty bottom.ctx bottom.ty )
+                        |> Result.map (\_ -> True)
+                        |> Result.withDefault False
 
                 _ ->
                     False
@@ -94,9 +97,12 @@ checkRule rule =
         TTrue { bottom, top } ->
             case bottom.term of
                 TmConst _ TmTrue ->
-                    (bottom.ctx == top.ctx)
-                        && (top.term == bottom.term)
-                        && equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool)
+                    Ok ()
+                        |> check ( "ctxSame", bottom.ctx == top.ctx )
+                        |> check ( "termSame", top.term == bottom.term )
+                        |> check ( "typeIsBool", equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
+                        |> Result.map (\_ -> True)
+                        |> Result.withDefault False
 
                 _ ->
                     False
@@ -104,9 +110,12 @@ checkRule rule =
         TFalse { bottom, top } ->
             case bottom.term of
                 TmConst _ TmFalse ->
-                    (bottom.ctx == top.ctx)
-                        && (top.term == bottom.term)
-                        && equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool)
+                    Ok ()
+                        |> check ( "ctxSame", bottom.ctx == top.ctx )
+                        |> check ( "termSame", top.term == bottom.term )
+                        |> check ( "typeIsBool", equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
+                        |> Result.map (\_ -> True)
+                        |> Result.withDefault False
 
                 _ ->
                     False
@@ -115,12 +124,12 @@ checkRule rule =
             case ( bottom.term, bottom.ty ) of
                 ( TmAbs _ varName ty t, TyArr ty1 ty2 ) ->
                     Ok ()
-                        |> check ( "ctxs are same", popbinding top.ctx == bottom.ctx )
-                        |> check ( "var is added to ctx with correct type", top.ctx == addbinding bottom.ctx varName (VarBind ty1) )
-                        |> check ( "terms are same", top.term == t )
-                        |> check ( "return type is correct", equalTypes top.ctx top.ty bottom.ctx ty2 )
+                        |> check ( "ctxSame", popbinding top.ctx == bottom.ctx )
+                        |> check ( "varTypeInCtx", top.ctx == addbinding bottom.ctx varName (VarBind ty1) )
+                        |> check ( "termSame", top.term == t )
+                        |> check ( "returnTypeRightSameAsTop", equalTypes top.ctx top.ty bottom.ctx ty2 )
                         |> check
-                            ( "arg type is correct"
+                            ( "returnTypeLeftSameAsArg"
                             , ty
                                 |> Maybe.map (\justTy -> equalTypes bottom.ctx justTy bottom.ctx ty1)
                                 |> Maybe.withDefault True
@@ -134,11 +143,14 @@ checkRule rule =
         TApp { bottom, top1, top2 } ->
             case ( bottom.term, top1.ty ) of
                 ( TmApp _ t1 t2, TyArr ty1 ty2 ) ->
-                    List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx ]
-                        && (top1.term == t1)
-                        && (top2.term == t2)
-                        && equalTypes top1.ctx ty1 top2.ctx top2.ty
-                        && equalTypes top1.ctx ty2 bottom.ctx bottom.ty
+                    Ok ()
+                        |> check ( "allCtxSame", List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx ] )
+                        |> check ( "leftTermSame", top1.term == t1 )
+                        |> check ( "rightTermSame", top2.term == t2 )
+                        |> check ( "leftArrowTypeSameAsArgType", equalTypes top1.ctx ty1 top2.ctx top2.ty )
+                        |> check ( "rightArrowTypeSameAsAppResultType", equalTypes top1.ctx ty2 bottom.ctx bottom.ty )
+                        |> Result.map (\_ -> True)
+                        |> Result.withDefault False
 
                 _ ->
                     False
@@ -147,11 +159,11 @@ checkRule rule =
             case ( bottom.term, bottom.ty ) of
                 ( TmTAbs _ tyVarName1 t, TyAll tyVarName2 ty ) ->
                     Ok ()
-                        |> check ( "1 - typeVariablesSame", tyVarName1 == tyVarName2 )
-                        |> check ( "2 - isAddedToContext", addbinding bottom.ctx tyVarName1 TyVarBind == top.ctx )
-                        |> check ( "3 - isFree", not <| isnamebound bottom.ctx tyVarName1 )
-                        |> check ( "4 - termsEqual", top.term == t )
-                        |> check ( "5 - typesEqual", ty == top.ty )
+                        |> check ( "typeVariablesSame", tyVarName1 == tyVarName2 )
+                        |> check ( "isAddedToContext", addbinding bottom.ctx tyVarName1 TyVarBind == top.ctx )
+                        |> check ( "isFree", not <| isnamebound bottom.ctx tyVarName1 )
+                        |> check ( "termsSame", top.term == t )
+                        |> check ( "typesSame", ty == top.ty )
                         |> Result.map (\_ -> True)
                         |> Result.withDefault False
 
@@ -161,9 +173,12 @@ checkRule rule =
         TTApp { bottom, top } ->
             case ( bottom.term, top.ty ) of
                 ( TmTApp _ t ty2, TyAll _ ty1 ) ->
-                    (bottom.ctx == top.ctx)
-                        && (top.term == t)
-                        && (bottom.ty == typeSubstTop ty2 ty1)
+                    Ok ()
+                        |> check ( "ctxSame", bottom.ctx == top.ctx )
+                        |> check ( "termSame", top.term == t )
+                        |> check ( "typeSubstitutionCorrect", bottom.ty == typeSubstTop ty2 ty1 )
+                        |> Result.map (\_ -> True)
+                        |> Result.withDefault False
 
                 _ ->
                     False
@@ -174,8 +189,8 @@ checkRule rule =
                     Ok ()
                         |> check ( "bottom & top1 ctxs are same", bottom.ctx == top1.ctx )
                         |> check ( "variable is added to ctx with correct type binding", top2.ctx == addbinding bottom.ctx varName (VarBind top1.ty) )
-                        |> check ( "in expr types are same", bottom.ty == top2.ty )
                         |> check ( "in expr terms are same", t2 == top2.term )
+                        |> check ( "in expr types are same", bottom.ty == top2.ty )
                         |> check ( "bound terms are same", t1 == top1.term )
                         |> Result.map (\_ -> True)
                         |> Result.withDefault False

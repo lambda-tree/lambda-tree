@@ -20,9 +20,9 @@ Model:
     - [x] T-Abs
     - [x] T-App
     - [x] T-If
-    - [ ] T-Let
-    - [ ] T-Inst
-    - [ ] T-Gen
+    - [x] T-Let
+    - [x] T-Inst
+    - [x] T-Gen
     - [ ] T-Var' (T-Var + T-Inst Combined rule for H-M)
     - [ ] T-Let' (T-Let + T-Gen Combined rule for H-M)
     - [x] T-TAbs

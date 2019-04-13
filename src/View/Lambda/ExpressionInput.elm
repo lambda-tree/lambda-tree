@@ -1,9 +1,9 @@
 module View.Lambda.ExpressionInput exposing (..)
 
+import Css exposing (..)
+import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Html.Styled as S exposing (Html, styled)
-import Css exposing (..)
 import View.Theme exposing (theme)
 
 
@@ -29,6 +29,7 @@ lambdaExprInput alignRight value onInput =
         , property "direction" <|
             if alignRight then
                 "ltr"
+
             else
                 "ltr"
         ]

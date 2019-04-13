@@ -266,6 +266,21 @@ substFtv ss tyTop =
         |> List.foldr (\( tyS, varName ) -> substOne tyS varName) tyTop
 
 
+substFtvCtx : SubstitutionFtv -> Context -> Context
+substFtvCtx ss ctx =
+    ctx
+        |> List.map
+            (Tuple.mapSecond <|
+                \b ->
+                    case b of
+                        VarBind t ->
+                            VarBind <| substFtv ss t
+
+                        _ ->
+                            b
+            )
+
+
 {-| Substitutes primarily to the vars of first expression
 -}
 unifyType : Ty -> Ty -> Result String SubstitutionFtv
@@ -314,7 +329,7 @@ unifyType ty1 ty2 =
             Err <| "Types should be degeneralized. TyAll '" ++ name2 ++ "' found"
 
         ( _, _ ) ->
-            Err ""
+            Err <| "Types are not compatible " ++ Debug.toString ( ty1, ty2 )
 
 
 degeneralizeTypeTop : Context -> Ty -> Ty
@@ -478,3 +493,100 @@ equalTypes ctx1 ty1 ctx2 ty2 =
     else
         (List.drop -ctxlengthDiff ctx2 == ctx1)
             && (typeShift -ctxlengthDiff ty1 == ty2)
+
+
+inst : Context -> Ty -> Ty
+inst ctx tyGen =
+    tyGen
+        |> renameBoundVarsWithFresh (ftvTy tyGen |> Set.union (ftvCtx ctx))
+        |> degeneralizeType ctx
+
+
+gen : Context -> Ty -> Ty
+gen ctx ty =
+    let
+        fv =
+            Set.diff (ftvTy ty) (ftvCtx ctx) |> Set.toList
+    in
+    fv |> List.foldr (\var accTy -> generalizeTypeTop ctx accTy var) ty
+
+
+w : Context -> Term -> Result String ( SubstitutionFtv, Ty )
+w ctx t =
+    case t of
+        TmVar _ x _ ->
+            case getbinding ctx x of
+                Just (VarBind ty) ->
+                    Ok <| ( [], inst ctx ty )
+
+                _ ->
+                    Err "Var is not bound in the context with type"
+
+        TmAbs _ varName maybeType t1 ->
+            let
+                fromType =
+                    TyName <| freshVarName (ftvCtx ctx) "X"
+
+                ctx1 =
+                    addbinding ctx varName (VarBind fromType)
+            in
+            w ctx1 t1
+                |> Result.map (\( s, toType ) -> ( s, substFtv s (TyArr fromType toType) ))
+
+        TmApp I t1 t2 ->
+            w ctx t1
+                |> Result.andThen
+                    (\( s1, ro ) ->
+                        w (substFtvCtx s1 ctx) t2
+                            |> Result.andThen
+                                (\( s2, tau ) ->
+                                    let
+                                        -- should consider some other ctxs/types too?
+                                        tauPrime =
+                                            TyName <|
+                                                freshVarName
+                                                    (ftvCtx ctx
+                                                        |> Set.union (ftvTy ro)
+                                                        |> Set.union (ftvTy tau)
+                                                    )
+                                                    "X"
+                                    in
+                                    unifyType (substFtv s2 ro) (TyArr tau tauPrime)
+                                        |> Result.map
+                                            (\s3 -> ( s3 ++ s2 ++ s1, substFtv s3 tauPrime ))
+                                )
+                    )
+
+        TmConst I c ->
+            case c of
+                TmTrue ->
+                    Ok ( [], TyConst TyBool )
+
+                TmFalse ->
+                    Ok ( [], TyConst TyBool )
+
+        TmLet I varName t1 t2 ->
+            w ctx t1
+                |> Result.andThen
+                    (\( s1, tau ) ->
+                        let
+                            ctx1 =
+                                substFtvCtx s1 ctx
+
+                            genTy =
+                                gen ctx1 tau
+                        in
+                        w (addbinding ctx varName (VarBind genTy)) t2
+                            |> Result.map
+                                (\( s2, tauPrime ) -> ( s2 ++ s1, tauPrime ))
+                    )
+
+        _ ->
+            Err "Not implemented"
+
+
+typeOf : Context -> Term -> Result String Ty
+typeOf ctx t =
+    w ctx t
+        |> Result.map Tuple.second
+        |> Result.map (gen ctx)

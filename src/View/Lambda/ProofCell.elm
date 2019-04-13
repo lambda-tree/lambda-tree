@@ -28,7 +28,7 @@ proofCell content msgCreator =
             []
             [ styled S.div
                 [ displayFlex
-                , flex <| int 1
+                , width <| px 170
                 , backgroundColor <| getBackgroundColor content.ctx
                 ]
                 []
@@ -36,7 +36,7 @@ proofCell content msgCreator =
             , lambdaExprText "⊢"
             , styled S.div
                 [ displayFlex
-                , flex <| int 2
+                , width <| px 340
                 , backgroundColor <| getBackgroundColor content.term
                 ]
                 []
@@ -44,7 +44,7 @@ proofCell content msgCreator =
             , lambdaExprText ":"
             , styled S.div
                 [ displayFlex
-                , flex <| int 1
+                , width <| px 170
                 , backgroundColor <| getBackgroundColor content.ty
                 ]
                 []

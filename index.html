@@ -7644,7 +7644,6 @@ var rtfeldman$elm_css$Css$alignItems = function (fn) {
 };
 var rtfeldman$elm_css$Css$center = rtfeldman$elm_css$Css$prop1('center');
 var rtfeldman$elm_css$Css$displayFlex = A2(rtfeldman$elm_css$Css$property, 'display', 'flex');
-var rtfeldman$elm_css$Css$flex = rtfeldman$elm_css$Css$prop1('flex');
 var rtfeldman$elm_css$Css$flexShrink = rtfeldman$elm_css$Css$prop1('flex-shrink');
 var rtfeldman$elm_css$Css$UnitlessInteger = {$: 'UnitlessInteger'};
 var rtfeldman$elm_css$Css$int = function (val) {
@@ -7654,6 +7653,7 @@ var rtfeldman$elm_css$Css$int = function (val) {
 		lengthOrNumber: rtfeldman$elm_css$Css$Structure$Compatible,
 		lengthOrNumberOrAutoOrNoneOrContent: rtfeldman$elm_css$Css$Structure$Compatible,
 		number: rtfeldman$elm_css$Css$Structure$Compatible,
+		numberOrInfinite: rtfeldman$elm_css$Css$Structure$Compatible,
 		numericValue: val,
 		unitLabel: '',
 		units: rtfeldman$elm_css$Css$UnitlessInteger,
@@ -7662,6 +7662,8 @@ var rtfeldman$elm_css$Css$int = function (val) {
 };
 var rtfeldman$elm_css$Css$margin = rtfeldman$elm_css$Css$prop1('margin');
 var rtfeldman$elm_css$Css$minWidth = rtfeldman$elm_css$Css$prop1('min-width');
+var rtfeldman$elm_css$Css$PxUnits = {$: 'PxUnits'};
+var rtfeldman$elm_css$Css$px = A2(rtfeldman$elm_css$Css$Internal$lengthConverter, rtfeldman$elm_css$Css$PxUnits, 'px');
 var author$project$View$Lambda$ProofCell$proofCell = F2(
 	function (content, msgCreator) {
 		return A2(
@@ -7692,8 +7694,8 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 							_List_fromArray(
 								[
 									rtfeldman$elm_css$Css$displayFlex,
-									rtfeldman$elm_css$Css$flex(
-									rtfeldman$elm_css$Css$int(1)),
+									rtfeldman$elm_css$Css$width(
+									rtfeldman$elm_css$Css$px(170)),
 									rtfeldman$elm_css$Css$backgroundColor(
 									author$project$View$Lambda$ProofCell$getBackgroundColor(content.ctx))
 								]),
@@ -7713,8 +7715,8 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 							_List_fromArray(
 								[
 									rtfeldman$elm_css$Css$displayFlex,
-									rtfeldman$elm_css$Css$flex(
-									rtfeldman$elm_css$Css$int(2)),
+									rtfeldman$elm_css$Css$width(
+									rtfeldman$elm_css$Css$px(340)),
 									rtfeldman$elm_css$Css$backgroundColor(
 									author$project$View$Lambda$ProofCell$getBackgroundColor(content.term))
 								]),
@@ -7734,8 +7736,8 @@ var author$project$View$Lambda$ProofCell$proofCell = F2(
 							_List_fromArray(
 								[
 									rtfeldman$elm_css$Css$displayFlex,
-									rtfeldman$elm_css$Css$flex(
-									rtfeldman$elm_css$Css$int(1)),
+									rtfeldman$elm_css$Css$width(
+									rtfeldman$elm_css$Css$px(170)),
 									rtfeldman$elm_css$Css$backgroundColor(
 									author$project$View$Lambda$ProofCell$getBackgroundColor(content.ty))
 								]),
@@ -7811,6 +7813,7 @@ var author$project$View$Lambda$RuleSelector$ruleSelector = function (createMsgCl
 				[author$project$Model$TTrue, author$project$Model$TFalse, author$project$Model$TVar, author$project$Model$TAbs, author$project$Model$TApp, author$project$Model$TIf, author$project$Model$TTAbs, author$project$Model$TTApp, author$project$Model$TLet, author$project$Model$TGen, author$project$Model$TInst])));
 };
 var rtfeldman$elm_css$Css$auto = {alignItemsOrAuto: rtfeldman$elm_css$Css$Structure$Compatible, cursor: rtfeldman$elm_css$Css$Structure$Compatible, flexBasis: rtfeldman$elm_css$Css$Structure$Compatible, intOrAuto: rtfeldman$elm_css$Css$Structure$Compatible, justifyContentOrAuto: rtfeldman$elm_css$Css$Structure$Compatible, lengthOrAuto: rtfeldman$elm_css$Css$Structure$Compatible, lengthOrAutoOrCoverOrContain: rtfeldman$elm_css$Css$Structure$Compatible, lengthOrNumberOrAutoOrNoneOrContent: rtfeldman$elm_css$Css$Structure$Compatible, overflow: rtfeldman$elm_css$Css$Structure$Compatible, pointerEvents: rtfeldman$elm_css$Css$Structure$Compatible, tableLayout: rtfeldman$elm_css$Css$Structure$Compatible, textRendering: rtfeldman$elm_css$Css$Structure$Compatible, touchAction: rtfeldman$elm_css$Css$Structure$Compatible, value: 'auto'};
+var rtfeldman$elm_css$Css$flex = rtfeldman$elm_css$Css$prop1('flex');
 var rtfeldman$elm_css$Css$height = rtfeldman$elm_css$Css$prop1('height');
 var rtfeldman$elm_css$Css$justifyContent = function (fn) {
 	return A3(
@@ -7820,8 +7823,6 @@ var rtfeldman$elm_css$Css$justifyContent = function (fn) {
 		fn(rtfeldman$elm_css$Css$Internal$lengthForOverloadedProperty));
 };
 var rtfeldman$elm_css$Css$minHeight = rtfeldman$elm_css$Css$prop1('min-height');
-var rtfeldman$elm_css$Css$PxUnits = {$: 'PxUnits'};
-var rtfeldman$elm_css$Css$px = A2(rtfeldman$elm_css$Css$Internal$lengthConverter, rtfeldman$elm_css$Css$PxUnits, 'px');
 var rtfeldman$elm_css$Css$stretch = rtfeldman$elm_css$Css$prop1('stretch');
 var author$project$View$Lambda$Tree$hairline = F2(
 	function (rule, text) {

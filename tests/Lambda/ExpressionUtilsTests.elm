@@ -8,30 +8,6 @@ import Set
 import Test exposing (..)
 
 
-{-| forall a. a -> a
--}
-typeIdentityFunction =
-    TyAll
-        "alpha"
-        (TyArr
-            (TyVar 0 0)
-            (TyVar 0 0)
-        )
-
-
-{-| Identity function in System F
-
-  - In TmAbs type, the context does not yet contain the "a" variable -> so the ctx length is 1 in type,
-  - In the TmAbs term, the context contains the "a" -> so the ctx length is 2
-  - After substitution, the "alpha" variable is consumed, so the context length of variables is lowered by 1
-
--}
-identityF =
-    TmTAbs I "alpha" <|
-        TmAbs I "a" (Just <| TyVar 0 1) <|
-            TmVar I 0 2
-
-
 typeShiftAboveTest : Test
 typeShiftAboveTest =
     describe "typeShiftAbove"
@@ -638,30 +614,134 @@ isSpecializedTypeTest =
         ]
 
 
+instTest : Test
+instTest =
+    describe "inst"
+        [ test "should inst vars" <|
+            \_ ->
+                inst [] (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1)
+                    |> Expect.equal (TyArr (TyName "A") <| TyName "A")
+        , test "should inst vars with fresh variables" <|
+            \_ ->
+                inst [ ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" ) ] (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1)
+                    |> Expect.equal (TyArr (TyName "A1") <| TyName "A1")
+        ]
 
-{-
-   unifyTypeTest : Test
-   unifyTypeTest =
-       describe "unifyType"
-           [ test "Should unify types" <|
-               \_ ->
-                   unifyType [] (TyName "TyVar1") [] (TyName "TyVar1")
-                       |> Expect.equal (Ok [])
-           , test "Should unify types 2" <|
-               \_ ->
-                   unifyType [] (TyAll "TyVar1" <| TyVar 0 1) [] (TyName "TyVar2")
-                       |> Expect.equal (Ok [ ( TyName "TyVar2", -1 ) ])
-           , test "Should unify types 3" <|
-               \_ ->
-                   unifyType [] (TyName "TyVar2") [] (TyAll "TyVar1" <| TyVar 0 1)
-                       |> Expect.equal (Ok [ ( TyName "TyVar2", -1 ) ])
-           , test "Should unify types 4" <|
-               \_ ->
-                   unifyType
-                       []
-                       (TyArr (TyName "TyVar2") (TyName "TyVar2"))
-                       []
-                       (TyAll "TyVar1" <| TyArr (TyVar 0 1) (TyVar 0 1))
-                       |> Expect.equal (Ok [ ( TyName "TyVar2", "TyVar1" ) ])
-           ]
--}
+
+genTest : Test
+genTest =
+    describe "gen"
+        [ test "should gen free vars" <|
+            \_ ->
+                gen [] (TyArr (TyName "A") <| TyArr (TyName "B") <| TyName "A")
+                    |> Expect.equal (TyAll "A" <| TyAll "B" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
+        , test "should gen vars with non empty ctx if they're not free in ctx" <|
+            \_ ->
+                gen [ ( "x", VarBind <| TyName "C" ) ] (TyArr (TyName "A") <| TyArr (TyName "B") <| TyName "A")
+                    |> Expect.equal (TyAll "A" <| TyAll "B" <| TyArr (TyVar 1 3) <| TyArr (TyVar 0 3) <| TyVar 1 3)
+        , test "should not gen free vars in ctx" <|
+            \_ ->
+                gen [ ( "x", VarBind <| TyName "A" ) ] (TyArr (TyName "A") <| TyArr (TyName "B") <| TyName "A")
+                    |> Expect.equal (TyAll "B" <| TyArr (TyName "A") <| TyArr (TyVar 0 2) <| TyName "A")
+        ]
+
+
+wTest : Test
+wTest =
+    describe "w"
+        [ describe "TmVar"
+            [ test "generic variable should be instantiated with fresh type variables" <|
+                \_ ->
+                    w
+                        [ ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) ) ]
+                        (TmVar I 0 1)
+                        |> Expect.equal (Ok <| ( [], TyArr (TyName "A") <| TyName "A" ))
+            , test "generic variable should be instantiated with fresh type variables 2" <|
+                \_ ->
+                    w
+                        [ ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) )
+                        , ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" )
+                        ]
+                        (TmVar I 0 2)
+                        |> Expect.equal (Ok <| ( [], TyArr (TyName "A1") <| TyName "A1" ))
+            , test "generic variable should be instantiated with fresh type variables 3" <|
+                \_ ->
+                    w
+                        [ ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" )
+                        , ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) )
+                        ]
+                        (TmVar I 1 2)
+                        |> Expect.equal (Ok <| ( [], TyArr (TyName "A1") <| TyName "A1" ))
+            ]
+        , describe "TmAbs"
+            [ test "lambda a. a : X -> X" <|
+                \_ ->
+                    w
+                        [ ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" )
+                        , ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) )
+                        ]
+                        (TmAbs I "termVar1" Nothing <| TmVar I 0 3)
+                        |> Expect.equal (Ok <| ( [], TyArr (TyName "X") <| TyName "X" ))
+            , test "lambda a. x : X -> A -> A" <|
+                \_ ->
+                    w
+                        [ ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" )
+                        , ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) )
+                        ]
+                        (TmAbs I "termVar1" Nothing <| TmVar I 1 3)
+                        |> Expect.equal (Ok <| ( [], TyArr (TyName "X") <| TyArr (TyName "A") <| TyName "A" ))
+            ]
+        , describe "TmApp"
+            [ test "(lambda termVar1. termVar1) x : A -> A" <|
+                \_ ->
+                    w
+                        [ ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" )
+                        , ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) )
+                        ]
+                        (TmApp I (TmAbs I "termVar1" Nothing <| TmVar I 0 3) (TmVar I 0 2))
+                        |> Result.map Tuple.second
+                        -- What is the substitution good for here??
+                        |> Expect.equal (Ok <| TyArr (TyName "A") <| TyName "A")
+            , test "(lambda termVar1. true) x : Bool" <|
+                \_ ->
+                    w
+                        [ ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" )
+                        ]
+                        (TmApp I (TmAbs I "termVar1" Nothing <| TmConst I TmTrue) (TmVar I 0 2))
+                        -- What is the substitution good for here??
+                        |> Result.map Tuple.second
+                        |> Expect.equal (Ok <| TyConst TyBool)
+            ]
+        , describe "TmLet"
+            [ test "Let const = lambda x. lambda y. x in const" <|
+                \_ ->
+                    w
+                        []
+                        (TmLet I
+                            "const"
+                            (TmAbs I "termVar1" Nothing <| TmAbs I "termVar2" Nothing <| TmVar I 1 2)
+                            (TmVar I 0 1)
+                        )
+                        |> Result.map Tuple.second
+                        -- What is the substitution good for here??
+                        |> Expect.equal (Ok <| TyArr (TyName "X") <| TyArr (TyName "X1") <| TyName "X")
+            ]
+        ]
+
+
+typeOfTest : Test
+typeOfTest =
+    describe "typeOf"
+        [ describe "TmLet"
+            [ test "Let const = lambda x. lambda y. x in const : Forall X, X1. X -> X1 -> X" <|
+                \_ ->
+                    typeOf
+                        []
+                        (TmLet I
+                            "const"
+                            (TmAbs I "termVar1" Nothing <| TmAbs I "termVar2" Nothing <| TmVar I 1 2)
+                            (TmVar I 0 1)
+                        )
+                        |> Expect.equal (Ok <| TyAll "X" <| TyAll "X1" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
+            ]
+        ]

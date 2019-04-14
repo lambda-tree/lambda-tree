@@ -525,7 +525,9 @@ w ctx t =
         TmAbs _ varName maybeType t1 ->
             let
                 fromType =
-                    TyName <| freshVarName (ftvCtx ctx) "X"
+                    maybeType
+                        |> Maybe.withDefault (TyName <| freshVarName (ftvCtx ctx) "X")
+                        |> Debug.log "fromType"
 
                 ctx1 =
                     addbinding ctx varName (VarBind fromType)

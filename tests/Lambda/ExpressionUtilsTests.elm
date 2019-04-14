@@ -690,6 +690,30 @@ wTest =
                         ]
                         (TmAbs I "termVar1" Nothing <| TmVar I 1 3)
                         |> Expect.equal (Ok <| ( [], TyArr (TyName "X") <| TyArr (TyName "A") <| TyName "A" ))
+            , test "lambda a : X. x : X -> A -> A" <|
+                \_ ->
+                    w
+                        [ ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" )
+                        , ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) )
+                        ]
+                        (TmAbs I "termVar1" (Just <| TyName "X") <| TmVar I 1 3)
+                        |> Expect.equal (Ok <| ( [], TyArr (TyName "X") <| TyArr (TyName "A") <| TyName "A" ))
+            , test "lambda a : Y. x : X -> A -> A" <|
+                \_ ->
+                    w
+                        [ ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" )
+                        , ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) )
+                        ]
+                        (TmAbs I "termVar1" (Just <| TyName "Y") <| TmVar I 1 3)
+                        |> Expect.equal (Ok <| ( [], TyArr (TyName "Y") <| TyArr (TyName "A") <| TyName "A" ))
+            , test "lambda a : Y -> Z. x : (Y -> Z) -> A -> A" <|
+                \_ ->
+                    w
+                        [ ( "x", VarBind <| TyArr (TyName "A") <| TyName "A" )
+                        , ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) )
+                        ]
+                        (TmAbs I "termVar1" (Just <| TyArr (TyName "Y") <| TyName "Z") <| TmVar I 1 3)
+                        |> Expect.equal (Ok <| ( [], TyArr (TyArr (TyName "Y") <| TyName "Z") <| TyArr (TyName "A") <| TyName "A" ))
             ]
         , describe "TmApp"
             [ test "(lambda termVar1. termVar1) x : A -> A" <|

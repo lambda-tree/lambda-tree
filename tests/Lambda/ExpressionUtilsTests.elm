@@ -287,6 +287,25 @@ degeneralizeTypeTopTest =
         ]
 
 
+degeneralizeTermTopTest : Test
+degeneralizeTermTopTest =
+    describe "degeneralizeTermTop"
+        [ test "Should degeneralize term" <|
+            \_ ->
+                degeneralizeTermTop []
+                    (TmTAbs I "A" <|
+                        TmAbs I "f" (Just <| TyArr (TyVar 0 1) <| TyVar 0 1) <|
+                            TmAbs I "x" (Just <| TyVar 1 2) <|
+                                (TmApp I (TmVar I 1 3) <| TmApp I (TmVar I 1 3) <| TmVar I 0 3)
+                    )
+                    |> Expect.equal
+                        (TmAbs I "f" (Just <| TyArr (TyName "A") <| TyName "A") <|
+                            TmAbs I "x" (Just <| TyName "A") <|
+                                (TmApp I (TmVar I 1 2) <| TmApp I (TmVar I 1 2) <| TmVar I 0 2)
+                        )
+        ]
+
+
 generalizeTypeTopTest : Test
 generalizeTypeTopTest =
     describe "generalizeTypeTop"
@@ -756,7 +775,7 @@ wTest =
 typeOfTest : Test
 typeOfTest =
     describe "typeOf"
-        [ describe "TmLet"
+        [ describe "H-M"
             [ test "Let const = lambda x. lambda y. x in const : Forall X, X1. X -> X1 -> X" <|
                 \_ ->
                     typeOf
@@ -768,4 +787,17 @@ typeOfTest =
                         )
                         |> Expect.equal (Ok <| TyAll "X" <| TyAll "X1" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
             ]
+        , only <|
+            describe "System F"
+                [ test "Lambda A . lambda f: A -> A . lambda x: A. f (f x): Forall A. (A -> A) -> A -> A" <|
+                    \_ ->
+                        typeOf
+                            []
+                            (TmTAbs I "A" <|
+                                TmAbs I "f" (Just <| TyArr (TyVar 0 1) <| TyVar 0 1) <|
+                                    TmAbs I "x" (Just <| TyVar 1 2) <|
+                                        (TmApp I (TmVar I 1 3) <| TmApp I (TmVar I 1 3) <| TmVar I 0 3)
+                            )
+                            |> Expect.equal (Ok <| TyAll "A" <| TyArr (TyArr (TyVar 0 1) <| TyVar 0 1) <| TyArr (TyVar 0 1) <| TyVar 0 1)
+                ]
         ]

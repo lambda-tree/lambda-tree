@@ -328,6 +328,13 @@ unifyType ty1 ty2 =
         ( _, TyAll name2 _ ) ->
             Err <| "Types should be degeneralized. TyAll '" ++ name2 ++ "' found"
 
+        ( TyVar x1 n1, TyVar x2 n2 ) ->
+            if n1 - x1 == n2 - x2 then
+                Ok []
+
+            else
+                Err <| "Bound variables are not referring to the same bound variable"
+
         ( _, _ ) ->
             Err <| "Types are not compatible " ++ Debug.toString ( ty1, ty2 )
 
@@ -359,6 +366,30 @@ degeneralizeType ctx ty =
 
         _ ->
             ty
+
+
+degeneralizeTermTop : Context -> Term -> Term
+degeneralizeTermTop ctx t =
+    case t of
+        TmTAbs _ varName t1 ->
+            let
+                onvar c x n =
+                    if c - ctxlength ctx - x == 0 then
+                        TyName varName
+
+                    else
+                        TyVar x n
+
+                ctxl =
+                    ctxlength ctx
+            in
+            t1
+                |> -- degeneralize types of the term t1 such that the TyVars are replaced by TyName
+                   tmmap (\fi c x n -> TmVar fi x n) (tymap onvar (\_ -> TyName)) ctxl
+                |> termShift -1
+
+        _ ->
+            t
 
 
 freshVarName : Set String -> String -> String
@@ -535,7 +566,7 @@ w ctx t =
             w ctx1 t1
                 |> Result.map (\( s, toType ) -> ( s, substFtv s (TyArr fromType toType) ))
 
-        TmApp I t1 t2 ->
+        TmApp _ t1 t2 ->
             w ctx t1
                 |> Result.andThen
                     (\( s1, ro ) ->
@@ -559,7 +590,7 @@ w ctx t =
                                 )
                     )
 
-        TmConst I c ->
+        TmConst _ c ->
             case c of
                 TmTrue ->
                     Ok ( [], TyConst TyBool )
@@ -567,7 +598,7 @@ w ctx t =
                 TmFalse ->
                     Ok ( [], TyConst TyBool )
 
-        TmLet I varName t1 t2 ->
+        TmLet _ varName t1 t2 ->
             w ctx t1
                 |> Result.andThen
                     (\( s1, tau ) ->
@@ -582,6 +613,22 @@ w ctx t =
                             |> Result.map
                                 (\( s2, tauPrime ) -> ( s2 ++ s1, tauPrime ))
                     )
+
+        -- use algorithm W style in TmTAbs & TmTApp -> rely on unification & substitution
+        TmTAbs _ tyVarName _ ->
+            degeneralizeTermTop ctx t
+                |> w ctx
+                |> Result.andThen
+                    (\( s1, ty ) ->
+                        unifyType (substFtv s1 (TyName tyVarName)) (TyName tyVarName)
+                            |> Result.map (\s2 -> ( s2 ++ s1, substFtv s2 ty ))
+                    )
+                |> Result.map (Tuple.mapSecond <| \gTy -> generalizeTypeTop ctx gTy tyVarName)
+
+        TmTApp _ t1 tyS ->
+            w ctx t1
+                |> Result.map
+                    (\( s1, tyAbs ) -> ( s1, typeSubstTop tyS tyAbs ))
 
         _ ->
             Err "Not implemented"

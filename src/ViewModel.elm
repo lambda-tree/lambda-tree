@@ -4,6 +4,7 @@ import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Rule exposing (ExprTree, RuleError(..), TyRule, tryRule)
 import Model exposing (Rule, TreeModel)
+import Result.Extra
 import Utils.Tree exposing (Tree(..))
 
 
@@ -89,7 +90,7 @@ getTreeViewData t =
             , term = { text = origNode.term, error = extractError exprNode.term }
             , ty = { text = origNode.ty, error = extractError exprNode.ty }
             , rule = origNode.rule
-            , result = tryRule exprTree
+            , result = tryRule exprTree |> Result.map (\_ -> "OK") |> Result.Extra.merge
             }
     in
     Utils.Tree.zipWithExtra zipper t (getExprTree t)

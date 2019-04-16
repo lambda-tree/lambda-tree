@@ -225,7 +225,7 @@ check condition previous =
             )
 
 
-tryRule : ExprTree -> String
+tryRule : ExprTree -> Result String ()
 tryRule t =
     let
         erasedErrorTree =
@@ -244,10 +244,6 @@ tryRule t =
                             _ ->
                                 Result.Err "Field is missing"
                     )
-
-        getResultMsg : Result String () -> String
-        getResultMsg =
-            Result.map (\() -> "OK") >> Result.Extra.merge
     in
     case erasedErrorTree of
         Node (Result.Ok r) children ->
@@ -269,10 +265,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TIf ->
                     case children of
@@ -301,10 +296,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TTrue ->
                     case children of
@@ -323,10 +317,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TFalse ->
                     case children of
@@ -345,10 +338,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TAbs ->
                     case children of
@@ -363,10 +355,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TTAbs ->
                     case children of
@@ -381,10 +372,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TApp ->
                     case children of
@@ -404,10 +394,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TTApp ->
                     case children of
@@ -422,10 +411,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TLet ->
                     case children of
@@ -445,10 +433,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TGen ->
                     case children of
@@ -463,10 +450,9 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 Model.TInst ->
                     case children of
@@ -481,13 +467,12 @@ tryRule t =
                                         }
                                     }
                                 )
-                                |> getResultMsg
 
                         _ ->
-                            "Top rule parse Error"
+                            Err "Top rule parse Error"
 
                 _ ->
-                    "Unimplemented Rule"
+                    Err "Unimplemented Rule"
 
         _ ->
-            "Bottom rule error"
+            Err "Bottom expression error"

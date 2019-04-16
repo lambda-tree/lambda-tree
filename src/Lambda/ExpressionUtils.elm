@@ -328,6 +328,7 @@ unifyType ty1 ty2 =
         ( _, TyAll name2 _ ) ->
             Err <| "Types should be degeneralized. TyAll '" ++ name2 ++ "' found"
 
+        -- Not necessary for System H-M (types should not reference variable => should be degeneralized) => for System F
         ( TyVar x1 n1, TyVar x2 n2 ) ->
             if n1 - x1 == n2 - x2 then
                 Ok []
@@ -574,7 +575,6 @@ w ctx t =
                             |> Result.andThen
                                 (\( s2, tau ) ->
                                     let
-                                        -- should consider some other ctxs/types too?
                                         tauPrime =
                                             TyName <|
                                                 freshVarName
@@ -639,3 +639,78 @@ typeOf ctx t =
     w ctx t
         |> Result.map Tuple.second
         |> Result.map (gen ctx)
+
+
+areHMTypesEquivalent : Context -> Ty -> Ty -> Result String ()
+areHMTypesEquivalent ctx ty1 ty2 =
+    let
+        renTy1 =
+            renameBoundVarsWithFresh (ftvTy ty1 |> Set.union (ftvTy ty2) |> Set.union (ftvCtx ctx)) ty1
+
+        degTy1 =
+            renTy1
+                |> degeneralizeType ctx
+
+        renTy2 =
+            renameBoundVarsWithFresh (ftvTy degTy1 |> Set.union (ftvTy ty2) |> Set.union (ftvCtx ctx)) ty2
+
+        degTy2 =
+            renTy2
+                |> degeneralizeType ctx
+
+        getTyName ty =
+            case ty of
+                TyName varName ->
+                    varName
+
+                _ ->
+                    ""
+    in
+    unifyType degTy1 degTy2
+        |> Result.andThen
+            (\s1 ->
+                unifyType degTy2 degTy1
+                    |> Result.andThen
+                        (\s2 ->
+                            let
+                                degTy1IsAtLeastAsGeneralAsDegTy2 =
+                                    \_ ->
+                                        if
+                                            s1
+                                                |> List.all
+                                                    (\( _, varName ) -> Set.member varName (ftvTy degTy1))
+                                        then
+                                            Ok ()
+
+                                        else
+                                            Err "Type 1 is not as general as Type 2"
+
+                                degTy2IsAtLeastAsGeneralAsDegTy1 =
+                                    \_ ->
+                                        if
+                                            s2
+                                                |> List.all
+                                                    (\( _, varName ) -> Set.member varName (ftvTy degTy2))
+                                        then
+                                            Ok ()
+
+                                        else
+                                            Err "Type 2 is not as general as Type 1"
+
+                                typesEquallyGeneralized =
+                                    \_ ->
+                                        if
+                                            (Set.map (TyName >> substFtv s1 >> getTyName) (topBoundVars renTy1) == topBoundVars renTy2)
+                                                && (Set.map (TyName >> substFtv s2 >> getTyName) (topBoundVars renTy2) == topBoundVars renTy1)
+                                        then
+                                            Ok ()
+
+                                        else
+                                            Err "Types are not equivalently generalized"
+                            in
+                            Ok ()
+                                |> Result.andThen degTy1IsAtLeastAsGeneralAsDegTy2
+                                |> Result.andThen degTy2IsAtLeastAsGeneralAsDegTy1
+                                |> Result.andThen typesEquallyGeneralized
+                        )
+            )

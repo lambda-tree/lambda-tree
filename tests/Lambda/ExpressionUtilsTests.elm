@@ -290,7 +290,7 @@ degeneralizeTypeTopTest =
 degeneralizeTermTopTest : Test
 degeneralizeTermTopTest =
     describe "degeneralizeTermTop"
-        [ test "Should degeneralize term" <|
+        [ test "Should degeneralize term top level if there is single type abstraction" <|
             \_ ->
                 degeneralizeTermTop []
                     (TmTAbs I "A" <|
@@ -303,6 +303,25 @@ degeneralizeTermTopTest =
                             TmAbs I "x" (Just <| TyName "A") <|
                                 (TmApp I (TmVar I 1 2) <| TmApp I (TmVar I 1 2) <| TmVar I 0 2)
                         )
+        , test "Should degeneralize term top level if there are 2 type abstractions" <|
+            \_ ->
+                degeneralizeTermTop []
+                    (TmTAbs I "A" <|
+                        TmTAbs I "B" <|
+                            (TmAbs I "termVar1" (Just <| TyVar 1 2) <| TmAbs I "termVar2" (Just <| TyVar 1 3) <| TmVar I 1 4)
+                    )
+                    |> Expect.equal
+                        (TmTAbs I "B" <|
+                            (TmAbs I "termVar1" (Just <| TyName "A") <| TmAbs I "termVar2" (Just <| TyVar 1 2) <| TmVar I 1 3)
+                        )
+        , test "Should degeneralize term top level if there is already degeneralized abstraction" <|
+            \_ ->
+                degeneralizeTermTop []
+                    (TmTAbs I "B" <|
+                        (TmAbs I "termVar1" (Just <| TyName "A") <| TmAbs I "termVar2" (Just <| TyVar 1 2) <| TmVar I 1 3)
+                    )
+                    |> Expect.equal
+                        (TmAbs I "termVar1" (Just <| TyName "A") <| TmAbs I "termVar2" (Just <| TyName "B") <| TmVar I 1 2)
         ]
 
 
@@ -787,17 +806,53 @@ typeOfTest =
                         )
                         |> Expect.equal (Ok <| TyAll "X" <| TyAll "X1" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
             ]
-        , only <|
-            describe "System F"
-                [ test "Lambda A . lambda f: A -> A . lambda x: A. f (f x): Forall A. (A -> A) -> A -> A" <|
-                    \_ ->
-                        typeOf
-                            []
-                            (TmTAbs I "A" <|
-                                TmAbs I "f" (Just <| TyArr (TyVar 0 1) <| TyVar 0 1) <|
-                                    TmAbs I "x" (Just <| TyVar 1 2) <|
-                                        (TmApp I (TmVar I 1 3) <| TmApp I (TmVar I 1 3) <| TmVar I 0 3)
-                            )
-                            |> Expect.equal (Ok <| TyAll "A" <| TyArr (TyArr (TyVar 0 1) <| TyVar 0 1) <| TyArr (TyVar 0 1) <| TyVar 0 1)
-                ]
+        , describe "System F"
+            [ test "Lambda A . lambda f: A -> A . lambda x: A. f (f x): Forall A. (A -> A) -> A -> A" <|
+                \_ ->
+                    typeOf
+                        []
+                        (TmTAbs I "A" <|
+                            TmAbs I "f" (Just <| TyArr (TyVar 0 1) <| TyVar 0 1) <|
+                                TmAbs I "x" (Just <| TyVar 1 2) <|
+                                    (TmApp I (TmVar I 1 3) <| TmApp I (TmVar I 1 3) <| TmVar I 0 3)
+                        )
+                        |> Expect.equal (Ok <| TyAll "A" <| TyArr (TyArr (TyVar 0 1) <| TyVar 0 1) <| TyArr (TyVar 0 1) <| TyVar 0 1)
+            , test "Lambda A. lambda termVar1: A. lambda termVar2: A. termVar1: Forall A. A -> A -> A" <|
+                \_ ->
+                    typeOf
+                        []
+                        (TmTAbs I "A" <|
+                            (TmAbs I "termVar1" (Just <| TyVar 0 1) <| TmAbs I "termVar2" (Just <| TyVar 1 2) <| TmVar I 1 3)
+                        )
+                        |> Expect.equal (Ok <| TyAll "A" <| TyArr (TyVar 0 1) <| TyArr (TyVar 0 1) <| TyVar 0 1)
+            , test "Lambda A. Lambda B. lambda termVar1: A. lambda termVar2: B. termVar1: Forall A. Forall B. A -> B -> A" <|
+                \_ ->
+                    typeOf
+                        []
+                        (TmTAbs I "A" <|
+                            TmTAbs I "B" <|
+                                (TmAbs I "termVar1" (Just <| TyVar 1 2) <| TmAbs I "termVar2" (Just <| TyVar 1 3) <| TmVar I 1 4)
+                        )
+                        |> Expect.equal (Ok <| TyAll "A" <| TyAll "B" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
+            ]
+        ]
+
+
+areHMTypesEquivalentTest : Test
+areHMTypesEquivalentTest =
+    describe "areHMTypesEquivalent"
+        [ test "should be Ok when ty1 & ty2 are equally general and equi valently generalized" <|
+            \_ ->
+                areHMTypesEquivalent
+                    []
+                    (TyAll "A" <| TyAll "B" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
+                    (TyAll "A" <| TyAll "B" <| TyArr (TyVar 0 2) <| TyArr (TyVar 1 2) <| TyVar 0 2)
+                    |> Expect.ok
+        , test "should Err when not equivalently generalized" <|
+            \_ ->
+                areHMTypesEquivalent
+                    []
+                    (TyAll "A" <| TyAll "B" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
+                    (TyAll "Y" <| TyAll "A" <| TyArr (TyVar 0 2) <| TyArr (TyName "Z") <| TyVar 0 2)
+                    |> Expect.err
         ]

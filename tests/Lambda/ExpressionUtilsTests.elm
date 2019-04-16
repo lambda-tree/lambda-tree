@@ -711,6 +711,20 @@ wTest =
                         (TmVar I 1 2)
                         |> Expect.equal (Ok <| ( [], TyArr (TyName "A1") <| TyName "A1" ))
             ]
+        , describe "TmConst"
+            [ test "true : Bool" <|
+                \_ ->
+                    w
+                        [ ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) ) ]
+                        (TmConst I TmTrue)
+                        |> Expect.equal (Ok <| ( [], TyConst TyBool ))
+            , test "false : Bool" <|
+                \_ ->
+                    w
+                        [ ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) ) ]
+                        (TmConst I TmFalse)
+                        |> Expect.equal (Ok <| ( [], TyConst TyBool ))
+            ]
         , describe "TmAbs"
             [ test "lambda a. a : X -> X" <|
                 \_ ->
@@ -834,6 +848,19 @@ typeOfTest =
                                 (TmAbs I "termVar1" (Just <| TyVar 1 2) <| TmAbs I "termVar2" (Just <| TyVar 1 3) <| TmVar I 1 4)
                         )
                         |> Expect.equal (Ok <| TyAll "A" <| TyAll "B" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
+            , test "(Lambda A. Lambda B. lambda termVar1: A. lambda termVar2: B. termVar1) [Bool]: Forall B. Bool -> B -> Bool" <|
+                \_ ->
+                    typeOf
+                        []
+                        (TmTApp I
+                            (TmTAbs I "A" <|
+                                TmTAbs I "B" <|
+                                    (TmAbs I "termVar1" (Just <| TyVar 1 2) <| TmAbs I "termVar2" (Just <| TyVar 1 3) <| TmVar I 1 4)
+                            )
+                         <|
+                            TyConst TyBool
+                        )
+                        |> Expect.equal (Ok <| TyAll "B" <| TyArr (TyConst TyBool) <| TyArr (TyVar 0 1) <| TyConst TyBool)
             ]
         ]
 

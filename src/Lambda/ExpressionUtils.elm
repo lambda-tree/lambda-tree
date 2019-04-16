@@ -614,7 +614,7 @@ w ctx t =
                                 (\( s2, tauPrime ) -> ( s2 ++ s1, tauPrime ))
                     )
 
-        -- use algorithm W style in TmTAbs & TmTApp -> rely on unification & substitution
+        -- Extension of W to work with System F terms
         TmTAbs _ tyVarName _ ->
             degeneralizeTermTop ctx t
                 |> w ctx
@@ -627,8 +627,15 @@ w ctx t =
 
         TmTApp _ t1 tyS ->
             w ctx t1
-                |> Result.map
-                    (\( s1, tyAbs ) -> ( s1, typeSubstTop tyS tyAbs ))
+                |> Result.andThen
+                    (\( s1, tyAbs ) ->
+                        case tyAbs of
+                            TyAll _ ty1 ->
+                                Ok ( s1, typeSubstTop tyS ty1 )
+
+                            _ ->
+                                Err "Type can be applied only on type abstraction term"
+                    )
 
         _ ->
             Err "Not implemented"

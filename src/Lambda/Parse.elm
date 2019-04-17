@@ -55,6 +55,7 @@ preprocess =
     String.replace "\\" symbols.lambda
         >> String.replace "lambda " symbols.lambda
         >> String.replace "Lambda " symbols.capitalLambda
+        >> String.replace "|" symbols.capitalLambda
         >> String.replace "^" symbols.capitalLambda
         >> String.replace "Let " "let "
         >> String.replace "In " "in "

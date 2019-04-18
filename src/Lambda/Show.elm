@@ -1,9 +1,10 @@
 module Lambda.Show exposing (..)
 
-import Lambda.Context exposing (Context)
-import Lambda.ContextUtils exposing (addbinding, index2name)
+import Lambda.Context exposing (..)
+import Lambda.ContextUtils exposing (addbinding, emptycontext, index2name)
 import Lambda.Expression exposing (..)
 import Lambda.Parse exposing (symbols)
+import List.Extra
 
 
 enclose : String -> String
@@ -233,7 +234,7 @@ showTerm ctx t =
             index2name fi ctx x
                 |> Maybe.withDefault "indexNotFoundInContext"
 
-        TmAbs fi varName maybeTy t1 ->
+        TmAbs _ varName maybeTy t1 ->
             let
                 tyFormatted =
                     maybeTy
@@ -245,12 +246,12 @@ showTerm ctx t =
                 ++ varName
                 ++ tyFormatted
                 ++ ". "
-                ++ showTerm ctx t1
+                ++ showTerm (addbinding ctx varName NameBind) t1
 
-        TmApp fi t1 t2 ->
+        TmApp _ t1 t2 ->
             addBracketsTermAppLeft t1 (showTerm ctx t1) ++ " " ++ addBracketsTermAppRight t2 (showTerm ctx t2)
 
-        TmIf fi t1 t2 t3 ->
+        TmIf _ t1 t2 t3 ->
             "if "
                 ++ addBracketsTermAppIf t1 (showTerm ctx t1)
                 ++ " then "
@@ -258,7 +259,7 @@ showTerm ctx t =
                 ++ " else "
                 ++ addBracketsTermAppIf t3 (showTerm ctx t3)
 
-        TmLet fi varName t1 t2 ->
+        TmLet _ varName t1 t2 ->
             "let "
                 ++ varName
                 ++ " = "
@@ -266,10 +267,10 @@ showTerm ctx t =
                 ++ " in "
                 ++ addBracketsTermAppLetRight t2 (showTerm ctx t2)
 
-        TmTAbs fi varName t1 ->
-            symbols.capitalLambda ++ varName ++ ". " ++ showTerm ctx t1
+        TmTAbs _ varName t1 ->
+            symbols.capitalLambda ++ varName ++ ". " ++ showTerm (addbinding ctx varName TyVarBind) t1
 
-        TmTApp fi t1 ty ->
+        TmTApp _ t1 ty ->
             addBracketsTermTypeApp t1 (showTerm ctx t1) ++ " [" ++ showType ctx ty ++ "]"
 
         TmConst _ TmTrue ->
@@ -277,3 +278,28 @@ showTerm ctx t =
 
         TmConst _ TmFalse ->
             "false"
+
+
+showCtx : Context -> String
+showCtx =
+    List.Extra.mapAccumr (\ctx ctxObj -> ( ctxObj :: ctx, showContextObject ctx ctxObj )) emptycontext
+        >> Tuple.second
+        >> List.reverse
+        >> String.join ", "
+
+
+showContextObject : Context -> ContextObject -> String
+showContextObject ctx ( varName, binding ) =
+    let
+        showBinding b =
+            case b of
+                NameBind ->
+                    ""
+
+                TyVarBind ->
+                    ""
+
+                VarBind ty ->
+                    ": " ++ showType ctx ty
+    in
+    varName ++ showBinding binding

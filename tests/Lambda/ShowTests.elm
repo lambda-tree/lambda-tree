@@ -87,6 +87,10 @@ showTermTest =
             \_ ->
                 showTerm [] (TmAbs I "termVar1" (Just <| TyArr (TyConst TyBool) <| TyConst TyBool) (TmConst I TmTrue))
                     |> Expect.equal "λtermVar1: Bool → Bool. true"
+        , test "should show abstraction 4" <|
+            \_ ->
+                showTerm [] (TmAbs I "termVar1" (Just <| TyArr (TyConst TyBool) <| TyConst TyBool) (TmVar I 0 1))
+                    |> Expect.equal "λtermVar1: Bool → Bool. termVar1"
         , test "should show application 1" <|
             \_ ->
                 showTerm [ ( "termVar1", NameBind ) ] (TmApp I (TmVar I 0 1) <| TmConst I TmTrue)
@@ -99,4 +103,40 @@ showTermTest =
             \_ ->
                 showTerm [ ( "termVar1", NameBind ), ( "termVar2", NameBind ) ] (TmApp I (TmVar I 0 2) (TmApp I (TmVar I 1 2) <| TmConst I TmTrue))
                     |> Expect.equal "termVar1 (termVar2 true)"
+        , test "should show if" <|
+            \_ ->
+                showTerm
+                    [ ( "termVar1", NameBind ), ( "termVar2", NameBind ) ]
+                    (TmIf I (TmApp I (TmVar I 0 2) (TmApp I (TmVar I 1 2) <| TmConst I TmTrue)) (TmConst I TmTrue) (TmConst I TmFalse))
+                    |> Expect.equal "if termVar1 (termVar2 true) then true else false"
+        , test "should show type abstraction" <|
+            \_ ->
+                showTerm
+                    []
+                    (TmTAbs I "TypeVar1" <| TmAbs I "termVar1" (Just <| TyVar 0 1) <| TmVar I 0 2)
+                    |> Expect.equal "ΛTypeVar1. λtermVar1: TypeVar1. termVar1"
+        , test "should show type application" <|
+            \_ ->
+                showTerm
+                    []
+                    (TmTAbs I "TypeVar1" <| TmAbs I "termVar1" (Just <| TyVar 0 1) <| TmVar I 0 2)
+                    |> Expect.equal "ΛTypeVar1. λtermVar1: TypeVar1. termVar1"
+        ]
+
+
+showCtxTest : Test
+showCtxTest =
+    describe "showCtx"
+        [ test "should show single var simple context" <|
+            \_ ->
+                showCtx [ ( "termVar1", VarBind <| TyConst TyBool ) ]
+                    |> Expect.equal "termVar1: Bool"
+        , test "should show multiple var simple context" <|
+            \_ ->
+                showCtx [ ( "termVar2", VarBind <| TyConst TyInt ), ( "termVar1", VarBind <| TyConst TyBool ) ]
+                    |> Expect.equal "termVar1: Bool, termVar2: Int"
+        , test "should show multiple var context with bound type vars" <|
+            \_ ->
+                showCtx [ ( "termVar2", VarBind <| TyVar 1 2 ), ( "termVar1", VarBind <| TyConst TyBool ), ( "TypeVar1", TyVarBind ) ]
+                    |> Expect.equal "TypeVar1, termVar1: Bool, termVar2: TypeVar1"
         ]

@@ -494,6 +494,24 @@ substTest =
                                 (TyName "Z")
                             )
                         )
+        , test "Should substitute tyS for the free variable in TyAll if not bound" <|
+            \_ ->
+                substFtv
+                    [ ( TyArr (TyName "Y") (TyName "Z"), "X" ) ]
+                    (TyAll "Y" <| TyArr (TyName "X") (TyName "X"))
+                    |> Expect.equal
+                        (TyAll "Y"
+                            (TyArr
+                                (TyArr
+                                    (TyName "Y")
+                                    (TyName "Z")
+                                )
+                                (TyArr
+                                    (TyName "Y")
+                                    (TyName "Z")
+                                )
+                            )
+                        )
         ]
 
 

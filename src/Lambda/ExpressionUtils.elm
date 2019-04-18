@@ -259,6 +259,9 @@ substFtv ss tyTop =
                 TyArr ty1 ty2 ->
                     TyArr (substOne tyS varName ty1) (substOne tyS varName ty2)
 
+                TyAll x ty1 ->
+                    TyAll x <| substOne tyS varName ty1
+
                 _ ->
                     ty
     in

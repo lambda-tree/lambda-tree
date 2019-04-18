@@ -1,10 +1,12 @@
 module View.Layout exposing (..)
 
-import Html.Styled.Events as E
-import Html.Styled as S exposing (Html, styled)
 import Css exposing (..)
+import Html.Styled as S exposing (Html, styled)
+import Html.Styled.Events as E
 import Message exposing (Msg(..))
-import Model exposing (ModelContent, TextKind(..))
+import Substitutor.Message
+import View.Lambda.ExpressionInput exposing (lambdaExprInput)
+import View.Lambda.ExpressionText exposing (lambdaExprText)
 import View.Lambda.Tree exposing (drawTree)
 import View.Theme exposing (theme)
 
@@ -29,6 +31,29 @@ mainContent model =
                 [ styled S.button [ margin <| rem 0.5 ] [ E.onClick ClickedMsg ] [ S.text "Click" ]
                 , styled S.button [ margin <| rem 0.5 ] [ E.onClick ZoomIn ] [ S.text "Zoom In" ]
                 , styled S.button [ margin <| rem 0.5 ] [ E.onClick ZoomOut ] [ S.text "Zoom Out" ]
+                , styled S.div
+                    [ displayFlex, flexDirection column, flex <| int 1 ]
+                    []
+                    [ S.text "Substitute free variable"
+                    , styled S.div
+                        [ flex <| int 1 ]
+                        []
+                        [ styled S.div
+                            [ displayFlex
+                            , flex <| int 1
+                            ]
+                            []
+                            [ lambdaExprInput False model.substitution.ty (Substitutor.Message.TyChanged >> SubstitutionMsg) ]
+                        , lambdaExprText "/"
+                        , styled S.div
+                            [ displayFlex
+                            , flex <| int 1
+                            ]
+                            []
+                            [ lambdaExprInput False model.substitution.var (Substitutor.Message.VarChanged >> SubstitutionMsg) ]
+                        , styled S.button [ margin <| rem 0.5 ] [ E.onClick DoSubstitutionMsg ] [ S.text "Substitute" ]
+                        ]
+                    ]
                 ]
             ]
         ]
@@ -53,7 +78,7 @@ rightColumn children =
     styled S.div
         [ displayFlex
         , flexDirection column
-        , flex <| int 1
+        , flex <| int 2
         , alignItems stretch
         , justifyContent flexStart
         , overflow auto

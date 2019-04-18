@@ -23,7 +23,6 @@ drawTree tree =
                         [ if List.length children == 0 then
                             S.div []
                                 [ ruleSelector <| RuleSelectedMsg path
-                                , S.button [ E.onClick <| RemoveMsg path ] [ S.text "Remove" ]
                                 ]
 
                           else
@@ -41,7 +40,7 @@ drawTree tree =
                                 S.div [] []
 
                               else
-                                hairline content.rule content.result
+                                hairline path content.rule content.result
                             , proofCell content (TextChangedMsg path)
                             ]
                         ]
@@ -49,10 +48,11 @@ drawTree tree =
     drawTreeP (getTreeViewData (Debug.log "tree" tree)) []
 
 
-hairline rule text =
+hairline path rule text =
     styled S.div
         [ displayFlex, justifyContent stretch, alignItems center ]
         []
         [ styled S.div [ height <| px 1, minHeight <| px 1, backgroundColor <| theme.darkLine, flex auto ] [] []
-        , styled S.div [ margin2 (rem 0) (rem 1) ] [] [ S.text <| Debug.toString rule ++ " | " ++ text ]
+        , styled S.button [ theme.font, margin2 (rem 0) (rem 0.5) ] [ E.onClick <| RemoveMsg path ] [ S.text <| "Remove" ]
+        , styled S.div [] [] [ S.text <| Debug.toString rule ++ " | " ++ text ]
         ]

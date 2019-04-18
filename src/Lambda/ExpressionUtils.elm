@@ -1,7 +1,7 @@
 module Lambda.ExpressionUtils exposing (..)
 
 import Lambda.Context exposing (..)
-import Lambda.ContextUtils exposing (addbinding, ctxlength, getbinding, index2name)
+import Lambda.ContextUtils exposing (addbinding, ctxlength, getbinding)
 import Lambda.Expression exposing (..)
 import Set exposing (Set)
 

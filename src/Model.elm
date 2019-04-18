@@ -1,5 +1,6 @@
 module Model exposing (..)
 
+import Substitutor.Model
 import Utils.Tree exposing (Tree(..))
 
 
@@ -35,7 +36,7 @@ emptyTree =
 
 
 type alias Model =
-    { tree : TreeModel, zoomLevel : Float }
+    { tree : TreeModel, zoomLevel : Float, substitution : Substitutor.Model.Model }
 
 
 type TextKind

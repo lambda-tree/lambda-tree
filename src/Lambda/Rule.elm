@@ -8,7 +8,6 @@ import Lambda.ParseTransform exposing (ParseTransformError)
 import Maybe exposing (..)
 import Model exposing (Rule, TreeModel)
 import Result
-import Result.Extra
 import Utils.Tree exposing (Tree(..))
 
 

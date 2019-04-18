@@ -1,9 +1,16 @@
 module Update exposing (..)
 
-import Lambda.Parse
+import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx)
+import Lambda.Parse exposing (parseCtx, parseType)
+import Lambda.ParseTransform exposing (fromParseContext, fromParseType)
+import Lambda.Show
 import List.Extra
 import Message exposing (..)
 import Model exposing (..)
+import Substitutor.Init
+import Substitutor.Model
+import Substitutor.Update
+import Substitutor.Utils exposing (parsedType, parsedVar)
 import Utils.Tree exposing (Tree(..))
 
 
@@ -30,6 +37,76 @@ update msg model =
 
         ZoomOut ->
             { model | zoomLevel = model.zoomLevel / 1.2 }
+
+        SubstitutionMsg m ->
+            { model | substitution = Substitutor.Update.update m model.substitution }
+
+        DoSubstitutionMsg ->
+            { model | tree = doSubstitution model.substitution model.tree, substitution = Substitutor.Init.init }
+
+
+doSubstitution : Substitutor.Model.Model -> TreeModel -> TreeModel
+doSubstitution sm tree =
+    case ( parsedType sm, parsedVar sm ) of
+        ( Ok tyS, Ok varS ) ->
+            let
+                ss =
+                    [ ( tyS, varS ) ]
+            in
+            tree
+                |> Utils.Tree.map
+                    (\({ ctx, term, ty } as o) ->
+                        let
+                            maybeCtx =
+                                parseCtx ctx
+                                    |> Result.toMaybe
+                                    |> Maybe.andThen (fromParseContext >> Result.toMaybe)
+                        in
+                        { o
+                            | ctx =
+                                maybeCtx
+                                    |> Maybe.andThen
+                                        (\c ->
+                                            let
+                                                substituted =
+                                                    substFtvCtx ss c
+                                            in
+                                            if substituted == c then
+                                                Nothing
+
+                                            else
+                                                Just substituted
+                                        )
+                                    |> Maybe.map Lambda.Show.showCtx
+                                    |> Maybe.withDefault ctx
+                            , term = term
+                            , ty =
+                                maybeCtx
+                                    |> Maybe.andThen
+                                        (\justCtx ->
+                                            parseType ty
+                                                |> Result.toMaybe
+                                                |> Maybe.map (fromParseType justCtx)
+                                                |> Maybe.andThen
+                                                    (\justTy ->
+                                                        let
+                                                            substituted =
+                                                                substFtv ss justTy
+                                                        in
+                                                        if substituted == justTy then
+                                                            Nothing
+
+                                                        else
+                                                            Just substituted
+                                                    )
+                                                |> Maybe.map (Lambda.Show.showType justCtx)
+                                        )
+                                    |> Maybe.withDefault ty
+                        }
+                    )
+
+        _ ->
+            tree
 
 
 addNode : List Int -> TreeModel -> Rule -> TreeModel
@@ -97,25 +174,10 @@ removeNode path tree =
         Node content children ->
             case path of
                 [] ->
-                    Node content children
-
-                idx :: [] ->
-                    Node content (List.Extra.removeAt idx children)
+                    Node content []
 
                 idx :: subPath ->
-                    let
-                        updatedChildren =
-                            List.indexedMap
-                                (\i t ->
-                                    if i == idx then
-                                        removeNode subPath t
-
-                                    else
-                                        t
-                                )
-                                children
-                    in
-                    Node content updatedChildren
+                    Node content (children |> List.Extra.updateAt idx (removeNode subPath))
 
 
 updateTextInPath kind tree text path =

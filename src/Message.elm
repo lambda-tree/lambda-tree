@@ -1,6 +1,7 @@
 module Message exposing (..)
 
 import Model exposing (..)
+import Substitutor.Message
 
 
 type Msg
@@ -11,3 +12,5 @@ type Msg
     | AddMsg (List Int)
     | RemoveMsg (List Int)
     | RuleSelectedMsg (List Int) Rule
+    | SubstitutionMsg Substitutor.Message.Msg
+    | DoSubstitutionMsg

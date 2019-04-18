@@ -467,6 +467,16 @@ parseType =
         |> runParser
 
 
+parseTypeVar : String -> Result Error String
+parseTypeVar =
+    succeed identity
+        |. spaces
+        |= typeVar
+        |. spaces
+        |. end
+        |> runParser
+
+
 parseCtx : String -> Result Error TyContext
 parseCtx =
     succeed identity

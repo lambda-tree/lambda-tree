@@ -248,25 +248,30 @@ tryRule t =
         Node (Result.Ok r) children ->
             case r.rule of
                 Model.TVar ->
-                    case children of
-                        [ Node (Result.Ok c1) _ ] ->
-                            checkRule
-                                (TVar
-                                    { bottom =
-                                        { ctx = r.ctx
-                                        , term = r.term
-                                        , ty = r.ty
-                                        }
-                                    , top =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    }
-                                )
+                    case r.term of
+                        TmVar _ _ _ ->
+                            case children of
+                                [ Node (Result.Ok c1) _ ] ->
+                                    checkRule
+                                        (TVar
+                                            { bottom =
+                                                { ctx = r.ctx
+                                                , term = r.term
+                                                , ty = r.ty
+                                                }
+                                            , top =
+                                                { ctx = c1.ctx
+                                                , term = c1.term
+                                                , ty = c1.ty
+                                                }
+                                            }
+                                        )
+
+                                _ ->
+                                    Err "Top rule parse Error"
 
                         _ ->
-                            Err "Top rule parse Error"
+                            Err "wrongRule"
 
                 Model.TIf ->
                     case children of

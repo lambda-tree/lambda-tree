@@ -567,7 +567,6 @@ w ctx t =
                 fromType =
                     maybeType
                         |> Maybe.withDefault (TyName <| freshVarName (ftvCtx ctx) "X")
-                        |> Debug.log "fromType"
 
                 ctx1 =
                     addbinding ctx varName (VarBind fromType)

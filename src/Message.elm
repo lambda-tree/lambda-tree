@@ -8,7 +8,7 @@ type Msg
     = ZoomIn
     | ZoomOut
     | TextChangedMsg (List Int) TextKind String
-    | ClickedMsg
+    | HintMsg
     | AddMsg (List Int)
     | RemoveMsg (List Int)
     | RuleSelectedMsg (List Int) Rule

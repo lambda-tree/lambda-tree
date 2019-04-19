@@ -265,7 +265,7 @@ showTerm ctx t =
                 ++ " = "
                 ++ addBracketsTermAppLetLeft t1 (showTerm ctx t1)
                 ++ " in "
-                ++ addBracketsTermAppLetRight t2 (showTerm ctx t2)
+                ++ addBracketsTermAppLetRight t2 (showTerm (addbinding ctx varName NameBind) t2)
 
         TmTAbs _ varName t1 ->
             symbols.capitalLambda ++ varName ++ ". " ++ showTerm (addbinding ctx varName TyVarBind) t1

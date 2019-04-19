@@ -1,9 +1,10 @@
 module Update exposing (..)
 
+import Inferer.Inferer exposing (buildTree)
 import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx, substFtvTerm)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
-import Lambda.Show
+import Lambda.Show exposing (showCtx, showTerm, showType)
 import List.Extra
 import Message exposing (..)
 import Model exposing (..)
@@ -20,8 +21,8 @@ update msg model =
         TextChangedMsg path kind text ->
             { model | tree = updateTextInPath kind model.tree text path }
 
-        ClickedMsg ->
-            model
+        HintMsg ->
+            { model | tree = doHint model.tree }
 
         AddMsg path ->
             { model | tree = addNode path model.tree NoRule }
@@ -46,6 +47,44 @@ update msg model =
 
         RuleClickedMsg _ ->
             Debug.todo "Update: RuleClickedMsg"
+
+
+doHint : TreeModel -> TreeModel
+doHint ((Node { ctx, term } _) as t1) =
+    let
+        maybeCtx =
+            parseCtx ctx
+                |> Result.toMaybe
+                |> Maybe.andThen (fromParseContext >> Result.toMaybe)
+
+        maybeTerm =
+            maybeCtx
+                |> Maybe.andThen
+                    (\justCtx ->
+                        parseTerm term
+                            |> Result.toMaybe
+                            |> Maybe.andThen (fromParseTerm justCtx >> Result.toMaybe)
+                    )
+    in
+    case ( maybeCtx, maybeTerm ) of
+        ( Just justCtx, Just justTerm ) ->
+            buildTree justCtx justTerm
+                |> Result.mapError (Debug.log "doHint: buildTree error:")
+                |> Result.toMaybe
+                |> Maybe.map
+                    (Utils.Tree.map
+                        (\content ->
+                            { ctx = showCtx content.ctx
+                            , term = showTerm content.ctx content.term
+                            , ty = showType justCtx content.ty
+                            , rule = content.rule
+                            }
+                        )
+                    )
+                |> Maybe.withDefault t1
+
+        _ ->
+            t1
 
 
 doSubstitution : Substitutor.Model.Model -> TreeModel -> TreeModel

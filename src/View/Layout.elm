@@ -36,7 +36,8 @@ mainContent model =
                 , overflow scroll
                 ]
                 []
-                [ S.text
+                [ S.button [ E.onClick HintMsg ] [ S.text "Hint" ]
+                , S.text
                     "Substitute free variable"
                 , lambdaExprInput False model.substitution.ty (Substitutor.Message.TyChanged >> SubstitutionMsg)
                 , lambdaExprText "/"

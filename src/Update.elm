@@ -44,6 +44,9 @@ update msg model =
         DoSubstitutionMsg ->
             { model | tree = doSubstitution model.substitution model.tree, substitution = Substitutor.Init.init }
 
+        RuleClickedMsg _ ->
+            Debug.todo "Update: RuleClickedMsg"
+
 
 doSubstitution : Substitutor.Model.Model -> TreeModel -> TreeModel
 doSubstitution sm tree =

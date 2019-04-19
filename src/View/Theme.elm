@@ -1,6 +1,6 @@
 module View.Theme exposing (..)
 
-import Css exposing (Color, Style, rgba, rgb, fontFamilies)
+import Css exposing (Color, Style, fontFamilies, rgb, rgba)
 
 
 theme :
@@ -11,6 +11,8 @@ theme :
     , darkLine : Color
     , clear : Color
     , inputBackground : Color
+    , cmFont : Style
+    , ktFont : Style
     , font : Style
     }
 theme =
@@ -21,5 +23,7 @@ theme =
     , darkLine = rgb 150 150 150
     , clear = rgba 0 0 0 0
     , inputBackground = rgba 255 255 255 0.5
-    , font = fontFamilies [ "cm" ]
+    , cmFont = fontFamilies [ "cm" ]
+    , ktFont = fontFamilies [ "kt" ]
+    , font = fontFamilies [ "cm", "kt" ]
     }

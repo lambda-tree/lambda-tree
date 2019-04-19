@@ -1,10 +1,10 @@
 module View exposing (..)
 
 import Css exposing (..)
-import Css.Global exposing (global, body, selector)
+import Css.Global exposing (body, global, selector)
 import Html.Styled as S exposing (Html, styled)
-import Model exposing (..)
 import Message exposing (..)
+import Model exposing (..)
 import View.Layout exposing (mainContent)
 import View.Theme exposing (theme)
 
@@ -23,12 +23,17 @@ view model =
             , selector "@font-face"
                 [ property "src" "url(resources/fonts/cmunrm.ttf)"
                 , fontStyle normal
-                , theme.font
+                , theme.cmFont
                 ]
             , selector "@font-face"
                 [ property "src" "url(resources/fonts/cmunti.ttf)"
                 , fontStyle italic
-                , theme.font
+                , theme.cmFont
+                ]
+            , selector "@font-face"
+                [ property "src" "url(resources/fonts/KaTeX_Main-Regular.ttf)"
+                , fontStyle normal
+                , theme.ktFont
                 ]
             ]
         , mainContent model

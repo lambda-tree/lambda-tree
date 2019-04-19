@@ -7,6 +7,7 @@ import Message exposing (Msg(..))
 import Substitutor.Message
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
+import View.Lambda.RuleList exposing (ruleList)
 import View.Lambda.Tree exposing (drawTree)
 import View.Theme exposing (theme)
 
@@ -27,34 +28,22 @@ mainContent model =
                 ]
             ]
         , rightColumn
-            [ scroller
-                [ styled S.button [ margin <| rem 0.5 ] [ E.onClick ClickedMsg ] [ S.text "Click" ]
-                , styled S.button [ margin <| rem 0.5 ] [ E.onClick ZoomIn ] [ S.text "Zoom In" ]
-                , styled S.button [ margin <| rem 0.5 ] [ E.onClick ZoomOut ] [ S.text "Zoom Out" ]
-                , styled S.div
-                    [ displayFlex, flexDirection column, flex <| int 1 ]
-                    []
-                    [ S.text "Substitute free variable"
-                    , styled S.div
-                        [ flex <| int 1 ]
-                        []
-                        [ styled S.div
-                            [ displayFlex
-                            , flex <| int 1
-                            ]
-                            []
-                            [ lambdaExprInput False model.substitution.ty (Substitutor.Message.TyChanged >> SubstitutionMsg) ]
-                        , lambdaExprText "/"
-                        , styled S.div
-                            [ displayFlex
-                            , flex <| int 1
-                            ]
-                            []
-                            [ lambdaExprInput False model.substitution.var (Substitutor.Message.VarChanged >> SubstitutionMsg) ]
-                        , styled S.button [ margin <| rem 0.5 ] [ E.onClick DoSubstitutionMsg ] [ S.text "Substitute" ]
-                        ]
-                    ]
+            [ styled S.div
+                [ displayFlex
+                , flexDirection column
+                , justifyContent flexStart
+                , alignItems stretch
+                , overflow scroll
                 ]
+                []
+                [ S.text
+                    "Substitute free variable"
+                , lambdaExprInput False model.substitution.ty (Substitutor.Message.TyChanged >> SubstitutionMsg)
+                , lambdaExprText "/"
+                , lambdaExprInput False model.substitution.var (Substitutor.Message.VarChanged >> SubstitutionMsg)
+                , styled S.button [ margin <| rem 0.5 ] [ E.onClick DoSubstitutionMsg ] [ S.text "Substitute" ]
+                ]
+            , ruleList <| RuleClickedMsg
             ]
         ]
 
@@ -109,7 +98,7 @@ scroller children =
         , flex auto
         , flexDirection column
         , justifyContent flexStart
-        , alignItems center
+        , alignItems stretch
         , overflow scroll
         ]
         []

@@ -12,5 +12,6 @@ type Msg
     | AddMsg (List Int)
     | RemoveMsg (List Int)
     | RuleSelectedMsg (List Int) Rule
+    | RuleClickedMsg Rule
     | SubstitutionMsg Substitutor.Message.Msg
     | DoSubstitutionMsg

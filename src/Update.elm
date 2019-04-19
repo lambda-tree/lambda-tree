@@ -1,8 +1,8 @@
 module Update exposing (..)
 
-import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx)
-import Lambda.Parse exposing (parseCtx, parseType)
-import Lambda.ParseTransform exposing (fromParseContext, fromParseType)
+import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx, substFtvTerm)
+import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
+import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Show
 import List.Extra
 import Message exposing (..)
@@ -79,7 +79,28 @@ doSubstitution sm tree =
                                         )
                                     |> Maybe.map Lambda.Show.showCtx
                                     |> Maybe.withDefault ctx
-                            , term = term
+                            , term =
+                                maybeCtx
+                                    |> Maybe.andThen
+                                        (\justCtx ->
+                                            parseTerm term
+                                                |> Result.toMaybe
+                                                |> Maybe.andThen (fromParseTerm justCtx >> Result.toMaybe)
+                                                |> Maybe.andThen
+                                                    (\justTerm ->
+                                                        let
+                                                            substituted =
+                                                                substFtvTerm ss justTerm
+                                                        in
+                                                        if substituted == justTerm then
+                                                            Nothing
+
+                                                        else
+                                                            Just substituted
+                                                    )
+                                                |> Maybe.map (Lambda.Show.showTerm justCtx)
+                                        )
+                                    |> Maybe.withDefault term
                             , ty =
                                 maybeCtx
                                     |> Maybe.andThen

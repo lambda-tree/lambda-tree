@@ -284,6 +284,11 @@ substFtvCtx ss ctx =
             )
 
 
+substFtvTerm : SubstitutionFtv -> Term -> Term
+substFtvTerm ss t =
+    tmmap (\fi _ x n -> TmVar fi x n) (\_ -> substFtv ss) 0 t
+
+
 {-| Substitutes primarily to the vars of first expression
 -}
 unifyType : Ty -> Ty -> Result String SubstitutionFtv
@@ -389,7 +394,7 @@ degeneralizeTermTop ctx t =
             in
             t1
                 |> -- degeneralize types of the term t1 such that the TyVars are replaced by TyName
-                   tmmap (\fi c x n -> TmVar fi x n) (tymap onvar (\_ -> TyName)) ctxl
+                   tmmap (\fi _ x n -> TmVar fi x n) (tymap onvar (\_ -> TyName)) ctxl
                 |> termShift -1
 
         _ ->

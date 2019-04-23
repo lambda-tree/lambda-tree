@@ -24,14 +24,11 @@ update msg model =
         HintMsg ->
             { model | tree = doHint model.tree }
 
-        AddMsg path ->
-            { model | tree = addNode path model.tree NoRule }
-
         RemoveMsg path ->
-            { model | tree = removeNode path model.tree }
+            { model | tree = setRule path NoRule model.tree }
 
         RuleSelectedMsg path rule ->
-            { model | tree = addNode path model.tree rule }
+            { model | tree = setRule path rule model.tree }
 
         ZoomIn ->
             { model | zoomLevel = model.zoomLevel * 1.2 }
@@ -172,18 +169,18 @@ doSubstitution sm tree =
             tree
 
 
-addNode : List Int -> TreeModel -> Rule -> TreeModel
-addNode path tree rule =
+setRule : List Int -> Rule -> TreeModel -> TreeModel
+setRule path rule tree =
     case tree of
         Node content children ->
             case path of
                 [] ->
                     case rule of
                         TTrue ->
-                            Node { content | rule = rule } [ emptyTree ]
+                            Node { content | rule = rule } []
 
                         TFalse ->
-                            Node { content | rule = rule } [ emptyTree ]
+                            Node { content | rule = rule } []
 
                         TVar ->
                             Node { content | rule = rule } [ emptyTree ]
@@ -219,34 +216,10 @@ addNode path tree rule =
                             Node { content | rule = rule } [ emptyTree ]
 
                         NoRule ->
-                            Node { content | rule = rule } [ emptyTree ]
+                            Node { content | rule = rule } []
 
                 idx :: subPath ->
-                    let
-                        updatedChildren =
-                            List.indexedMap
-                                (\i t ->
-                                    if i == idx then
-                                        addNode subPath t rule
-
-                                    else
-                                        t
-                                )
-                                children
-                    in
-                    Node content updatedChildren
-
-
-removeNode : List Int -> TreeModel -> TreeModel
-removeNode path tree =
-    case tree of
-        Node content children ->
-            case path of
-                [] ->
-                    Node content []
-
-                idx :: subPath ->
-                    Node content (children |> List.Extra.updateAt idx (removeNode subPath))
+                    Node content (children |> List.Extra.updateAt idx (setRule subPath rule))
 
 
 updateTextInPath kind tree text path =

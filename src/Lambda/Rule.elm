@@ -9,6 +9,7 @@ import List.Extra
 import Maybe exposing (..)
 import Model exposing (Rule, TreeModel)
 import Result
+import Set exposing (Set)
 import Utils.Tree exposing (Tree(..))
 
 
@@ -310,9 +311,21 @@ checkWithDetails condition previous =
             )
 
 
+type alias ResolvedExprTree =
+    Tree
+        (Result String
+            { ctx : Lambda.Context.Context
+            , term : Lambda.Expression.Term
+            , ty : Lambda.Expression.Ty
+            , rule : Rule
+            }
+        )
+
+
 tryRule : ExprTree -> Result String ()
 tryRule t =
     let
+        erasedErrorTree : ResolvedExprTree
         erasedErrorTree =
             t
                 |> Utils.Tree.map

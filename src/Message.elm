@@ -9,7 +9,6 @@ type Msg
     | ZoomOut
     | TextChangedMsg (List Int) TextKind String
     | HintMsg
-    | AddMsg (List Int)
     | RemoveMsg (List Int)
     | RuleSelectedMsg (List Int) Rule
     | RuleClickedMsg Rule

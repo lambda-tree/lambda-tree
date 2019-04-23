@@ -1,7 +1,7 @@
 module Inferer.Inferer exposing (..)
 
 import Lambda.Context exposing (..)
-import Lambda.ContextUtils exposing (addbinding, ctxlength, getbinding)
+import Lambda.ContextUtils exposing (addbinding, getbinding)
 import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (..)
 import Model exposing (Rule(..))
@@ -49,7 +49,7 @@ buildTree ctx t =
                             , term = t
                             , ty = inst ctx ty
                             , ss = []
-                            , rule = TVar
+                            , rule = TVarInst
                             }
                             []
 
@@ -128,7 +128,7 @@ buildTree ctx t =
                                         { ctx = ctx
                                         , term = t
                                         , ty = n2.ty
-                                        , rule = TLet
+                                        , rule = TLetGen
                                         , ss = n2.ss ++ n1.ss
                                         }
                                         [ bt1, bt2 ]

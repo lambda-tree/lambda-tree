@@ -188,6 +188,9 @@ addNode path tree rule =
                         TVar ->
                             Node { content | rule = rule } [ emptyTree ]
 
+                        TVarInst ->
+                            Node { content | rule = rule } [ emptyTree ]
+
                         TAbs ->
                             Node { content | rule = rule } [ emptyTree ]
 
@@ -204,6 +207,9 @@ addNode path tree rule =
                             Node { content | rule = rule } [ emptyTree ]
 
                         TLet ->
+                            Node { content | rule = rule } [ emptyTree, emptyTree ]
+
+                        TLetGen ->
                             Node { content | rule = rule } [ emptyTree, emptyTree ]
 
                         TGen ->

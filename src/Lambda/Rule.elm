@@ -3,8 +3,9 @@ module Lambda.Rule exposing (..)
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
-import Lambda.ExpressionUtils exposing (degeneralizeTypeTop, equalTypes, generalizeTypeTop, isSpecializedType, typeSubstTop)
+import Lambda.ExpressionUtils exposing (areHMTypesEquivalent, degeneralizeTypeTop, equalTypes, gen, generalizeTypeTop, isSpecializedType, typeSubstTop)
 import Lambda.ParseTransform exposing (ParseTransformError)
+import List.Extra
 import Maybe exposing (..)
 import Model exposing (Rule, TreeModel)
 import Result
@@ -13,6 +14,7 @@ import Utils.Tree exposing (Tree(..))
 
 type TyRule
     = TVar { bottom : TypeStatement, top : TypeStatement }
+    | TVarInst { bottom : TypeStatement, top : TypeStatement }
     | TIf { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement, top3 : TypeStatement }
     | TTrue { bottom : TypeStatement, top : TypeStatement }
     | TFalse { bottom : TypeStatement, top : TypeStatement }
@@ -21,6 +23,7 @@ type TyRule
     | TTAbs { bottom : TypeStatement, top : TypeStatement }
     | TTApp { bottom : TypeStatement, top : TypeStatement }
     | TLet { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
+    | TLetGen { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
     | TGen { bottom : TypeStatement, top : TypeStatement }
     | TInst { bottom : TypeStatement, top : TypeStatement }
 
@@ -75,17 +78,39 @@ checkRule rule =
                             False
                     )
 
+        TVarInst { bottom, top } ->
+            Ok ()
+                |> check ( "Contexts are not same", bottom.ctx == top.ctx )
+                |> check ( "Terms are not same", bottom.term == top.term )
+                |> check ( "Types are not same", bottom.ty == top.ty )
+                |> checkWithDetails
+                    ( "Type of var is incorrectly specialized"
+                    , case bottom.term of
+                        TmVar _ x _ ->
+                            case getbinding top.ctx x of
+                                Just (VarBind ty1) ->
+                                    isSpecializedType top.ctx
+                                        ty1
+                                        bottom.ty
+
+                                _ ->
+                                    Err "Variable is not bound in context"
+
+                        _ ->
+                            Ok <| False
+                    )
+
         TIf { bottom, top1, top2, top3 } ->
             case bottom.term of
                 TmIf _ t1 t2 t3 ->
                     Ok ()
-                        |> check ( "allCtxSame", List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx, top3.ctx ] )
-                        |> check ( "ifTermSame", top1.term == t1 )
-                        |> check ( "ifTypeIsBool", equalTypes top1.ctx top1.ty bottom.ctx (TyConst TyBool) )
-                        |> check ( "thenTermSame", top2.term == t2 )
-                        |> check ( "thenTypeSame", equalTypes top2.ctx top2.ty bottom.ctx bottom.ty )
-                        |> check ( "elseTermSame", top3.term == t3 )
-                        |> check ( "elseTypeSame", equalTypes top3.ctx top3.ty bottom.ctx bottom.ty )
+                        |> check ( "Contexts are not same", List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx, top3.ctx ] )
+                        |> check ( "'If' part of term is not same", top1.term == t1 )
+                        |> check ( "'If' part of term has not type of Bool", equalTypes top1.ctx top1.ty bottom.ctx (TyConst TyBool) )
+                        |> check ( "'Then' part of term is not same", top2.term == t2 )
+                        |> check ( "Type of 'then' part is not same", equalTypes top2.ctx top2.ty bottom.ctx bottom.ty )
+                        |> check ( "'Else' part of term is not same", top3.term == t3 )
+                        |> check ( "Type of 'else' part is not same", equalTypes top3.ctx top3.ty bottom.ctx bottom.ty )
 
                 _ ->
                     Err "wrongRule"
@@ -185,6 +210,44 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
+        TLetGen { bottom, top1, top2 } ->
+            case bottom.term of
+                TmLet _ varName t1 t2 ->
+                    Ok ()
+                        |> check ( "bottom & top1 ctxs are same", bottom.ctx == top1.ctx )
+                        |> checkWithDetails
+                            ( "variable is added to ctx with correct type binding"
+                            , let
+                                genTy =
+                                    gen top1.ctx top1.ty
+                              in
+                              case List.Extra.uncons top2.ctx of
+                                Just ( ( boundVarName, binding ), rest ) ->
+                                    case binding of
+                                        VarBind boundTy ->
+                                            Ok ()
+                                                |> check ( "Context is different", rest == bottom.ctx )
+                                                |> check ( "Var is added to ctx with different name", boundVarName == varName )
+                                                |> checkWithDetails
+                                                    ( "Var added to ctx is not generalized correctly"
+                                                    , areHMTypesEquivalent top1.ctx boundTy genTy
+                                                        |> Result.map (\_ -> True)
+                                                    )
+                                                |> Result.map (\_ -> True)
+
+                                        _ ->
+                                            Err "Type of variable added to context is missing"
+
+                                _ ->
+                                    Err "Context is empty"
+                            )
+                        |> check ( "in expr terms are same", t2 == top2.term )
+                        |> check ( "in expr types are same", bottom.ty == top2.ty )
+                        |> check ( "bound terms are same", t1 == top1.term )
+
+                _ ->
+                    Err "wrongRule"
+
         TGen { bottom, top } ->
             case bottom.ty of
                 TyAll varName _ ->
@@ -224,6 +287,29 @@ check condition previous =
             )
 
 
+checkWithDetails : ( String, Result String Bool ) -> Result String () -> Result String ()
+checkWithDetails condition previous =
+    previous
+        |> Result.andThen
+            (\_ ->
+                case condition of
+                    ( error, conditionResult ) ->
+                        let
+                            _ =
+                                Debug.log ("CHECK: " ++ error) conditionResult
+                        in
+                        case conditionResult of
+                            Ok True ->
+                                Ok ()
+
+                            Err e ->
+                                Err <| error ++ ": " ++ e
+
+                            Ok False ->
+                                Err error
+            )
+
+
 tryRule : ExprTree -> Result String ()
 tryRule t =
     let
@@ -254,6 +340,32 @@ tryRule t =
                                 [ Node (Result.Ok c1) _ ] ->
                                     checkRule
                                         (TVar
+                                            { bottom =
+                                                { ctx = r.ctx
+                                                , term = r.term
+                                                , ty = r.ty
+                                                }
+                                            , top =
+                                                { ctx = c1.ctx
+                                                , term = c1.term
+                                                , ty = c1.ty
+                                                }
+                                            }
+                                        )
+
+                                _ ->
+                                    Err "Top rule parse Error"
+
+                        _ ->
+                            Err "wrongRule"
+
+                Model.TVarInst ->
+                    case r.term of
+                        TmVar _ _ _ ->
+                            case children of
+                                [ Node (Result.Ok c1) _ ] ->
+                                    checkRule
+                                        (TVarInst
                                             { bottom =
                                                 { ctx = r.ctx
                                                 , term = r.term
@@ -424,6 +536,28 @@ tryRule t =
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
                             checkRule
                                 (TLet
+                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                    , top1 =
+                                        { ctx = c1.ctx
+                                        , term = c1.term
+                                        , ty = c1.ty
+                                        }
+                                    , top2 =
+                                        { ctx = c2.ctx
+                                        , term = c2.term
+                                        , ty = c2.ty
+                                        }
+                                    }
+                                )
+
+                        _ ->
+                            Err "Top rule parse Error"
+
+                Model.TLetGen ->
+                    case children of
+                        [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
+                            checkRule
+                                (TLetGen
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top1 =
                                         { ctx = c1.ctx

@@ -11,12 +11,14 @@ type Rule
     = TTrue
     | TFalse
     | TVar
+    | TVarInst
     | TAbs
     | TApp
     | TIf
     | TTAbs
     | TTApp
     | TLet
+    | TLetGen
     | TGen
     | TInst
     | NoRule

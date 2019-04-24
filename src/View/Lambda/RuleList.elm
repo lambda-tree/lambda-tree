@@ -25,7 +25,7 @@ ruleList createMsgClick =
         (List.map
             (ruleButton createMsgClick)
             [ TTrue, TFalse, TVar, TAbs, TApp, TIf, TTAbs, TTApp, TLet, TGen, TInst ]
-            ++ [ styled S.img [ width <| pct 100, height auto ] [ A.src "resources/img/if.png" ] []
+            ++ [ styled S.img [ width <| pct 100, height auto ] [ A.src "/img/if.png" ] []
                ]
         )
 

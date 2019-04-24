@@ -3,16 +3,23 @@ module Main exposing (..)
 import Browser
 import Html.Styled exposing (toUnstyled)
 import Init
+import Message exposing (Msg)
+import Model exposing (Model)
 import Update
 import View
-import Model
-import Message
 
 
-main : Program () Model.Model Message.Msg
+main : Program () Model Msg
 main =
-    Browser.sandbox
-        { init = Init.init
-        , update = Update.update
-        , view = View.view >> toUnstyled
+    Browser.document
+        { init = \_ -> ( Init.init, Cmd.none )
+        , update = \msg -> Update.update msg >> (\m -> ( m, Cmd.none ))
+        , view =
+            \m ->
+                { title = "Lambda Tree"
+                , body = [ m |> View.view |> toUnstyled ]
+                }
+
+        --        , view = View.view >> toUnstyled
+        , subscriptions = \_ -> Sub.none
         }

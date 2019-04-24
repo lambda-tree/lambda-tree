@@ -7,13 +7,12 @@
     "dependencies": {
         "direct": {
             "elm/browser": "1.0.0",
-            "elm/core": "1.0.0",
+            "elm/core": "1.0.2",
             "elm/html": "1.0.0",
             "elm/parser": "1.1.0",
             "elm-community/list-extra": "8.1.0",
             "elm-community/maybe-extra": "5.0.0",
             "elm-community/result-extra": "2.2.1",
-            "elm-explorations/test": "1.1.0",
             "rtfeldman/elm-css": "16.0.0",
             "rundis/elm-bootstrap": "5.0.0"
         },
@@ -29,7 +28,9 @@
         }
     },
     "test-dependencies": {
-        "direct": {},
+        "direct": {
+            "elm-explorations/test": "1.2.0"
+        },
         "indirect": {}
     }
 }

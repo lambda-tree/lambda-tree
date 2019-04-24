@@ -11,3 +11,31 @@ local.properties
 
 # Visual Studio code
 .vscode
+
+# Logs
+logs
+*.log
+.idea
+npm-debug.log*
+
+
+# Compiled binary addons (http://nodejs.org/api/addons.html)
+build/Release
+
+# Dependency directory
+node_modules
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# elm-repl generated files
+repl-temp-*
+
+.DS_Store
+example/dist
+
+ignore
+dist

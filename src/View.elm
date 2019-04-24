@@ -21,17 +21,17 @@ view model =
             [ Css.Global.html [ height <| pct 100, minHeight <| pct 100 ]
             , body [ height <| pct 100, minHeight <| pct 100, backgroundColor theme.background, margin <| px 0 ]
             , selector "@font-face"
-                [ property "src" "url(resources/fonts/cmunrm.ttf)"
+                [ property "src" "url(/fonts/cmunrm.ttf)"
                 , fontStyle normal
                 , theme.cmFont
                 ]
             , selector "@font-face"
-                [ property "src" "url(resources/fonts/cmunti.ttf)"
+                [ property "src" "url(/fonts/cmunti.ttf)"
                 , fontStyle italic
                 , theme.cmFont
                 ]
             , selector "@font-face"
-                [ property "src" "url(resources/fonts/KaTeX_Main-Regular.ttf)"
+                [ property "src" "url(/fonts/KaTeX_Main-Regular.ttf)"
                 , fontStyle normal
                 , theme.ktFont
                 ]

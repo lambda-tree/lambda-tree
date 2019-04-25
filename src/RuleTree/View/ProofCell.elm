@@ -1,12 +1,11 @@
-module View.Lambda.ProofCell exposing (..)
+module RuleTree.View.ProofCell exposing (..)
 
 import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
-import Message exposing (Msg)
-import Model exposing (TextKind(..))
+import RuleTree.Model exposing (TextKind(..))
+import RuleTree.ViewModel exposing (TreeViewDataResult)
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
-import ViewModel exposing (TreeViewDataResult)
 
 
 getBackgroundColor : TreeViewDataResult -> Color
@@ -19,7 +18,7 @@ getBackgroundColor result =
             rgba 255 0 0 0.5
 
 
-proofCell : { a | ctx : TreeViewDataResult, term : TreeViewDataResult, ty : TreeViewDataResult } -> (TextKind -> String -> Msg) -> S.Html Msg
+proofCell : { a | ctx : TreeViewDataResult, term : TreeViewDataResult, ty : TreeViewDataResult } -> (TextKind -> String -> msg) -> S.Html msg
 proofCell content msgCreator =
     S.div
         []

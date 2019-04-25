@@ -1,10 +1,10 @@
-module ViewModel exposing (..)
+module RuleTree.ViewModel exposing (..)
 
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Rule exposing (ExprTree, RuleError(..), TyRule, tryRule)
-import Model exposing (Rule, TreeModel)
 import Result.Extra
+import RuleTree.Model exposing (Rule(..), RuleTree)
 import Utils.Tree exposing (Tree(..))
 
 
@@ -26,7 +26,7 @@ type alias TreeViewData =
         }
 
 
-getExprTree : TreeModel -> ExprTree
+getExprTree : RuleTree -> ExprTree
 getExprTree t =
     t
         |> Utils.Tree.map
@@ -73,7 +73,7 @@ getExprTree t =
             )
 
 
-getTreeViewData : TreeModel -> TreeViewData
+getTreeViewData : RuleTree -> TreeViewData
 getTreeViewData t =
     let
         zipper origNode _ exprNode exprTree =

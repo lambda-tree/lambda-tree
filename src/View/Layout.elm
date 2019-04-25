@@ -1,17 +1,22 @@
 module View.Layout exposing (..)
 
 import Css exposing (..)
-import Html.Styled as S exposing (Html, styled)
+import Html.Styled as S exposing (Html, fromUnstyled, styled, toUnstyled)
 import Html.Styled.Events as E
+import Material.Button as Button
+import Material.Options as Options
 import Message exposing (Msg(..))
+import Model
+import RuleTree.Message exposing (Msg(..))
+import RuleTree.View.Tree exposing (drawTree)
 import Substitutor.Message
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
 import View.Lambda.RuleList exposing (ruleList)
-import View.Lambda.Tree exposing (drawTree)
 import View.Theme exposing (theme)
 
 
+mainContent : Model.Model -> Html Message.Msg
 mainContent model =
     styled S.div
         [ displayFlex
@@ -22,9 +27,9 @@ mainContent model =
         , minHeight <| pct 100
         ]
         []
-        [ leftColumn model.zoomLevel
+        [ leftColumn
             [ treeContainer
-                [ drawTree model.tree
+                [ drawTree model.ruleTree |> S.map RuleTreeMsg
                 ]
             ]
         , rightColumn
@@ -36,20 +41,30 @@ mainContent model =
                 , overflow scroll
                 ]
                 []
-                [ S.button [ E.onClick HintMsg ] [ S.text "Hint" ]
-                , S.text
-                    "Substitute free variable"
-                , lambdaExprInput False model.substitution.ty (Substitutor.Message.TyChanged >> SubstitutionMsg)
-                , lambdaExprText "/"
-                , lambdaExprInput False model.substitution.var (Substitutor.Message.VarChanged >> SubstitutionMsg)
-                , styled S.button [ margin <| rem 0.5 ] [ E.onClick DoSubstitutionMsg ] [ S.text "Substitute" ]
+                [ S.button [ E.onClick (HintMsg |> RuleTreeMsg) ] [ S.text "Hint" ]
+
+                --                , S.text
+                --                    "Substitute free variable"
+                --                , lambdaExprInput False model.substitution.ty (Substitutor.Message.TyChanged >> SubstitutionMsg)
+                --                , lambdaExprText "/"
+                --                , lambdaExprInput False model.substitution.var (Substitutor.Message.VarChanged >> SubstitutionMsg)
+                --                , styled S.button [ margin <| rem 0.5 ] [ E.onClick (DoSubstitutionMsg model.substitution |> RuleTreeMsg) ] [ S.text "Substitute" ]
+                , Button.view Mdc
+                    "my-button"
+                    model.mdc
+                    [ Button.ripple
+                    , Options.onClick (HintMsg |> RuleTreeMsg)
+                    ]
+                    [ S.text "Click me!" |> toUnstyled ]
+                    |> fromUnstyled
                 ]
-            , ruleList <| RuleClickedMsg
+
+            --            , ruleList <| (RuleClickedMsg >> RuleTreeMsg)
             ]
         ]
 
 
-leftColumn zoomLevel children =
+leftColumn children =
     styled S.div
         [ displayFlex
         , flexDirection column
@@ -58,7 +73,6 @@ leftColumn zoomLevel children =
         , justifyContent flexStart
         , overflow auto
         , whiteSpace noWrap
-        , property "zoom" <| String.fromFloat zoomLevel ++ "%"
         ]
         []
         children

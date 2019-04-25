@@ -8,8 +8,6 @@ import Lambda.Parse as P
 
 type ParseTransformError
     = IndexNotFound String
-    | TypeMissing String
-    | NotImplemented String
 
 
 {-| Transforms Parsed context to lambda expression context

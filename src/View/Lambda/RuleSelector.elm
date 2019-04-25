@@ -1,10 +1,8 @@
 module View.Lambda.RuleSelector exposing (..)
 
-import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
-import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Model exposing (Rule(..))
+import RuleTree.Model exposing (Rule(..))
 import View.Theme exposing (theme)
 
 

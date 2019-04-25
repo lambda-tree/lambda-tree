@@ -1,16 +1,18 @@
-module View.Lambda.Tree exposing (..)
+module RuleTree.View.Tree exposing (..)
 
 import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Events as E
-import Message exposing (Msg(..))
+import RuleTree.Message exposing (..)
+import RuleTree.Model exposing (RuleTree)
+import RuleTree.View.ProofCell exposing (proofCell)
+import RuleTree.ViewModel exposing (TreeViewData, getTreeViewData)
 import Utils.Tree exposing (Tree(..))
-import View.Lambda.ProofCell exposing (proofCell)
 import View.Lambda.RuleSelector exposing (ruleSelector)
 import View.Theme exposing (theme)
-import ViewModel exposing (TreeViewData, getTreeViewData)
 
 
+drawTree : RuleTree -> S.Html Msg
 drawTree tree =
     let
         drawTreeP : TreeViewData -> List Int -> S.Html Msg

@@ -1,16 +1,11 @@
 module Message exposing (..)
 
-import Model exposing (..)
+import Material
+import RuleTree.Message
 import Substitutor.Message
 
 
 type Msg
-    = ZoomIn
-    | ZoomOut
-    | TextChangedMsg (List Int) TextKind String
-    | HintMsg
-    | RemoveMsg (List Int)
-    | RuleSelectedMsg (List Int) Rule
-    | RuleClickedMsg Rule
+    = RuleTreeMsg RuleTree.Message.Msg
     | SubstitutionMsg Substitutor.Message.Msg
-    | DoSubstitutionMsg
+    | Mdc (Material.Msg Msg)

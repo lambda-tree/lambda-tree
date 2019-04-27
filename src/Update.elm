@@ -18,3 +18,9 @@ update msg model =
 
         Mdc msg_ ->
             Material.update Mdc msg_ model
+
+        ToggleChecking ->
+            ( { model | showErrors = not model.showErrors }, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )

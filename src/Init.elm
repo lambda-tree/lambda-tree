@@ -10,5 +10,6 @@ init : Model
 init =
     { ruleTree = RuleTree.Init.init
     , substitution = Substitutor.Init.init
+    , showErrors = True
     , mdc = Material.defaultModel
     }

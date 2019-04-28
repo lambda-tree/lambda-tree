@@ -28,7 +28,7 @@ lambdaExprInput alignRight value onInput =
         , boxShadow none
         , property "direction" <|
             if alignRight then
-                "ltr"
+                "rtl"
 
             else
                 "ltr"

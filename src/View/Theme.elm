@@ -8,6 +8,7 @@ theme :
     , text : Color
     , textOnDark : Color
     , secondary : Color
+    , secondaryOnDark : Color
     , line : Color
     , darkLine : Color
     , clear : Color
@@ -20,9 +21,10 @@ theme :
 theme =
     { background = rgb 240 240 240
     , text = rgba 10 10 10 0.85
-    , textOnDark = rgba 255 255 255 0.8
+    , textOnDark = rgba 255 255 255 0.95
     , secondary = rgb 250 240 230
-    , line = rgb 211 211 211
+    , secondaryOnDark = rgb 222 222 222
+    , line = rgba 195 195 195 0.4
     , darkLine = rgb 150 150 150
     , clear = rgba 0 0 0 0
     , inputBackground = rgba 255 255 255 0.5

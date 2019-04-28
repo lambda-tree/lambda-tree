@@ -8,8 +8,8 @@ import Substitutor.Model exposing (Model)
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        TyChanged s ->
+        TyChangedMsg s ->
             { model | ty = preprocess s }
 
-        VarChanged s ->
+        VarChangedMsg s ->
             { model | var = s }

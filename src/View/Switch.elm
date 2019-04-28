@@ -14,6 +14,7 @@ switch isChecked onChange =
         , display inlineBlock
         , width <| px 38
         , height <| px 22
+        , marginBottom <| rem 0
         ]
         []
         [ styled S.input

@@ -3,6 +3,7 @@ module Update exposing (..)
 import Message exposing (..)
 import Model exposing (..)
 import RuleTree.Update
+import Settings.Update
 import Substitutor.Update
 
 
@@ -15,8 +16,10 @@ update msg model =
         RuleTreeMsg m ->
             { model | ruleTree = RuleTree.Update.update m model.ruleTree }
 
-        ToggleChecking isOn ->
-            { model | showErrors = isOn }
+        SettingsMsg m ->
+            { model | settings = Settings.Update.update m model.settings }
 
-        _ ->
-            model
+
+
+--        _ ->
+--            model

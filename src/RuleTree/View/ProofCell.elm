@@ -31,7 +31,7 @@ proofCell content msgCreator =
                 , backgroundColor <| getBackgroundColor content.ctx
                 ]
                 []
-                [ lambdaExprInput True content.ctx.text (msgCreator CtxKind) ]
+                [ lambdaExprInput False content.ctx.text (msgCreator CtxKind) ]
             , lambdaExprText "⊢"
             , styled S.div
                 [ displayFlex

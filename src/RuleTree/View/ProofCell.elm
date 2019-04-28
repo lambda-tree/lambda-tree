@@ -28,25 +28,27 @@ proofCell content msgCreator =
             [ styled S.div
                 [ displayFlex
                 , width <| px 170
-                , backgroundColor <| getBackgroundColor content.ctx
                 ]
                 []
-                [ lambdaExprInput False content.ctx.text (msgCreator CtxKind) ]
+                [ lambdaExprInput
+                    [ View.Lambda.ExpressionInput.Value content.ctx.text
+                    , View.Lambda.ExpressionInput.OnInput (msgCreator CtxKind)
+                    , View.Lambda.ExpressionInput.Error content.ctx.error
+                    ]
+                ]
             , lambdaExprText "⊢"
             , styled S.div
                 [ displayFlex
                 , width <| px 340
-                , backgroundColor <| getBackgroundColor content.term
                 ]
                 []
-                [ lambdaExprInput False content.term.text (msgCreator TermKind) ]
+                [ lambdaExprInput [ View.Lambda.ExpressionInput.Value content.term.text, View.Lambda.ExpressionInput.OnInput (msgCreator TermKind), View.Lambda.ExpressionInput.Error content.term.error ] ]
             , lambdaExprText ":"
             , styled S.div
                 [ displayFlex
                 , width <| px 170
-                , backgroundColor <| getBackgroundColor content.ty
                 ]
                 []
-                [ lambdaExprInput False content.ty.text (msgCreator TyKind) ]
+                [ lambdaExprInput [ View.Lambda.ExpressionInput.Value content.ty.text, View.Lambda.ExpressionInput.OnInput (msgCreator TyKind), View.Lambda.ExpressionInput.Error content.ty.error ] ]
             ]
         ]

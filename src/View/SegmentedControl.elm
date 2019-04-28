@@ -25,7 +25,7 @@ segmentedControlButton options (SegmentedControlItem id msg { text, sup, image }
                 rgba 0 0 0 0
         , color <|
             if checked then
-                rgba 255 255 255 0.95
+                theme.textOnDark
 
             else
                 theme.secondaryOnDark

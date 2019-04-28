@@ -94,6 +94,7 @@ topBar model =
                     (SettingsMsg << TypeSystemChangedMsg)
                     { text = Just "System F", image = Nothing, sup = Nothing }
                 ]
+            , styled S.div [ width <| px 20 ] [] []
             , styled S.div [ flex <| int 1 ] [] []
             , checkSwitch model
             , styled S.div [ width <| px 20 ] [] []
@@ -117,26 +118,31 @@ ruleBar model =
             , padding2 (px 10) <| px 15
             ]
             []
-            [ styled S.span
+            ([ styled S.span
                 [ theme.font, color theme.textOnDark, fontSize <| rem 1.3 ]
                 []
                 [ S.text
                     "Rules"
                 ]
-            , styled S.div [ flex <| int 1 ] [] []
-            , styled S.div [ flex <| int 1 ] [] []
-            , styled S.div [ flex <| int 1 ] [] []
-            , combinedRulesSwitch model
-            ]
+             , styled S.div [ flex <| int 1 ] [] []
+             ]
+                ++ (if model.settings.typeSystem == HM then
+                        [ combinedRulesSwitch model ]
+
+                    else
+                        []
+                   )
+            )
         ]
 
 
 appBar children =
     styled S.div
         [ height <| px 48
-        , backgroundColor <| hex "#263238"
+        , backgroundColor <| theme.backgroundDark
         , displayFlex
         , justifyContent stretch
+        , overflow auto
         ]
         []
         children
@@ -182,9 +188,9 @@ ruleListContainer model =
         []
         [ S.text
             "Substitute free variable"
-        , lambdaExprInput False model.substitution.ty (Substitutor.Message.TyChangedMsg >> SubstitutionMsg)
+        , lambdaExprInput [ View.Lambda.ExpressionInput.Value model.substitution.ty, View.Lambda.ExpressionInput.OnInput (Substitutor.Message.TyChangedMsg >> SubstitutionMsg) ]
         , lambdaExprText "/"
-        , lambdaExprInput False model.substitution.var (Substitutor.Message.VarChangedMsg >> SubstitutionMsg)
+        , lambdaExprInput [ View.Lambda.ExpressionInput.Value model.substitution.var, View.Lambda.ExpressionInput.OnInput (Substitutor.Message.VarChangedMsg >> SubstitutionMsg) ]
         , styled S.button [ margin <| rem 0.5 ] [ E.onClick (DoSubstitutionMsg model.substitution |> RuleTreeMsg) ] [ S.text "Substitute" ]
         , ruleList <| (RuleClickedMsg >> RuleTreeMsg)
         ]

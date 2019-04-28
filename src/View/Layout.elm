@@ -1,23 +1,12 @@
 module View.Layout exposing (..)
 
 import Css exposing (..)
-import Css.Global
 import Dict
 import Html
 import Html.Attributes
 import Html.Styled as S exposing (Html, fromUnstyled, styled, toUnstyled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Material
-import Material.Button as Button
-import Material.Drawer.Permanent as Drawer
-import Material.Icon
-import Material.Options as Options exposing (for, when)
-import Material.Switch as Switch
-import Material.TabBar as TabBar
-import Material.Theme
-import Material.TopAppBar as TopAppBar
-import Material.Typography
 import Message exposing (Msg(..))
 import Model
 import RuleTree.Message exposing (Msg(..))
@@ -26,14 +15,15 @@ import Substitutor.Message
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
 import View.Lambda.RuleList exposing (ruleList)
+import View.Switch as Switch
 import View.Theme exposing (theme)
 
 
-tab : Message.TypeSystem -> TabBar.Tab Message.Msg
+tab : Message.TypeSystem -> Html Message.Msg
 tab typeSystem =
-    TabBar.tab
-        [ Options.onClick (SelectTypeSystemMsg typeSystem) ]
-        [ Html.text
+    S.div
+        []
+        [ S.text
             (case typeSystem of
                 Message.SimplyTyped ->
                     "λ->"
@@ -55,15 +45,16 @@ mainContent model =
         , alignItems <| stretch
         , justifyContent stretch
         , height <| pct 100
-        , minHeight <| pct 100
+        , width <| pct 100
+        , maxWidth <| pct 100
         ]
         []
         [ styled S.div
             [ displayFlex
             , flexDirection column
-            , flex <| int 8
-            , alignItems stretch
-            , justifyContent stretch
+            , flex <| int 1
+            , alignItems flexStart
+            , justifyContent flexStart
             , height <| pct 100
             , minHeight <| pct 100
             ]
@@ -90,42 +81,13 @@ mainContent model =
                         ]
                         []
                     , styled S.div [ flex <| int 1 ] [] []
-                    , S.div
-                        []
-                        [ let
-                            index =
-                                "tab-bar"
-
-                            onDark =
-                                Options.styled Html.div [ Material.Theme.textPrimaryOnDark ]
-                          in
-                          onDark
-                            [ TabBar.view Mdc
-                                index
-                                model.mdc
-                                [ TabBar.activeTab 0 ]
-                                [ tab Message.SimplyTyped
-                                , tab Message.HM
-                                , tab Message.SystemF
-                                ]
-                            ]
-                            |> fromUnstyled
-                        ]
                     , styled S.div [ flex <| int 1 ] [] []
-                    , checkSwitch model ToggleChecking |> fromUnstyled
-                    , Button.view Mdc
-                        "hint-button"
-                        model.mdc
-                        [ Button.ripple
-                        , Button.raised
-                        , Options.onClick (HintMsg |> RuleTreeMsg)
-                        ]
-                        [ S.text "Hint" |> toUnstyled ]
-                        |> fromUnstyled
+                    , checkSwitch model ToggleChecking
                     ]
                 ]
             , styled S.div
                 [ displayFlex
+                , flex <| int 1
                 , flexDirection column
                 , alignItems flexStart
                 , justifyContent flexStart
@@ -155,14 +117,6 @@ mainContent model =
                 --                , lambdaExprText "/"
                 --                , lambdaExprInput False model.substitution.var (Substitutor.Message.VarChanged >> SubstitutionMsg)
                 --                , styled S.button [ margin <| rem 0.5 ] [ E.onClick (DoSubstitutionMsg model.substitution |> RuleTreeMsg) ] [ S.text "Substitute" ]
-                , Button.view Mdc
-                    "my-button"
-                    model.mdc
-                    [ Button.ripple
-                    , Options.onClick (HintMsg |> RuleTreeMsg)
-                    ]
-                    [ S.text "Click me!" |> toUnstyled ]
-                    |> fromUnstyled
                 ]
 
             --            , ruleList <| (RuleClickedMsg >> RuleTreeMsg)
@@ -170,48 +124,14 @@ mainContent model =
         ]
 
 
-x : List (Html.Html msg) -> Html.Html msg
-x =
-    Options.styled Html.div
-        [ Material.Typography.subtitle1, Material.Theme.textSecondaryOnDark ]
-
-
 checkSwitch model onClick =
-    x
-        [ styled S.span [ marginRight <| px 10 ] [] [ S.text "Check" ] |> toUnstyled
-        , Switch.view Mdc
-            "check-switch"
-            model.mdc
-            [ Options.onClick onClick
-            , Switch.on |> when model.showErrors
-            ]
-            []
-        , styled S.span [ marginRight <| px 30 ] [] [] |> toUnstyled
+    styled S.div
+        [ displayFlex, alignItems center ]
+        []
+        [ styled S.span [ marginRight <| px 10, color theme.textOnDark, theme.cmFont ] [] [ S.text "Check" ]
+        , Switch.switch model.showErrors onClick
+        , styled S.span [ marginRight <| px 30 ] [] []
         ]
-
-
-top : Model.Model -> Html Message.Msg
-top model =
-    TopAppBar.view Mdc
-        "top-bar"
-        model.mdc
-        [ TopAppBar.dense
-        , Options.css "background-color" "#263238"
-        ]
-        [ TopAppBar.section
-            [ TopAppBar.alignStart
-            ]
-            [ TopAppBar.title [] [ styled S.img [ width auto, height <| px 25 ] [ A.src "/img/logo.svg" ] [] |> toUnstyled ]
-            ]
-        , TopAppBar.section
-            [ TopAppBar.alignEnd
-            ]
-            [ TopAppBar.actionItem [] "print"
-            , TopAppBar.actionItem [] "bookmark"
-            , checkSwitch model ToggleChecking
-            ]
-        ]
-        |> fromUnstyled
 
 
 
@@ -252,7 +172,8 @@ rightColumn children =
     styled S.div
         [ displayFlex
         , flexDirection column
-        , flex <| int 2
+        , width <| px 200
+        , minWidth <| px 200
         , alignItems stretch
         , justifyContent flexStart
         , overflow auto

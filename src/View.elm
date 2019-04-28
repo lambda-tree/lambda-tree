@@ -19,7 +19,7 @@ view model =
         []
         [ global
             [ Css.Global.html [ height <| pct 100, minHeight <| pct 100 ]
-            , body [ height <| pct 100, minHeight <| pct 100, backgroundColor theme.background, margin <| px 0 ]
+            , body [ height <| pct 100, minHeight <| pct 100, backgroundColor theme.background, margin <| px 0, overflowX hidden ]
             , selector "@font-face"
                 [ property "src" "url(/fonts/cmunrm.ttf)"
                 , fontStyle normal

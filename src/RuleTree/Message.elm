@@ -1,5 +1,6 @@
 module RuleTree.Message exposing (..)
 
+import Bootstrap.Dropdown as Dropdown
 import RuleTree.Model exposing (Rule, TextKind)
 import Substitutor.Model
 
@@ -12,3 +13,4 @@ type Msg
     | RuleSelectedMsg (List Int) Rule
     | RuleClickedMsg Rule
     | DoSubstitutionMsg Substitutor.Model.Model
+    | RuleDropdownMsg (List Int) Dropdown.State

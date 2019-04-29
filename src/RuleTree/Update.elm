@@ -1,5 +1,6 @@
 module RuleTree.Update exposing (..)
 
+import Bootstrap.Dropdown as Dropdown
 import Inferer.Inferer exposing (buildTree)
 import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx, substFtvTerm)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
@@ -10,7 +11,7 @@ import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (..)
 import Substitutor.Model
 import Substitutor.Utils exposing (parsedType, parsedVar)
-import Utils.Tree exposing (Tree(..))
+import Utils.Tree exposing (Tree(..), mapContentAtPath)
 
 
 update : Msg -> RuleTree -> RuleTree
@@ -37,9 +38,12 @@ update msg tree =
         SelectRuleMsg _ ->
             Debug.todo "Update: SelectRuleMsg"
 
+        RuleDropdownMsg path state ->
+            setDropdown path state tree
+
 
 doHint : RuleTree -> RuleTree
-doHint ((Node { ctx, term } _) as t1) =
+doHint ((Node { ctx, term, dropdown } _) as t1) =
     let
         maybeCtx =
             parseCtx ctx
@@ -67,6 +71,7 @@ doHint ((Node { ctx, term } _) as t1) =
                             , term = showTerm content.ctx content.term
                             , ty = showType justCtx content.ty
                             , rule = content.rule
+                            , dropdown = dropdown
                             }
                         )
                     )
@@ -159,6 +164,11 @@ doSubstitution sm tree =
 
         _ ->
             tree
+
+
+setDropdown : List Int -> Dropdown.State -> RuleTree -> RuleTree
+setDropdown path state =
+    mapContentAtPath path (\c -> { c | dropdown = state })
 
 
 setRule : List Int -> Rule -> RuleTree -> RuleTree

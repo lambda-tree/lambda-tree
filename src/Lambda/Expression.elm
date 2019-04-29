@@ -54,3 +54,9 @@ type Binding
     = NameBind
     | VarBind Ty
     | TyVarBind
+
+
+type TypeSystem
+    = SimplyTyped
+    | HM
+    | SystemF

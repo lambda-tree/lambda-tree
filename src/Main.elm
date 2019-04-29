@@ -1,11 +1,11 @@
 module Main exposing (..)
 
-import Bootstrap.CDN
 import Browser
 import Html.Styled exposing (toUnstyled)
 import Init
 import Message exposing (Msg(..))
 import Model exposing (Model)
+import Subscriptions
 import Update
 import View
 import View.GlobalCss
@@ -24,5 +24,5 @@ main =
                     , View.view model |> toUnstyled
                     ]
                 }
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = Subscriptions.subscriptions
         }

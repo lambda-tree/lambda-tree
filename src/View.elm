@@ -5,13 +5,13 @@ import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
+import Lambda.Expression exposing (TypeSystem(..))
 import Lambda.Parse exposing (symbols)
 import Message exposing (Msg(..))
 import Model
 import RuleTree.Message exposing (Msg(..))
 import RuleTree.View.Tree exposing (drawTree)
 import Settings.Message exposing (Msg(..))
-import Settings.Model exposing (TypeSystem(..))
 import Substitutor.Message
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
@@ -60,6 +60,7 @@ leftColumn model =
         ]
 
 
+topBar : Model.Model -> S.Html Message.Msg
 topBar model =
     appBar
         [ styled
@@ -79,15 +80,15 @@ topBar model =
             , styled S.div [ flex <| int 1 ] [] []
             , segmentedControl [ View.SegmentedControl.SelectedIdx model.settings.typeSystem ]
                 [ View.SegmentedControl.SegmentedControlItem
-                    Settings.Model.SimplyTyped
+                    Lambda.Expression.SimplyTyped
                     (SettingsMsg << TypeSystemChangedMsg)
                     { text = Just symbols.lambda, sup = Just symbols.arrow, image = Nothing }
                 , View.SegmentedControl.SegmentedControlItem
-                    Settings.Model.HM
+                    Lambda.Expression.HM
                     (SettingsMsg << TypeSystemChangedMsg)
                     { text = Just "H-M", image = Nothing, sup = Nothing }
                 , View.SegmentedControl.SegmentedControlItem
-                    Settings.Model.SystemF
+                    Lambda.Expression.SystemF
                     (SettingsMsg << TypeSystemChangedMsg)
                     { text = Just "System F", image = Nothing, sup = Nothing }
                 ]

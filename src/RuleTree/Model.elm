@@ -1,5 +1,6 @@
 module RuleTree.Model exposing (..)
 
+import Bootstrap.Dropdown as Dropdown
 import Utils.Tree exposing (Tree(..))
 
 
@@ -27,7 +28,7 @@ type TextKind
 
 
 type alias RuleTreeContent =
-    { ctx : String, term : String, ty : String, rule : Rule }
+    { ctx : String, term : String, ty : String, rule : Rule, dropdown : Dropdown.State }
 
 
 type alias RuleTree =
@@ -36,4 +37,4 @@ type alias RuleTree =
 
 emptyTree : RuleTree
 emptyTree =
-    Node { ctx = "", term = "", ty = "", rule = NoRule } []
+    Node { ctx = "", term = "", ty = "", rule = NoRule, dropdown = Dropdown.initialState } []

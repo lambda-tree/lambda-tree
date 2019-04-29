@@ -1,8 +1,6 @@
 module RuleTree.View.Tree exposing (..)
 
-import Bootstrap.Button as Button
 import Css exposing (..)
-import Html.Attributes as HtmlA
 import Html.Styled as S exposing (styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
@@ -12,7 +10,7 @@ import RuleTree.Model exposing (Rule(..), RuleTree)
 import RuleTree.View.ProofCell exposing (proofCell)
 import RuleTree.ViewModel exposing (TreeViewData, getTreeViewData)
 import Utils.Tree exposing (Tree(..))
-import View.Lambda.RuleSelector exposing (rulePlus, ruleSelector)
+import View.Lambda.RuleSelector exposing (newRuleDDButton, ruleDropDown, selectedRuleDDButton)
 import View.Theme exposing (theme)
 
 
@@ -48,13 +46,13 @@ drawTree tree =
                             styled S.div
                                 [ displayFlex, flexDirection column, alignItems center, justifyContent center, flex auto ]
                                 []
-                                [ rulePlus <| RuleSelectedMsg path TTAbs
+                                [ ruleDropDown newRuleDDButton path content.dropdown
                                 , styled S.div [ width <| px 1, minWidth <| px 1, backgroundColor <| theme.darkLine, height <| px 10 ] [] []
                                 ]
 
                           else
                             S.div [] []
-                        , --                           Draw children in div
+                        , -- Draw children in div
                           styled S.div
                             [ displayFlex
                             , alignItems flexEnd
@@ -68,8 +66,6 @@ drawTree tree =
                             [ displayFlex
                             , alignItems stretch
                             , justifyContent stretch
-
-                            --                            , backgroundColor <| rgba 0 0 255 0.2
                             ]
                             []
                             [ -- Draw hairline below between rules on left
@@ -88,8 +84,8 @@ drawTree tree =
                                 , alignItems stretch
                                 ]
                                 []
-                                [ -- hairline above rule
-                                  ruleLine path content.rule content.result
+                                [ -- hairline and rule selector above rule
+                                  ruleLine (content.rule /= NoRule) path content.rule content.result content.dropdown
                                 , proofCell content (TextChangedMsg path)
                                 , styled S.div [ height <| px 10 ] [] []
                                 , if List.isEmpty path then
@@ -118,30 +114,31 @@ drawTree tree =
     drawTreeP (getTreeViewData (Debug.log "tree" tree)) [] 1
 
 
-ruleLine path rule text =
+ruleLine showDrop path rule text dropdownState =
     styled S.div
         [ displayFlex, justifyContent stretch, alignItems center, height <| px 18, minHeight <| px 20 ]
         []
         [ hairLine
-        , styled S.span
-            [ displayFlex, backgroundColor theme.background, alignItems center ]
-            []
-            [ styled S.span [ width <| px 10, backgroundColor theme.background ] [] []
-            , resultBut (RemoveMsg path)
-            , styled S.span
-                [ width <| px 8, height <| pct 100 ]
+        , if showDrop then
+            styled S.span
+                [ displayFlex, backgroundColor theme.background, alignItems center ]
                 []
-                []
-            , Button.button
-                [ Button.small, Button.outlineDark, Button.onClick (RuleSelectedMsg path TIf), Button.attrs [ HtmlA.style "borderWidth" "0", HtmlA.style "outline" "none" ] ]
-                [ S.text (Debug.toString rule) |> S.toUnstyled ]
-                |> S.fromUnstyled
-            , styled
-                S.span
-                [ width <| px 10 ]
-                []
-                []
-            ]
+                [ styled S.span [ width <| px 10, backgroundColor theme.background ] [] []
+                , resultBut (RemoveMsg path)
+                , styled S.span
+                    [ width <| px 2, height <| pct 100 ]
+                    []
+                    []
+                , ruleDropDown (selectedRuleDDButton rule) path dropdownState
+                , styled
+                    S.span
+                    [ width <| px 10 ]
+                    []
+                    []
+                ]
+
+          else
+            S.span [] []
         , hairLine
         ]
 
@@ -152,8 +149,10 @@ hairLine =
 
 resultBut msg =
     styled S.button
-        [ backgroundColor <| rgb 230 55 86
-        , color <| rgb 234 230 220
+        [ --        backgroundColor <| rgb 230 55 86
+          --        , color <| rgb 234 230 220
+          backgroundColor <| theme.clear
+        , color <| rgb 230 55 86
         , padding <| px 2
         , borderRadius <| px 10
         , width <| px 18

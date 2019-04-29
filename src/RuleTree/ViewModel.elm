@@ -1,5 +1,6 @@
 module RuleTree.ViewModel exposing (..)
 
+import Bootstrap.Dropdown as Dropdown
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Rule exposing (ExprTree, RuleError(..), TyRule, tryRule)
@@ -23,6 +24,7 @@ type alias TreeViewData =
         , ty : TreeViewDataResult
         , rule : Rule
         , result : String
+        , dropdown : Dropdown.State
         }
 
 
@@ -91,6 +93,7 @@ getTreeViewData t =
             , ty = { text = origNode.ty, error = extractError exprNode.ty }
             , rule = origNode.rule
             , result = tryRule exprTree |> Result.map (\_ -> "OK") |> Result.Extra.merge
+            , dropdown = origNode.dropdown
             }
     in
     Utils.Tree.zipWithExtra zipper t (getExprTree t)

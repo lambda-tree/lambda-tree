@@ -1,5 +1,7 @@
 module Utils.Tree exposing (..)
 
+import List.Extra
+
 
 type Tree a
     = Node a (List (Tree a))
@@ -10,6 +12,17 @@ map f t =
     case t of
         Node x nodes ->
             Node (f x) (List.map (map f) nodes)
+
+
+indexedMap : (List Int -> a -> b) -> Tree a -> Tree b
+indexedMap =
+    let
+        indexedMapWithPath path f t =
+            case t of
+                Node x nodes ->
+                    Node (f path x) (List.indexedMap (\i -> indexedMapWithPath (path ++ [ i ]) f) nodes)
+    in
+    indexedMapWithPath []
 
 
 zipWith : (a -> b -> c) -> Tree a -> Tree b -> Tree c
@@ -39,3 +52,23 @@ listZipWith f l1 l2 =
 
         _ ->
             []
+
+
+mapContentAtPath : List Int -> (a -> a) -> Tree a -> Tree a
+mapContentAtPath path f (Node content children) =
+    case path of
+        [] ->
+            Node (f content) children
+
+        idx :: subPath ->
+            Node content (children |> List.Extra.updateAt idx (mapContentAtPath subPath f))
+
+
+foldr : (a -> b -> b) -> b -> Tree a -> b
+foldr f acc (Node content children) =
+    f content <| List.foldr (\t1 r -> foldr f r t1) acc children
+
+
+toList : Tree a -> List a
+toList =
+    foldr (::) []

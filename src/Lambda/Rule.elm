@@ -8,24 +8,24 @@ import Lambda.ParseTransform exposing (ParseTransformError)
 import List.Extra
 import Maybe exposing (..)
 import Result
-import RuleTree.Model exposing (Rule, RuleTree)
+import RuleTree.Model exposing (Rule)
 import Utils.Tree exposing (Tree(..))
 
 
 type TyRule
-    = TVar { bottom : TypeStatement, top : TypeStatement }
-    | TVarInst { bottom : TypeStatement, top : TypeStatement }
-    | TIf { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement, top3 : TypeStatement }
-    | TTrue { bottom : TypeStatement, top : TypeStatement }
-    | TFalse { bottom : TypeStatement, top : TypeStatement }
-    | TAbs { bottom : TypeStatement, top : TypeStatement }
-    | TApp { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
-    | TTAbs { bottom : TypeStatement, top : TypeStatement }
-    | TTApp { bottom : TypeStatement, top : TypeStatement }
-    | TLet { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
-    | TLetGen { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
-    | TGen { bottom : TypeStatement, top : TypeStatement }
-    | TInst { bottom : TypeStatement, top : TypeStatement }
+    = TyRuleTVar { bottom : TypeStatement, top : TypeStatement }
+    | TyRuleTVarInst { bottom : TypeStatement, top : TypeStatement }
+    | TyRuleTIf { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement, top3 : TypeStatement }
+    | TyRuleTTrue { bottom : TypeStatement, top : TypeStatement }
+    | TyRuleTFalse { bottom : TypeStatement, top : TypeStatement }
+    | TyRuleTAbs { bottom : TypeStatement, top : TypeStatement }
+    | TyRuleTApp { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
+    | TyRuleTTAbs { bottom : TypeStatement, top : TypeStatement }
+    | TyRuleTTApp { bottom : TypeStatement, top : TypeStatement }
+    | TyRuleTLet { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
+    | TyRuleTLetGen { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
+    | TyRuleTGen { bottom : TypeStatement, top : TypeStatement }
+    | TyRuleTInst { bottom : TypeStatement, top : TypeStatement }
 
 
 type alias TypeStatement =
@@ -54,7 +54,7 @@ type alias ExprTree =
 checkRule : TyRule -> Result String ()
 checkRule rule =
     case rule of
-        TVar { bottom, top } ->
+        TyRuleTVar { bottom, top } ->
             Ok ()
                 |> check ( "ctxSame", bottom.ctx == top.ctx )
                 |> check ( "termSame", bottom.term == top.term )
@@ -78,7 +78,7 @@ checkRule rule =
                             False
                     )
 
-        TVarInst { bottom, top } ->
+        TyRuleTVarInst { bottom, top } ->
             Ok ()
                 |> check ( "Contexts are not same", bottom.ctx == top.ctx )
                 |> check ( "Terms are not same", bottom.term == top.term )
@@ -100,7 +100,7 @@ checkRule rule =
                             Ok <| False
                     )
 
-        TIf { bottom, top1, top2, top3 } ->
+        TyRuleTIf { bottom, top1, top2, top3 } ->
             case bottom.term of
                 TmIf _ t1 t2 t3 ->
                     Ok ()
@@ -115,7 +115,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TTrue { bottom, top } ->
+        TyRuleTTrue { bottom, top } ->
             case bottom.term of
                 TmConst _ TmTrue ->
                     Ok ()
@@ -126,7 +126,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TFalse { bottom, top } ->
+        TyRuleTFalse { bottom, top } ->
             case bottom.term of
                 TmConst _ TmFalse ->
                     Ok ()
@@ -137,7 +137,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TAbs { bottom, top } ->
+        TyRuleTAbs { bottom, top } ->
             case ( bottom.term, bottom.ty ) of
                 ( TmAbs _ varName ty t, TyArr ty1 ty2 ) ->
                     Ok ()
@@ -155,7 +155,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TApp { bottom, top1, top2 } ->
+        TyRuleTApp { bottom, top1, top2 } ->
             case ( bottom.term, top1.ty ) of
                 ( TmApp _ t1 t2, TyArr ty1 ty2 ) ->
                     Ok ()
@@ -168,7 +168,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TTAbs { bottom, top } ->
+        TyRuleTTAbs { bottom, top } ->
             case ( bottom.term, bottom.ty ) of
                 ( TmTAbs _ tyVarName1 t, TyAll tyVarName2 ty ) ->
                     Ok ()
@@ -181,7 +181,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TTApp { bottom, top } ->
+        TyRuleTTApp { bottom, top } ->
             case bottom.term of
                 TmTApp _ t ty2 ->
                     case top.ty of
@@ -197,7 +197,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TLet { bottom, top1, top2 } ->
+        TyRuleTLet { bottom, top1, top2 } ->
             case bottom.term of
                 TmLet _ varName t1 t2 ->
                     Ok ()
@@ -210,7 +210,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TLetGen { bottom, top1, top2 } ->
+        TyRuleTLetGen { bottom, top1, top2 } ->
             case bottom.term of
                 TmLet _ varName t1 t2 ->
                     Ok ()
@@ -248,7 +248,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TGen { bottom, top } ->
+        TyRuleTGen { bottom, top } ->
             case bottom.ty of
                 TyAll varName _ ->
                     Ok ()
@@ -261,7 +261,7 @@ checkRule rule =
                 _ ->
                     Err "wrongRule"
 
-        TInst { bottom, top } ->
+        TyRuleTInst { bottom, top } ->
             Ok ()
                 |> check ( "ctxs are same", bottom.ctx == top.ctx )
                 |> check ( "terms are same", bottom.term == top.term )
@@ -351,7 +351,7 @@ tryRule t =
                             case children of
                                 [ Node (Result.Ok c1) _ ] ->
                                     checkRule
-                                        (TVar
+                                        (TyRuleTVar
                                             { bottom =
                                                 { ctx = r.ctx
                                                 , term = r.term
@@ -377,7 +377,7 @@ tryRule t =
                             case children of
                                 [ Node (Result.Ok c1) _ ] ->
                                     checkRule
-                                        (TVarInst
+                                        (TyRuleTVarInst
                                             { bottom =
                                                 { ctx = r.ctx
                                                 , term = r.term
@@ -401,7 +401,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _, Node (Result.Ok c3) _ ] ->
                             checkRule
-                                (TIf
+                                (TyRuleTIf
                                     { bottom =
                                         { ctx = r.ctx
                                         , term = r.term
@@ -432,7 +432,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
-                                (TTrue
+                                (TyRuleTTrue
                                     { bottom =
                                         { ctx = r.ctx
                                         , term = r.term
@@ -453,7 +453,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
-                                (TTrue
+                                (TyRuleTTrue
                                     { bottom =
                                         { ctx = r.ctx
                                         , term = r.term
@@ -474,7 +474,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
-                                (TAbs
+                                (TyRuleTAbs
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top =
                                         { ctx = c1.ctx
@@ -491,7 +491,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
-                                (TTAbs
+                                (TyRuleTTAbs
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top =
                                         { ctx = c1.ctx
@@ -508,7 +508,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
                             checkRule
-                                (TApp
+                                (TyRuleTApp
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top1 =
                                         { ctx = c1.ctx
@@ -530,7 +530,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
-                                (TTApp
+                                (TyRuleTTApp
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top =
                                         { ctx = c1.ctx
@@ -547,7 +547,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
                             checkRule
-                                (TLet
+                                (TyRuleTLet
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top1 =
                                         { ctx = c1.ctx
@@ -569,7 +569,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
                             checkRule
-                                (TLetGen
+                                (TyRuleTLetGen
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top1 =
                                         { ctx = c1.ctx
@@ -591,7 +591,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
-                                (TGen
+                                (TyRuleTGen
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top =
                                         { ctx = c1.ctx
@@ -608,7 +608,7 @@ tryRule t =
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
-                                (TInst
+                                (TyRuleTInst
                                     { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                     , top =
                                         { ctx = c1.ctx

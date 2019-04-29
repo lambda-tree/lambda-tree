@@ -32,7 +32,7 @@ checkRuleTest =
         [ test "TVar simple" <|
             \_ ->
                 checkRule
-                    (TVar
+                    (TyRuleTVar
                         { bottom =
                             { ctx = [ ( "x", VarBind <| TyConst TyBool ) ]
                             , term = TmVar I 0 1
@@ -49,7 +49,7 @@ checkRuleTest =
         , test "TVar with TyVar reference to context in binding" <|
             \_ ->
                 checkRule
-                    (TVar
+                    (TyRuleTVar
                         { bottom =
                             { ctx =
                                 [ ( "Z", TyVarBind )
@@ -76,7 +76,7 @@ checkRuleTest =
         , test "TIf" <|
             \_ ->
                 checkRule
-                    (TIf
+                    (TyRuleTIf
                         { bottom =
                             { ctx = [ ( "X", TyVarBind ), ( "y", VarBind <| TyConst TyBool ), ( "x", VarBind <| TyVar 1 2 ) ]
                             , term = TmIf I (TmVar I 1 3) (TmVar I 0 3) (TmApp I (TmAbs I "x" (Just <| TyConst TyBool) (TmVar I 1 4)) (TmConst I TmTrue))
@@ -103,7 +103,7 @@ checkRuleTest =
         , test "TTrue" <|
             \_ ->
                 checkRule
-                    (TTrue
+                    (TyRuleTTrue
                         { bottom =
                             { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
                             , term = TmConst I TmTrue
@@ -120,7 +120,7 @@ checkRuleTest =
         , test "TFalse" <|
             \_ ->
                 checkRule
-                    (TFalse
+                    (TyRuleTFalse
                         { bottom =
                             { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
                             , term = TmConst I TmFalse
@@ -137,7 +137,7 @@ checkRuleTest =
         , test "TAbs" <|
             \_ ->
                 checkRule
-                    (TAbs
+                    (TyRuleTAbs
                         { bottom =
                             { ctx = []
                             , term = TmAbs I "x" (Just <| TyConst TyBool) (TmVar I 0 0)
@@ -154,7 +154,7 @@ checkRuleTest =
         , test "TAbs 2" <|
             \_ ->
                 checkRule
-                    (TAbs
+                    (TyRuleTAbs
                         { bottom =
                             { ctx = [ ( "A", TyVarBind ) ]
                             , term = TmAbs I "x" (Just <| TyVar 0 1) (TmVar I 0 2)
@@ -171,7 +171,7 @@ checkRuleTest =
         , test "TApp" <|
             \_ ->
                 checkRule
-                    (TApp
+                    (TyRuleTApp
                         { bottom =
                             { ctx = []
                             , term = TmApp I (TmAbs I "x" (Just <| TyConst TyBool) (TmVar I 0 0)) (TmConst I TmTrue)
@@ -193,7 +193,7 @@ checkRuleTest =
         , test "TTAbs {TypeVar1, TypeVar2} |- ΛTypeVar3. λtermVar3: TypeVar3. termVar3" <|
             \_ ->
                 checkRule
-                    (TTAbs
+                    (TyRuleTTAbs
                         { bottom =
                             { ctx =
                                 [ ( "TypeVar2", TyVarBind )
@@ -220,7 +220,7 @@ checkRuleTest =
         , test "TTApp {TypeVar1, TypeVar2} |- (ΛTypeVar3. λtermVar3: TypeVar3. termVar3) [TypeVar1->TypeVar2]" <|
             \_ ->
                 checkRule
-                    (TTApp
+                    (TyRuleTTApp
                         { bottom =
                             { ctx =
                                 [ ( "TypeVar2", TyVarBind )
@@ -252,7 +252,7 @@ checkRuleTest =
         , test "TGen {} |- (λtermVar1. termVar1) : Forall TypeVar1. TypeVar1 -> TypeVar1" <|
             \_ ->
                 checkRule
-                    (TGen
+                    (TyRuleTGen
                         { bottom =
                             { ctx = []
                             , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)
@@ -269,7 +269,7 @@ checkRuleTest =
         , test "TInst {} |- (λtermVar1. termVar1) : Bool -> Bool" <|
             \_ ->
                 checkRule
-                    (TInst
+                    (TyRuleTInst
                         { bottom =
                             { ctx = []
                             , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)
@@ -286,7 +286,7 @@ checkRuleTest =
         , test "TInst {} |- (λtermVar1. termVar1) : A -> A" <|
             \_ ->
                 checkRule
-                    (TInst
+                    (TyRuleTInst
                         { bottom =
                             { ctx = []
                             , term = TmAbs I "termVar1" Nothing (TmVar I 0 1)

@@ -1,24 +1,8 @@
 module RuleTree.Model exposing (..)
 
 import Bootstrap.Dropdown as Dropdown
+import Lambda.Rule exposing (Rule(..))
 import Utils.Tree exposing (Tree(..))
-
-
-type Rule
-    = TTrue
-    | TFalse
-    | TVar
-    | TVarInst
-    | TAbs
-    | TApp
-    | TIf
-    | TTAbs
-    | TTApp
-    | TLet
-    | TLetGen
-    | TGen
-    | TInst
-    | NoRule
 
 
 type TextKind

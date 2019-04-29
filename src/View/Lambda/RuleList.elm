@@ -4,7 +4,7 @@ import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import RuleTree.Model exposing (Rule(..))
+import Lambda.Rule exposing (Rule(..))
 import View.Theme exposing (theme)
 
 

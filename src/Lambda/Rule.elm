@@ -8,8 +8,24 @@ import Lambda.ParseTransform exposing (ParseTransformError)
 import List.Extra
 import Maybe exposing (..)
 import Result
-import RuleTree.Model exposing (Rule)
 import Utils.Tree exposing (Tree(..))
+
+
+type Rule
+    = TTrue
+    | TFalse
+    | TVar
+    | TVarInst
+    | TAbs
+    | TApp
+    | TIf
+    | TTAbs
+    | TTApp
+    | TLet
+    | TLetGen
+    | TGen
+    | TInst
+    | NoRule
 
 
 type TyRule
@@ -345,7 +361,7 @@ tryRule t =
     case erasedErrorTree of
         Node (Result.Ok r) children ->
             case r.rule of
-                RuleTree.Model.TVar ->
+                TVar ->
                     case r.term of
                         TmVar _ _ _ ->
                             case children of
@@ -371,7 +387,7 @@ tryRule t =
                         _ ->
                             Err "wrongRule"
 
-                RuleTree.Model.TVarInst ->
+                TVarInst ->
                     case r.term of
                         TmVar _ _ _ ->
                             case children of
@@ -397,7 +413,7 @@ tryRule t =
                         _ ->
                             Err "wrongRule"
 
-                RuleTree.Model.TIf ->
+                TIf ->
                     case children of
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _, Node (Result.Ok c3) _ ] ->
                             checkRule
@@ -428,7 +444,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TTrue ->
+                TTrue ->
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
@@ -449,7 +465,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TFalse ->
+                TFalse ->
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
@@ -470,7 +486,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TAbs ->
+                TAbs ->
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
@@ -487,7 +503,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TTAbs ->
+                TTAbs ->
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
@@ -504,7 +520,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TApp ->
+                TApp ->
                     case children of
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
                             checkRule
@@ -526,7 +542,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TTApp ->
+                TTApp ->
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
@@ -543,7 +559,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TLet ->
+                TLet ->
                     case children of
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
                             checkRule
@@ -565,7 +581,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TLetGen ->
+                TLetGen ->
                     case children of
                         [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
                             checkRule
@@ -587,7 +603,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TGen ->
+                TGen ->
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule
@@ -604,7 +620,7 @@ tryRule t =
                         _ ->
                             Err "Top rule parse Error"
 
-                RuleTree.Model.TInst ->
+                TInst ->
                     case children of
                         [ Node (Result.Ok c1) _ ] ->
                             checkRule

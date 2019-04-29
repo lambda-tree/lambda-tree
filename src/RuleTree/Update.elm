@@ -5,6 +5,7 @@ import Inferer.Inferer exposing (buildTree)
 import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx, substFtvTerm)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
+import Lambda.Rule exposing (Rule(..))
 import Lambda.Show exposing (showCtx, showTerm, showType)
 import List.Extra
 import RuleTree.Message exposing (..)

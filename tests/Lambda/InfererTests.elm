@@ -3,7 +3,7 @@ module Lambda.InfererTests exposing (..)
 import Expect exposing (Expectation)
 import Inferer.Inferer exposing (buildTree)
 import Lambda.Expression exposing (..)
-import RuleTree.Model exposing (Rule(..))
+import Lambda.Rule exposing (Rule(..))
 import Test exposing (..)
 import Utils.Tree exposing (Tree(..))
 

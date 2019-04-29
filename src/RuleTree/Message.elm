@@ -1,7 +1,8 @@
 module RuleTree.Message exposing (..)
 
 import Bootstrap.Dropdown as Dropdown
-import RuleTree.Model exposing (Rule, TextKind)
+import Lambda.Rule exposing (Rule)
+import RuleTree.Model exposing (TextKind)
 import Substitutor.Model
 
 

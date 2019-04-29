@@ -4,7 +4,7 @@ import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (addbinding, getbinding)
 import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (..)
-import RuleTree.Model exposing (Rule(..))
+import Lambda.Rule exposing (Rule(..))
 import Set exposing (Set)
 import Utils.Tree exposing (Tree(..))
 

@@ -48,7 +48,7 @@ leftColumn model =
         [ topBar model
         , styled S.div
             [ displayFlex
-            , flex <| int 1
+            , flex <| auto
             , flexDirection column
             , alignItems flexStart
             , justifyContent flexStart
@@ -56,10 +56,7 @@ leftColumn model =
             , whiteSpace noWrap
             ]
             []
-            [ treeContainer
-                [ drawTree model.ruleTree |> S.map RuleTreeMsg
-                ]
-            ]
+            [ treeContainer model ]
         ]
 
 
@@ -196,16 +193,20 @@ ruleListContainer model =
         ]
 
 
-treeContainer children =
+treeContainer model =
     styled S.div
         [ displayFlex
         , flex auto
         , flexDirection column
         , justifyContent flexStart
         , alignItems center
+        , padding <| px 20
+        , marginLeft auto
+        , marginRight auto
         ]
         []
-        children
+        [ drawTree model.ruleTree |> S.map RuleTreeMsg
+        ]
 
 
 checkSwitch model =

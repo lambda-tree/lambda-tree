@@ -34,6 +34,9 @@ update msg tree =
         RuleClickedMsg _ ->
             Debug.todo "Update: RuleClickedMsg"
 
+        SelectRuleMsg _ ->
+            Debug.todo "Update: SelectRuleMsg"
+
 
 doHint : RuleTree -> RuleTree
 doHint ((Node { ctx, term } _) as t1) =

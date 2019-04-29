@@ -23,7 +23,7 @@ proofCell content msgCreator =
     S.div
         []
         [ styled S.div
-            [ displayFlex, flexShrink <| int 0, alignItems center, minWidth <| rem 45, margin <| rem 0.5 ]
+            [ displayFlex, flexShrink <| int 0, alignItems center, minWidth <| rem 45, margin <| rem 0.5, justifyContent center, minHeight <| px 32 ]
             []
             [ styled S.div
                 [ displayFlex

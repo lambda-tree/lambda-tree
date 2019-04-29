@@ -8,6 +8,7 @@ type Msg
     = TextChangedMsg (List Int) TextKind String
     | HintMsg
     | RemoveMsg (List Int)
+    | SelectRuleMsg (List Int)
     | RuleSelectedMsg (List Int) Rule
     | RuleClickedMsg Rule
     | DoSubstitutionMsg Substitutor.Model.Model

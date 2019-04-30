@@ -5,13 +5,13 @@ import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Lambda.Expression exposing (TypeSystem(..))
 import Lambda.Parse exposing (symbols)
 import Message exposing (Msg(..))
 import Model
 import RuleTree.Message exposing (Msg(..))
-import RuleTree.View.Tree exposing (drawTree)
+import RuleTree.View.Tree exposing (treeView)
 import Settings.Message exposing (Msg(..))
+import Settings.Model exposing (TypeSystem(..))
 import Substitutor.Message
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
@@ -80,15 +80,15 @@ topBar model =
             , styled S.div [ flex <| int 1 ] [] []
             , segmentedControl [ View.SegmentedControl.SelectedIdx model.settings.typeSystem ]
                 [ View.SegmentedControl.SegmentedControlItem
-                    Lambda.Expression.SimplyTyped
+                    SimplyTyped
                     (SettingsMsg << TypeSystemChangedMsg)
                     { text = Just symbols.lambda, sup = Just symbols.arrow, image = Nothing }
                 , View.SegmentedControl.SegmentedControlItem
-                    Lambda.Expression.HM
+                    HM
                     (SettingsMsg << TypeSystemChangedMsg)
-                    { text = Just "H-M", image = Nothing, sup = Nothing }
+                    { text = Just "H–M", image = Nothing, sup = Nothing }
                 , View.SegmentedControl.SegmentedControlItem
-                    Lambda.Expression.SystemF
+                    SystemF
                     (SettingsMsg << TypeSystemChangedMsg)
                     { text = Just "System F", image = Nothing, sup = Nothing }
                 ]
@@ -206,14 +206,14 @@ treeContainer model =
         , marginRight auto
         ]
         []
-        [ drawTree model.ruleTree |> S.map RuleTreeMsg
+        [ treeView model.settings model.ruleTree |> S.map RuleTreeMsg
         ]
 
 
 checkSwitch model =
     styled S.div
         [ displayFlex, alignItems center ]
-        []
+        [ A.title "Show errors in derivation tree" ]
         [ styled S.span [ marginRight <| px 10, color theme.secondaryOnDark, theme.font ] [] [ S.text "Check" ]
         , Switch.switch model.settings.checkErrors (SettingsMsg << Settings.Message.CheckErrorsChangedMsg)
         ]

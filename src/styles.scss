@@ -8,3 +8,16 @@
     -o-transform: translateY(2px);
     transform: translateY(2px);
 }
+
+.error-background {
+    background-color: rgba(255, 23, 45, 0.12);
+}
+
+.borderless-dropdown {
+    border-width: 0;
+    outline: none;
+}
+
+.small-caps {
+    font-variant: small-caps;
+}

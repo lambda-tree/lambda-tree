@@ -642,3 +642,97 @@ tryRule t =
 
         _ ->
             Err "Bottom expression error"
+
+
+rulesForTypeSystem : TypeSystem -> List Rule
+rulesForTypeSystem ts =
+    case ts of
+        SimplyTyped ->
+            [ TTrue
+            , TFalse
+            , TVar
+            , TAbs
+            , TApp
+            , TIf
+            , TLet
+            ]
+
+        HM NonDeterministic ->
+            [ TTrue
+            , TFalse
+            , TVar
+            , TAbs
+            , TApp
+            , TIf
+            , TLet
+            , TGen
+            , TInst
+            ]
+
+        HM SyntaxDirected ->
+            [ TTrue
+            , TFalse
+            , TVarInst
+            , TAbs
+            , TApp
+            , TIf
+            , TLetGen
+            ]
+
+        SystemF ->
+            [ TTrue
+            , TFalse
+            , TVar
+            , TAbs
+            , TApp
+            , TTAbs
+            , TTApp
+            , TIf
+            , TLet
+            ]
+
+
+isTerminalRule : Rule -> Bool
+isTerminalRule rule =
+    case rule of
+        TTrue ->
+            True
+
+        TFalse ->
+            True
+
+        TVar ->
+            True
+
+        TVarInst ->
+            True
+
+        TAbs ->
+            False
+
+        TApp ->
+            False
+
+        TIf ->
+            False
+
+        TTAbs ->
+            False
+
+        TTApp ->
+            False
+
+        TLet ->
+            False
+
+        TLetGen ->
+            False
+
+        TGen ->
+            False
+
+        TInst ->
+            False
+
+        NoRule ->
+            False

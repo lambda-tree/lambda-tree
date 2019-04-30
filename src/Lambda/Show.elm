@@ -4,6 +4,7 @@ import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (addbinding, emptycontext, index2name)
 import Lambda.Expression exposing (..)
 import Lambda.Parse exposing (symbols)
+import Lambda.Rule exposing (Rule(..))
 import List.Extra
 
 
@@ -303,3 +304,49 @@ showContextObject ctx ( varName, binding ) =
                     ": " ++ showType ctx ty
     in
     varName ++ showBinding binding
+
+
+showRule : Rule -> String
+showRule rule =
+    case rule of
+        TTrue ->
+            "T–True"
+
+        TFalse ->
+            "T–False"
+
+        TVar ->
+            "T–Var"
+
+        TVarInst ->
+            "T–Var'"
+
+        TAbs ->
+            "T–Abs"
+
+        TApp ->
+            "T–App"
+
+        TIf ->
+            "T–If"
+
+        TTAbs ->
+            "T–TAbs"
+
+        TTApp ->
+            "T–TApp"
+
+        TLet ->
+            "T–Let"
+
+        TLetGen ->
+            "T–Let'"
+
+        TGen ->
+            "T–Gen"
+
+        TInst ->
+            "T–Inst"
+
+        NoRule ->
+            "-"

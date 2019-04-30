@@ -1,7 +1,6 @@
 module Settings.Init exposing (..)
 
-import Lambda.Expression exposing (TypeSystem(..))
-import Settings.Model exposing (Model)
+import Settings.Model exposing (Model, TypeSystem(..))
 
 
 init : Model

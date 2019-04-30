@@ -1,6 +1,6 @@
 module Settings.Message exposing (..)
 
-import Lambda.Expression exposing (TypeSystem)
+import Settings.Model exposing (TypeSystem)
 
 
 type Msg

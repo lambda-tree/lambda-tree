@@ -56,7 +56,12 @@ type Binding
     | TyVarBind
 
 
+type HMFlavor
+    = SyntaxDirected
+    | NonDeterministic
+
+
 type TypeSystem
     = SimplyTyped
-    | HM
+    | HM HMFlavor
     | SystemF

@@ -28,7 +28,7 @@ segmentedControlButton options (SegmentedControlItem id msg { text, sup, image }
                 theme.textOnDark
 
             else
-                theme.secondaryOnDark
+                theme.textOnDark
         , padding2 (px 2) <| px 10
         , paddingBottom <|
             if Maybe.Extra.isJust sup then

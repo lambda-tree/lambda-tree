@@ -15,6 +15,12 @@ style =
             , theme.cmFont
             ]
         , selector "@font-face"
+            [ property "src" "url(/fonts/cmunbx.ttf)"
+            , fontStyle normal
+            , fontWeight bold
+            , theme.cmFont
+            ]
+        , selector "@font-face"
             [ property "src" "url(/fonts/cmunti.ttf)"
             , fontStyle italic
             , theme.cmFont

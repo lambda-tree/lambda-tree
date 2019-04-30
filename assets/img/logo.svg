@@ -1,14 +1,13 @@
-
 <svg width="91px" height="36px" viewBox="0 0 89 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 43.1 (39012) - http://www.bohemiancoding.com/sketch -->
     <desc>Created with Sketch.</desc>
     <defs></defs>
     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="Artboard" transform="translate(-7.000000, -12.000000)">
-            <text id="λree" font-family="CMUSerif-Roman, CMU Serif" font-size="50" font-weight="500" fill="#DDDDDD">
+        <g id="Artboard" transform="translate(-7.000000, -12.000000)" fill="#F7F7F7">
+            <text id="λree" font-family="CMUSerif-Roman, CMU Serif" font-size="50" font-weight="500">
                 <tspan x="9" y="47">λree</tspan>
             </text>
-            <path d="M8.91162143,22.5 C12.4084763,22.5 29.4952294,22.5 31.4218129,22.5 C32.6058652,22.5 33.1592961,22.1025905 33.6214248,21.6818901 C34.0835536,21.2611897 34.2569721,20.007775 32.8271625,20.007775 C31.3973529,20.007775 12.3757957,20.007775 10.6706789,20.007775 C10.1044996,20.007775 8.45966143,19.8696838 7.75224577,20.7574368 C7.07127982,21.6119975 7.33615125,22.5 8.91162143,22.5 Z" id="Line" stroke-opacity="0.85" stroke="#0A0A0A" stroke-width="0.8" fill="#FFFFFF" stroke-linecap="square"></path>
+            <path d="M8.91162143,22.5 C12.4084763,22.5 29.4952294,22.5 31.4218129,22.5 C32.6058652,22.5 33.1592961,22.1025905 33.6214248,21.6818901 C34.0835536,21.2611897 34.2569721,20.007775 32.8271625,20.007775 C31.3973529,20.007775 12.3757957,20.007775 10.6706789,20.007775 C10.1044996,20.007775 8.45966143,19.8696838 7.75224577,20.7574368 C7.07127982,21.6119975 7.33615125,22.5 8.91162143,22.5 Z" id="Line" stroke="#263238" stroke-width="0.8" stroke-linecap="square"></path>
         </g>
     </g>
 </svg>

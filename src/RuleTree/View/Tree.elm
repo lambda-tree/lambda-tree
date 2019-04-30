@@ -4,123 +4,112 @@ import Css exposing (..)
 import Html.Styled as S exposing (styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Lambda.Rule exposing (Rule(..))
+import Lambda.Rule exposing (Rule(..), isTerminalRule, rulesForTypeSystem)
 import List.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (RuleTree)
 import RuleTree.View.ProofCell exposing (proofCell)
+import RuleTree.View.RuleDropdown exposing (newRuleDDButton, ruleDropdown, selectedRuleDDButton)
 import RuleTree.ViewModel exposing (TreeViewData, getTreeViewData)
+import Settings.Model
+import Settings.Utils exposing (getTypeSystem)
 import Utils.Tree exposing (Tree(..))
-import View.Lambda.RuleSelector exposing (newRuleDDButton, ruleDropDown, selectedRuleDDButton)
 import View.Theme exposing (theme)
 
 
-sp =
-    styled S.div
-        [ flex auto
-        , minWidth <| rem 1.5
-        ]
-        []
-        []
-
-
-hairlineSp =
-    styled S.div
-        [ displayFlex, flexDirection column, alignItems stretch, justifyContent stretch, flex auto ]
-        []
-        [ sp
-        , styled S.div [ height <| px 1, minHeight <| px 1, backgroundColor <| theme.darkLine ] [] []
-        ]
-
-
-drawTree : RuleTree -> S.Html Msg
-drawTree tree =
+treeView : Settings.Model.Model -> RuleTree -> S.Html Msg
+treeView settings tree =
     let
-        drawTreeP : TreeViewData -> List Int -> Int -> S.Html Msg
-        drawTreeP t path childCount =
-            case t of
-                Node content children ->
+        typeSystem =
+            getTypeSystem settings
+
+        rules =
+            rulesForTypeSystem typeSystem
+
+        drawTreeP : TreeViewData -> List Int -> Int -> Rule -> S.Html Msg
+        drawTreeP (Node content children) path childCount rule =
+            styled S.div
+                [ displayFlex, flexDirection column, alignItems stretch ]
+                []
+                [ -- Draw rule adding button
+                  if List.length children == 0 && (not << isTerminalRule) content.rule && (not << isTerminalRule) rule then
                     styled S.div
-                        [ displayFlex, flexDirection column, alignItems stretch ]
+                        [ displayFlex, flexDirection column, alignItems center, justifyContent center, flex auto ]
                         []
-                        [ if List.length children == 0 then
-                            styled S.div
-                                [ displayFlex, flexDirection column, alignItems center, justifyContent center, flex auto ]
-                                []
-                                [ ruleDropDown newRuleDDButton path content.dropdown
-                                , styled S.div [ width <| px 1, minWidth <| px 1, backgroundColor <| theme.darkLine, height <| px 10 ] [] []
-                                ]
+                        [ ruleDropdown content.dropdown { button = newRuleDDButton, path = path, rules = rules }
+                        , styled S.div [ width <| px 1, minWidth <| px 1, backgroundColor <| theme.darkLine, height <| px 10 ] [] []
+                        ]
+
+                  else
+                    S.div [] []
+                , -- Draw children in div
+                  styled S.div
+                    [ displayFlex
+                    , alignItems flexEnd
+                    , marginBottom <| px -11
+                    ]
+                    []
+                    (children
+                        |> List.indexedMap (\i t1 -> drawTreeP t1 (path ++ [ i ]) (List.length children) content.rule)
+                    )
+                , styled S.div
+                    [ displayFlex
+                    , alignItems stretch
+                    , justifyContent stretch
+                    ]
+                    []
+                    [ -- Draw hairline below between rules on left
+                      case List.Extra.last path of
+                        Just 0 ->
+                            ruleFiller
+
+                        Nothing ->
+                            ruleFiller
+
+                        _ ->
+                            hairlineRuleFiller
+                    , styled S.div
+                        [ displayFlex
+                        , flexDirection column
+                        , alignItems stretch
+                        ]
+                        []
+                        [ -- hairline and rule selector above rule
+                          ruleLine content.dropdown { showDropdown = content.rule /= NoRule, path = path, selectedRule = content.rule, rules = rules }
+                        , proofCell content (TextChangedMsg path)
+                        , styled S.div [ height <| px 10 ] [] []
+                        , if List.isEmpty path then
+                            S.div [] []
 
                           else
-                            S.div [] []
-                        , -- Draw children in div
-                          styled S.div
-                            [ displayFlex
-                            , alignItems flexEnd
-                            , marginBottom <| px -11
-                            ]
-                            []
-                            (children
-                                |> List.indexedMap (\i t1 -> drawTreeP t1 (path ++ [ i ]) (List.length children))
-                            )
-                        , styled S.div
-                            [ displayFlex
-                            , alignItems stretch
-                            , justifyContent stretch
-                            ]
-                            []
-                            [ -- Draw hairline below between rules on left
-                              case List.Extra.last path of
-                                Just 0 ->
-                                    sp
-
-                                Nothing ->
-                                    sp
-
-                                _ ->
-                                    hairlineSp
-                            , styled S.div
-                                [ displayFlex
-                                , flexDirection column
-                                , alignItems stretch
-                                ]
-                                []
-                                [ -- hairline and rule selector above rule
-                                  ruleLine (content.rule /= NoRule) path content.rule content.result content.dropdown
-                                , proofCell content (TextChangedMsg path)
-                                , styled S.div [ height <| px 10 ] [] []
-                                , if List.isEmpty path then
-                                    S.div [] []
-
-                                  else
-                                    hairLine
-                                ]
-
-                            -- Draw hairline below between rules on right
-                            , case List.Extra.last path of
-                                Just x ->
-                                    if x == childCount - 1 then
-                                        sp
-
-                                    else
-                                        hairlineSp
-
-                                _ ->
-                                    sp
-                            ]
-
-                        -- Cells and hairline
+                            hairLine
                         ]
+
+                    -- Draw hairline below between rules on right
+                    , case List.Extra.last path of
+                        Just x ->
+                            if x == childCount - 1 then
+                                ruleFiller
+
+                            else
+                                hairlineRuleFiller
+
+                        _ ->
+                            ruleFiller
+                    ]
+
+                -- Cells and hairline
+                ]
     in
-    drawTreeP (getTreeViewData (Debug.log "tree" tree)) [] 1
+    drawTreeP (getTreeViewData (Debug.log "tree" tree)) [] 1 NoRule
 
 
-ruleLine showDrop path rule text dropdownState =
+ruleLine dropdownState { showDropdown, path, selectedRule, rules } =
     styled S.div
         [ displayFlex, justifyContent stretch, alignItems center, height <| px 18, minHeight <| px 20 ]
         []
         [ hairLine
-        , if showDrop then
+        , if showDropdown then
             styled S.span
                 [ displayFlex, backgroundColor theme.background, alignItems center ]
                 []
@@ -130,7 +119,7 @@ ruleLine showDrop path rule text dropdownState =
                     [ width <| px 2, height <| pct 100 ]
                     []
                     []
-                , ruleDropDown (selectedRuleDDButton rule) path dropdownState
+                , ruleDropdown dropdownState { button = selectedRuleDDButton selectedRule, path = path, rules = rules }
                 , styled
                     S.span
                     [ width <| px 10 ]
@@ -174,3 +163,21 @@ resultBut msg =
         ]
         [ E.onClick msg ]
         [ S.i [ A.class "fas fa-exclamation" ] [] ]
+
+
+ruleFiller =
+    styled S.div
+        [ flex auto
+        , minWidth <| rem 1.5
+        ]
+        []
+        []
+
+
+hairlineRuleFiller =
+    styled S.div
+        [ displayFlex, flexDirection column, alignItems stretch, justifyContent stretch, flex auto ]
+        []
+        [ ruleFiller
+        , styled S.div [ height <| px 1, minHeight <| px 1, backgroundColor <| theme.darkLine ] [] []
+        ]

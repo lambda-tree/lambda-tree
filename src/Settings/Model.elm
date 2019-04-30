@@ -1,10 +1,14 @@
 module Settings.Model exposing (..)
 
-import Lambda.Expression
+
+type TypeSystem
+    = SimplyTyped
+    | HM
+    | SystemF
 
 
 type alias Model =
     { checkErrors : Bool
-    , typeSystem : Lambda.Expression.TypeSystem
+    , typeSystem : TypeSystem
     , useCombinedRules : Bool
     }

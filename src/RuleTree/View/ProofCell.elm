@@ -4,7 +4,7 @@ import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
 import Lambda.ParseTransform exposing (ParseTransformError(..))
-import Lambda.Rule exposing (RuleError(..))
+import Lambda.Rule exposing (ExprError(..))
 import Maybe.Extra
 import RuleTree.Model exposing (TextKind(..))
 import RuleTree.ViewModel exposing (TreeViewDataResult)
@@ -12,7 +12,7 @@ import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
 
 
-showRuleError : RuleError -> String
+showRuleError : ExprError -> String
 showRuleError ruleError =
     case ruleError of
         ParseError { col } ->
@@ -25,7 +25,7 @@ showRuleError ruleError =
             "Error in context"
 
 
-getTitle : Maybe RuleError -> List (S.Attribute msg)
+getTitle : Maybe ExprError -> List (S.Attribute msg)
 getTitle =
     Maybe.map showRuleError
         >> Maybe.map A.title

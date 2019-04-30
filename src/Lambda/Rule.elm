@@ -3,11 +3,13 @@ module Lambda.Rule exposing (..)
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (..)
 import Lambda.Expression exposing (..)
-import Lambda.ExpressionUtils exposing (areHMTypesEquivalent, degeneralizeTypeTop, equalTypes, gen, generalizeTypeTop, isSpecializedType, typeSubstTop)
+import Lambda.ExpressionUtils exposing (areHMTypesEquivalent, degeneralizeTermTop, degeneralizeTypeTop, equalTypes, ftvCtx, ftvTy, gen, generalizeTypeTop, isSpecializedType, typeSubstTop)
 import Lambda.ParseTransform exposing (ParseTransformError)
+import Lambda.RuleError
 import List.Extra
 import Maybe exposing (..)
 import Result
+import Set
 import Utils.Tree exposing (Tree(..))
 
 
@@ -52,7 +54,7 @@ type alias ContainmentStatement =
     { ctx : Context, variable : Term }
 
 
-type RuleError
+type ExprError
     = ParseError { row : Int, col : Int }
     | ParseTransformError ParseTransformError
     | PrerequisiteDataError
@@ -60,9 +62,9 @@ type RuleError
 
 type alias ExprTree =
     Tree
-        { ctx : Result RuleError Lambda.Context.Context
-        , term : Result RuleError Lambda.Expression.Term
-        , ty : Result RuleError Lambda.Expression.Ty
+        { ctx : Result ExprError Lambda.Context.Context
+        , term : Result ExprError Lambda.Expression.Term
+        , ty : Result ExprError Lambda.Expression.Ty
         , rule : Rule
         }
 
@@ -71,56 +73,66 @@ checkRule : TyRule -> Result String ()
 checkRule rule =
     case rule of
         TyRuleTVar { bottom, top } ->
-            Ok ()
-                |> check ( "ctxSame", bottom.ctx == top.ctx )
-                |> check ( "termSame", bottom.term == top.term )
-                |> check ( "tySame", bottom.ty == top.ty )
-                |> check
-                    ( "types of vars are same"
-                    , case bottom.term of
-                        TmVar _ x _ ->
-                            case getbinding top.ctx x of
-                                Just (VarBind ty1) ->
-                                    equalTypes
-                                        (List.drop (x + 1) top.ctx)
-                                        ty1
-                                        bottom.ctx
-                                        bottom.ty
+            case bottom.term of
+                TmVar _ _ _ ->
+                    Ok ()
+                        |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
+                        |> check ( Lambda.RuleError.termSame, bottom.term == top.term )
+                        |> check ( Lambda.RuleError.tySame, bottom.ty == top.ty )
+                        |> check
+                            ( Lambda.RuleError.varTyCtx
+                            , case bottom.term of
+                                TmVar _ x _ ->
+                                    case getbinding top.ctx x of
+                                        Just (VarBind ty1) ->
+                                            equalTypes
+                                                (List.drop (x + 1) top.ctx)
+                                                ty1
+                                                bottom.ctx
+                                                bottom.ty
+
+                                        _ ->
+                                            False
 
                                 _ ->
                                     False
+                            )
 
-                        _ ->
-                            False
-                    )
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTVarInst { bottom, top } ->
-            Ok ()
-                |> check ( "Contexts are not same", bottom.ctx == top.ctx )
-                |> check ( "Terms are not same", bottom.term == top.term )
-                |> check ( "Types are not same", bottom.ty == top.ty )
-                |> checkWithDetails
-                    ( "Type of var is incorrectly specialized"
-                    , case bottom.term of
-                        TmVar _ x _ ->
-                            case getbinding top.ctx x of
-                                Just (VarBind ty1) ->
-                                    isSpecializedType top.ctx
-                                        ty1
-                                        bottom.ty
+            case bottom.term of
+                TmVar _ _ _ ->
+                    Ok ()
+                        |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
+                        |> check ( Lambda.RuleError.termSame, bottom.term == top.term )
+                        |> check ( Lambda.RuleError.tySame, bottom.ty == top.ty )
+                        |> checkWithDetails
+                            ( Lambda.RuleError.varSpec
+                            , case bottom.term of
+                                TmVar _ x _ ->
+                                    case getbinding top.ctx x of
+                                        Just (VarBind ty1) ->
+                                            isSpecializedType top.ctx
+                                                ty1
+                                                bottom.ty
+
+                                        _ ->
+                                            Err Lambda.RuleError.varNotInCtx
 
                                 _ ->
-                                    Err "Variable is not bound in context"
+                                    Ok <| False
+                            )
 
-                        _ ->
-                            Ok <| False
-                    )
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTIf { bottom, top1, top2, top3 } ->
             case bottom.term of
                 TmIf _ t1 t2 t3 ->
                     Ok ()
-                        |> check ( "Contexts are not same", List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx, top3.ctx ] )
+                        |> check ( Lambda.RuleError.ctxSame, List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx, top3.ctx ] )
                         |> check ( "'If' part of term is not same", top1.term == t1 )
                         |> check ( "'If' part of term has not type of Bool", equalTypes top1.ctx top1.ty bottom.ctx (TyConst TyBool) )
                         |> check ( "'Then' part of term is not same", top2.term == t2 )
@@ -129,73 +141,93 @@ checkRule rule =
                         |> check ( "Type of 'else' part is not same", equalTypes top3.ctx top3.ty bottom.ctx bottom.ty )
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTTrue { bottom, top } ->
             case bottom.term of
                 TmConst _ TmTrue ->
                     Ok ()
-                        |> check ( "ctxSame", bottom.ctx == top.ctx )
-                        |> check ( "termSame", top.term == bottom.term )
-                        |> check ( "typeIsBool", equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
+                        |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
+                        |> check ( Lambda.RuleError.termSame, top.term == bottom.term )
+                        |> check ( Lambda.RuleError.tyBool, equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTFalse { bottom, top } ->
             case bottom.term of
                 TmConst _ TmFalse ->
                     Ok ()
-                        |> check ( "ctxSame", bottom.ctx == top.ctx )
-                        |> check ( "termSame", top.term == bottom.term )
-                        |> check ( "typeIsBool", equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
+                        |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
+                        |> check ( Lambda.RuleError.termSame, top.term == bottom.term )
+                        |> check ( Lambda.RuleError.tyBool, equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTAbs { bottom, top } ->
-            case ( bottom.term, bottom.ty ) of
-                ( TmAbs _ varName ty t, TyArr ty1 ty2 ) ->
-                    Ok ()
-                        |> check ( "ctxSame", popbinding top.ctx == bottom.ctx )
-                        |> check ( "varTypeInCtx", top.ctx == addbinding bottom.ctx varName (VarBind ty1) )
-                        |> check ( "termSame", top.term == t )
-                        |> check ( "returnTypeRightSameAsTop", equalTypes top.ctx top.ty bottom.ctx ty2 )
-                        |> check
-                            ( "returnTypeLeftSameAsArg"
-                            , ty
-                                |> Maybe.map (\justTy -> equalTypes bottom.ctx justTy bottom.ctx ty1)
-                                |> Maybe.withDefault True
-                            )
+            case bottom.term of
+                TmAbs _ varName ty t ->
+                    case bottom.ty of
+                        TyArr ty1 ty2 ->
+                            Ok ()
+                                |> check ( "Top context doesn't contain whole bottom context", popbinding top.ctx == bottom.ctx || top.ctx == bottom.ctx )
+                                |> check ( "Variable is not added to context with correct type", top.ctx == addbinding bottom.ctx varName (VarBind ty1) )
+                                |> check ( "Top expression is not same as the body of the abstraction", top.term == t )
+                                |> check ( "Return type of the abstraction is not same as type of the top expression", equalTypes top.ctx top.ty bottom.ctx ty2 )
+                                |> check
+                                    ( "Abstraction argument type is not same in bottom term & type"
+                                      -- TODO: differentiate between type systems
+                                    , ty
+                                        |> Maybe.map (\justTy -> equalTypes bottom.ctx justTy bottom.ctx ty1)
+                                        |> Maybe.withDefault True
+                                    )
+
+                        _ ->
+                            Err "Type of abstraction is not in form σ → τ"
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTApp { bottom, top1, top2 } ->
-            case ( bottom.term, top1.ty ) of
-                ( TmApp _ t1 t2, TyArr ty1 ty2 ) ->
-                    Ok ()
-                        |> check ( "allCtxSame", List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx ] )
-                        |> check ( "leftTermSame", top1.term == t1 )
-                        |> check ( "rightTermSame", top2.term == t2 )
-                        |> check ( "leftArrowTypeSameAsArgType", equalTypes top1.ctx ty1 top2.ctx top2.ty )
-                        |> check ( "rightArrowTypeSameAsAppResultType", equalTypes top1.ctx ty2 bottom.ctx bottom.ty )
+            case bottom.term of
+                TmApp _ t1 t2 ->
+                    case top1.ty of
+                        TyArr ty1 ty2 ->
+                            Ok ()
+                                |> check ( Lambda.RuleError.ctxSame, List.all ((==) bottom.ctx) [ top1.ctx, top2.ctx ] )
+                                |> check ( "Abstraction part of term is not same", top1.term == t1 )
+                                |> check ( "Argument part of term is not same", top2.term == t2 )
+                                |> check ( "Abstraction argument type in top left premise is not same as type of the argument in top right premise", equalTypes top1.ctx ty1 top2.ctx top2.ty )
+                                |> check ( "Abstraction return type in top left premise is not same as type of application", equalTypes top1.ctx ty2 bottom.ctx bottom.ty )
+
+                        _ ->
+                            Err "Type of abstraction is not in form σ → τ"
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTTAbs { bottom, top } ->
-            case ( bottom.term, bottom.ty ) of
-                ( TmTAbs _ tyVarName1 t, TyAll tyVarName2 ty ) ->
-                    Ok ()
-                        |> check ( "typeVariablesSame", tyVarName1 == tyVarName2 )
-                        |> check ( "isAddedToContext", addbinding bottom.ctx tyVarName1 TyVarBind == top.ctx )
-                        |> check ( "isFree", not <| isnamebound bottom.ctx tyVarName1 )
-                        |> check ( "termsSame", top.term == t )
-                        |> check ( "typesSame", ty == top.ty )
+            case bottom.term of
+                TmTAbs _ tyVarName1 t ->
+                    case bottom.ty of
+                        TyAll tyVarName2 ty ->
+                            Ok ()
+                                |> check ( "Type variables in term and type are not same", tyVarName1 == tyVarName2 )
+                                |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
+                                -- TODO: Check for free variables
+                                |> check
+                                    ( "Type abstraction variable is in free variables of context"
+                                    , not <| Set.member tyVarName1 (Set.union (ftvTy bottom.ty) (ftvCtx bottom.ctx))
+                                    )
+                                |> check ( "Type abstraction body part of term is not same", degeneralizeTermTop bottom.ctx bottom.term == top.term )
+                                |> check ( "The quantified part of type is not same", degeneralizeTypeTop bottom.ctx bottom.ty == top.ty )
+
+                        _ ->
+                            Err "Type of type abstraction is not in form ∀.ɑ σ"
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTTApp { bottom, top } ->
             case bottom.term of
@@ -203,36 +235,36 @@ checkRule rule =
                     case top.ty of
                         TyAll _ ty1 ->
                             Ok ()
-                                |> check ( "ctxSame", bottom.ctx == top.ctx )
-                                |> check ( "termSame", top.term == t )
-                                |> check ( "typeSubstitutionCorrect", bottom.ty == typeSubstTop ty2 ty1 )
+                                |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
+                                |> check ( "The abstraction part of the term is not the same", top.term == t )
+                                |> check ( "Type is not substituted correctly for the type variable", bottom.ty == typeSubstTop ty2 ty1 )
 
                         _ ->
-                            Err "topTypeNotForAll"
+                            Err "Type of abstraction part is not universally quantified with type variable"
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTLet { bottom, top1, top2 } ->
             case bottom.term of
                 TmLet _ varName t1 t2 ->
                     Ok ()
-                        |> check ( "bottom & top1 ctxs are same", bottom.ctx == top1.ctx )
-                        |> check ( "variable is added to ctx with correct type binding", top2.ctx == addbinding bottom.ctx varName (VarBind top1.ty) )
-                        |> check ( "in expr terms are same", t2 == top2.term )
-                        |> check ( "in expr types are same", bottom.ty == top2.ty )
-                        |> check ( "bound terms are same", t1 == top1.term )
+                        |> check ( "Contexts of binding part are not same", bottom.ctx == top1.ctx )
+                        |> check ( "Variable is not added to ctx with correct type", top2.ctx == addbinding bottom.ctx varName (VarBind top1.ty) )
+                        |> check ( "Terms of 'in' expression are not same", t2 == top2.term )
+                        |> check ( "Types of 'in' expression are not same", bottom.ty == top2.ty )
+                        |> check ( "Terms of the binding part are not same", t1 == top1.term )
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTLetGen { bottom, top1, top2 } ->
             case bottom.term of
                 TmLet _ varName t1 t2 ->
                     Ok ()
-                        |> check ( "bottom & top1 ctxs are same", bottom.ctx == top1.ctx )
+                        |> check ( "Contexts of binding part are not same", bottom.ctx == top1.ctx )
                         |> checkWithDetails
-                            ( "variable is added to ctx with correct type binding"
+                            ( "Variable is not added to ctx with correct type"
                             , let
                                 genTy =
                                     gen top1.ctx top1.ty
@@ -257,31 +289,35 @@ checkRule rule =
                                 _ ->
                                     Err "Context is empty"
                             )
-                        |> check ( "in expr terms are same", t2 == top2.term )
-                        |> check ( "in expr types are same", bottom.ty == top2.ty )
-                        |> check ( "bound terms are same", t1 == top1.term )
+                        |> check ( "Terms of 'in' expression are not same", t2 == top2.term )
+                        |> check ( "Types of 'in' expression are not same", bottom.ty == top2.ty )
+                        |> check ( "Terms of the binding part are not same", t1 == top1.term )
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleTerm
 
         TyRuleTGen { bottom, top } ->
             case bottom.ty of
                 TyAll varName _ ->
                     Ok ()
-                        |> check ( "ctxs are same", bottom.ctx == top.ctx )
-                        |> check ( "terms are same", bottom.term == top.term )
-                        |> check ( "var is not a free var of ctx", isnamebound bottom.ctx varName |> not )
-                        |> check ( "type is degeneralized", degeneralizeTypeTop bottom.ctx bottom.ty == top.ty )
-                        |> check ( "type is generalized", generalizeTypeTop top.ctx top.ty varName == bottom.ty )
+                        |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
+                        |> check ( Lambda.RuleError.termSame, bottom.term == top.term )
+                        |> check
+                            ( "Quantified type variable is in free variables of context"
+                            , not <|
+                                Set.member varName (Set.union (ftvTy bottom.ty) (ftvCtx bottom.ctx))
+                            )
+                        |> check ( "Type is incorrectly generalized", degeneralizeTypeTop bottom.ctx bottom.ty == top.ty )
+                        |> check ( "Type is incorrectly generalized", generalizeTypeTop top.ctx top.ty varName == bottom.ty )
 
                 _ ->
-                    Err "wrongRule"
+                    Err Lambda.RuleError.wrongRuleType
 
         TyRuleTInst { bottom, top } ->
             Ok ()
-                |> check ( "ctxs are same", bottom.ctx == top.ctx )
-                |> check ( "terms are same", bottom.term == top.term )
-                |> check ( "type is subtype", isSpecializedType top.ctx top.ty bottom.ty == Ok True )
+                |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
+                |> check ( Lambda.RuleError.termSame, bottom.term == top.term )
+                |> check ( "Type is not a subtype", isSpecializedType top.ctx top.ty bottom.ty == Ok True )
 
 
 check : ( String, Bool ) -> Result String () -> Result String ()

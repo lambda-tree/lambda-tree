@@ -4,7 +4,7 @@ import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Lambda.Rule exposing (RuleError)
+import Lambda.Rule exposing (ExprError)
 import Maybe.Extra
 import View.Theme exposing (theme)
 
@@ -12,7 +12,7 @@ import View.Theme exposing (theme)
 type LambdaExprInputOption msg
     = Value String
     | OnInput (String -> msg)
-    | Error (Maybe RuleError)
+    | Error (Maybe ExprError)
     | AlignRight
 
 

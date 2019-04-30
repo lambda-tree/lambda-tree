@@ -3,7 +3,7 @@ module RuleTree.ViewModel exposing (..)
 import Bootstrap.Dropdown as Dropdown
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
-import Lambda.Rule exposing (ExprTree, Rule(..), RuleError(..), TyRule, tryRule)
+import Lambda.Rule exposing (ExprError(..), ExprTree, Rule(..), TyRule, tryRule)
 import Result.Extra
 import RuleTree.Model exposing (RuleTree)
 import Utils.Tree exposing (Tree(..))
@@ -14,7 +14,7 @@ type alias TreeViewDataError =
 
 
 type alias TreeViewDataResult =
-    { text : String, error : Maybe RuleError }
+    { text : String, error : Maybe ExprError }
 
 
 type alias TreeViewData =

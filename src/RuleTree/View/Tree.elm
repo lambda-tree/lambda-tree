@@ -75,7 +75,7 @@ treeView settings tree =
                         ]
                         []
                         [ -- hairline and rule selector above rule
-                          ruleLine content.dropdown { showDropdown = content.rule /= NoRule, path = path, selectedRule = content.rule, rules = rules }
+                          ruleLine content.dropdown { showDropdown = content.rule /= NoRule, path = path, selectedRule = content.rule, rules = rules, result = content.result }
                         , proofCell content (TextChangedMsg path)
                         , styled S.div [ height <| px 10 ] [] []
                         , if List.isEmpty path then
@@ -104,7 +104,7 @@ treeView settings tree =
     drawTreeP (getTreeViewData (Debug.log "tree" tree)) [] 1 NoRule
 
 
-ruleLine dropdownState { showDropdown, path, selectedRule, rules } =
+ruleLine dropdownState { showDropdown, path, selectedRule, rules, result } =
     styled S.div
         [ displayFlex, justifyContent stretch, alignItems center, height <| px 18, minHeight <| px 20 ]
         []
@@ -115,6 +115,7 @@ ruleLine dropdownState { showDropdown, path, selectedRule, rules } =
                 []
                 [ styled S.span [ width <| px 10, backgroundColor theme.background ] [] []
                 , resultBut (RemoveMsg path)
+                , S.text result
                 , styled S.span
                     [ width <| px 2, height <| pct 100 ]
                     []

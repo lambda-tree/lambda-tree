@@ -111,7 +111,7 @@ treeView settings tree =
                 -- Cells and hairline
                 ]
     in
-    drawTreeP (getTreeViewData (Debug.log "tree" tree)) [] 1 NoRule
+    drawTreeP (getTreeViewData typeSystem (Debug.log "tree" tree)) [] 1 NoRule
 
 
 ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule, rules, result } =

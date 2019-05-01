@@ -12,9 +12,9 @@ import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
 
 
-showRuleError : ExprError -> String
-showRuleError ruleError =
-    case ruleError of
+showExprError : ExprError -> String
+showExprError exprError =
+    case exprError of
         ParseError { col } ->
             "Error parsing expression at " ++ String.fromInt col
 
@@ -24,10 +24,13 @@ showRuleError ruleError =
         PrerequisiteDataError ->
             "Error in context"
 
+        NotInTypeSystemError ->
+            "Expression is not valid in selected type system"
+
 
 getTitle : Maybe ExprError -> List (S.Attribute msg)
 getTitle =
-    Maybe.map showRuleError
+    Maybe.map showExprError
         >> Maybe.map A.title
         >> Maybe.Extra.toList
 

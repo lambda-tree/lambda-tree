@@ -58,6 +58,7 @@ type ExprError
     = ParseError { row : Int, col : Int }
     | ParseTransformError ParseTransformError
     | PrerequisiteDataError
+    | NotInTypeSystemError
 
 
 type alias ExprTreeContent =
@@ -376,12 +377,12 @@ type alias ResolvedExprTree =
         )
 
 
-tryRule : ExprTree -> Result String ()
-tryRule t =
+tryRule : TypeSystem -> ExprTree -> Result String ()
+tryRule typeSystem tree =
     let
         erasedErrorTree : ResolvedExprTree
         erasedErrorTree =
-            t
+            tree
                 |> Utils.Tree.map
                     (\{ ctx, term, ty, rule } ->
                         case ( ctx, term, ty ) of
@@ -399,7 +400,8 @@ tryRule t =
     in
     case erasedErrorTree of
         Node (Result.Ok r) children ->
-            canApplyRule r
+            canApplyRuleInTypeSystem typeSystem r.rule
+                |> Result.andThen (\() -> canApplyRuleToExpr r)
                 |> Result.andThen
                     (\() ->
                         case r.rule of
@@ -771,8 +773,17 @@ isTerminalRule rule =
             False
 
 
-canApplyRule : { rule : Rule, ctx : Context, term : Term, ty : Ty } -> Result String ()
-canApplyRule { rule, term, ty, ctx } =
+canApplyRuleInTypeSystem : TypeSystem -> Rule -> Result String ()
+canApplyRuleInTypeSystem typeSystem rule =
+    if List.member rule <| rulesForTypeSystem typeSystem then
+        Ok ()
+
+    else
+        Err "Rule is not in available for selected type system"
+
+
+canApplyRuleToExpr : { rule : Rule, ctx : Context, term : Term, ty : Ty } -> Result String ()
+canApplyRuleToExpr { rule, term, ty, ctx } =
     case rule of
         TVar ->
             case term of

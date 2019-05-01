@@ -728,3 +728,119 @@ areHMTypesEquivalent ctx ty1 ty2 =
                                 |> Result.andThen typesEquallyGeneralized
                         )
             )
+
+
+isTyInTypeSystem : TypeSystem -> Ty -> Bool
+isTyInTypeSystem =
+    let
+        isTyInTypeSystemRanked rank typeSystem ty =
+            case ty of
+                TyVar _ _ ->
+                    case typeSystem of
+                        SimplyTyped ->
+                            False
+
+                        HM _ ->
+                            True
+
+                        SystemF ->
+                            True
+
+                TyArr ty1 ty2 ->
+                    isTyInTypeSystemRanked (rank + 1) typeSystem ty1
+                        && isTyInTypeSystemRanked rank typeSystem ty2
+
+                TyAll _ ty1 ->
+                    case typeSystem of
+                        SimplyTyped ->
+                            False
+
+                        HM _ ->
+                            (rank <= 1)
+                                && isTyInTypeSystemRanked rank typeSystem ty1
+
+                        SystemF ->
+                            isTyInTypeSystemRanked rank typeSystem ty1
+
+                TyName _ ->
+                    True
+
+                TyConst _ ->
+                    True
+    in
+    isTyInTypeSystemRanked 1
+
+
+isTermInTypeSystem : TypeSystem -> Term -> Bool
+isTermInTypeSystem typeSystem term =
+    case term of
+        TmVar _ _ _ ->
+            True
+
+        TmAbs _ _ (Just ty) _ ->
+            isTyInTypeSystem typeSystem ty
+
+        TmAbs _ _ Nothing _ ->
+            case typeSystem of
+                SimplyTyped ->
+                    False
+
+                HM _ ->
+                    True
+
+                SystemF ->
+                    False
+
+        TmApp _ t1 t2 ->
+            isTermInTypeSystem typeSystem t1 && isTermInTypeSystem typeSystem t2
+
+        TmIf _ t1 t2 t3 ->
+            isTermInTypeSystem typeSystem t1
+                && isTermInTypeSystem typeSystem t2
+                && isTermInTypeSystem typeSystem t3
+
+        TmLet _ _ t1 t2 ->
+            isTermInTypeSystem typeSystem t1
+                && isTermInTypeSystem typeSystem t2
+
+        TmTAbs _ _ t ->
+            case typeSystem of
+                SimplyTyped ->
+                    False
+
+                HM _ ->
+                    False
+
+                SystemF ->
+                    isTermInTypeSystem typeSystem t
+
+        TmTApp _ t ty ->
+            case typeSystem of
+                SimplyTyped ->
+                    False
+
+                HM _ ->
+                    False
+
+                SystemF ->
+                    isTermInTypeSystem typeSystem t && isTyInTypeSystem typeSystem ty
+
+        TmConst _ _ ->
+            True
+
+
+isCtxInTypeSystem : TypeSystem -> Context -> Bool
+isCtxInTypeSystem typeSystem ctx =
+    ctx
+        |> List.all
+            (\( _, binding ) ->
+                case binding of
+                    VarBind ty ->
+                        isTyInTypeSystem typeSystem ty
+
+                    NameBind ->
+                        True
+
+                    TyVarBind ->
+                        False
+            )

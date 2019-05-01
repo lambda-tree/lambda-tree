@@ -15,3 +15,6 @@ update msg model =
 
         TypeSystemChangedMsg value ->
             { model | typeSystem = value }
+
+        SidebarVisibilityChangedMsg value ->
+            { model | showSidebar = value }

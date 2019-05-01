@@ -3,8 +3,6 @@ module RuleTree.Model exposing (..)
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Popover as Popover
 import Lambda.Rule exposing (Rule(..))
-import Substitutor.Init
-import Substitutor.Model
 import Utils.Tree exposing (Tree(..))
 
 
@@ -21,7 +19,6 @@ type alias RuleTreeContent =
     , rule : Rule
     , dropdown : Dropdown.State
     , statusPopover : Popover.State
-    , substitution : Substitutor.Model.Model
     }
 
 
@@ -38,6 +35,5 @@ emptyTree =
         , rule = NoRule
         , dropdown = Dropdown.initialState
         , statusPopover = Popover.initialState
-        , substitution = Substitutor.Init.init
         }
         []

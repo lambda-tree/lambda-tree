@@ -59,6 +59,7 @@ type ExprError
     | ParseTransformError ParseTransformError
     | PrerequisiteDataError
     | NotInTypeSystemError
+    | EmptyTypeError
 
 
 type alias ExprTreeContent =

@@ -8,8 +8,8 @@ import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Rule exposing (ExprError(..), ExprTree, ExprTreeContent, Rule(..), TyRule, tryRule)
 import RuleTree.Model exposing (RuleTree, RuleTreeContent)
-import Substitutor.Model
 import Utils.Tree exposing (Tree(..))
+import Utils.Utils exposing (extractError)
 
 
 type alias TreeViewDataError =
@@ -28,7 +28,6 @@ type alias TreeViewDataContent =
     , result : Result String ()
     , dropdown : Dropdown.State
     , statusPopover : Popover.State
-    , substitution : Substitutor.Model.Model
     }
 
 
@@ -83,7 +82,14 @@ getExprTree typeSystem t =
 
                     tyExpr =
                         parseType ty
-                            |> Result.mapError ParseError
+                            |> Result.mapError
+                                (\x ->
+                                    if String.isEmpty ty then
+                                        EmptyTypeError
+
+                                    else
+                                        ParseError x
+                                )
                             |> Result.andThen
                                 (\parsedTy ->
                                     ctxExpr
@@ -112,15 +118,6 @@ getTreeViewData typeSystem tree =
     let
         zipper : RuleTreeContent -> RuleTree -> ExprTreeContent -> ExprTree -> TreeViewDataContent
         zipper origNode _ exprNode exprTree =
-            let
-                extractError result =
-                    case result of
-                        Err e ->
-                            Just e
-
-                        Ok _ ->
-                            Nothing
-            in
             { ctx = { text = origNode.ctx, error = extractError exprNode.ctx }
             , term = { text = origNode.term, error = extractError exprNode.term }
             , ty = { text = origNode.ty, error = extractError exprNode.ty }
@@ -128,7 +125,6 @@ getTreeViewData typeSystem tree =
             , result = tryRule typeSystem exprTree
             , dropdown = origNode.dropdown
             , statusPopover = origNode.statusPopover
-            , substitution = origNode.substitution
             }
     in
     Utils.Tree.zipWithExtra zipper tree (getExprTree typeSystem tree)

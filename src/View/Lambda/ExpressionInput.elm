@@ -14,6 +14,7 @@ type LambdaExprInputOption msg
     | OnInput (String -> msg)
     | Error (Maybe ExprError)
     | AlignRight
+    | Placeholder String
 
 
 lambdaExprInput : List (LambdaExprInputOption msg) -> Html msg
@@ -58,6 +59,18 @@ lambdaExprInput options =
                                 Nothing
                     )
                 |> List.head
+
+        placeholder =
+            options
+                |> List.filterMap
+                    (\x ->
+                        case x of
+                            Placeholder s ->
+                                Just <| A.placeholder s
+
+                            _ ->
+                                Nothing
+                    )
     in
     styled S.input
         [ color theme.text
@@ -92,5 +105,5 @@ lambdaExprInput options =
             else
                 "ltr"
         ]
-        (value ++ onInput ++ [ A.autocomplete False, A.spellcheck False ])
+        (value ++ onInput ++ placeholder ++ [ A.autocomplete False, A.spellcheck False ])
         []

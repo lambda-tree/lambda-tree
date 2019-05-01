@@ -11,4 +11,5 @@ type alias Model =
     { checkErrors : Bool
     , typeSystem : TypeSystem
     , useCombinedRules : Bool
+    , showSidebar : Bool
     }

@@ -10,14 +10,13 @@ import List.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (..)
 import Substitutor.Model
-import Substitutor.Update
 import Substitutor.Utils exposing (parsedType, parsedVar)
 import Utils.Tree exposing (Tree(..), mapContentAtPath)
 
 
 update : Msg -> RuleTree -> RuleTree
 update msg tree =
-    case Debug.log "update :: Msg" msg of
+    case msg of
         TextChangedMsg path kind text ->
             updateTextInPath kind text path tree
 
@@ -29,9 +28,6 @@ update msg tree =
 
         RuleSelectedMsg path rule ->
             setRule path rule tree
-
-        DoSubstitutionMsg s ->
-            doSubstitution s tree
 
         RuleClickedMsg _ ->
             Debug.todo "Update: RuleClickedMsg"
@@ -45,8 +41,8 @@ update msg tree =
         RuleStatusPopoverMsg path state ->
             mapContentAtPath path (\c -> { c | statusPopover = state }) tree
 
-        SubstitutionMsg path m ->
-            mapContentAtPath path (\c -> { c | substitution = Substitutor.Update.update m c.substitution }) tree
+        OpenSubstitutionMsg _ ->
+            tree
 
 
 doHint : RuleTree -> RuleTree

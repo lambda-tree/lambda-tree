@@ -27,6 +27,9 @@ showExprError exprError =
         NotInTypeSystemError ->
             "Expression is not valid in selected type system"
 
+        EmptyTypeError ->
+            "No type. Use type variable such as 'A1' to derive the type"
+
 
 getTitle : Maybe ExprError -> List (S.Attribute msg)
 getTitle =

@@ -2,6 +2,7 @@ module View exposing (..)
 
 import Bootstrap.Button as Button
 import Css exposing (..)
+import Html.Attributes
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
@@ -19,6 +20,7 @@ import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
 import View.Lambda.RuleList exposing (ruleList)
 import View.SegmentedControl exposing (segmentedControl)
+import View.SubstitutionModal exposing (substitutionModal)
 import View.Switch as Switch
 import View.Theme exposing (theme)
 
@@ -34,7 +36,11 @@ view model =
         ]
         []
         [ leftColumn model
-        , rightColumn model
+        , if model.settings.showSidebar then
+            rightColumn model
+
+          else
+            S.div [] []
         ]
 
 
@@ -58,7 +64,7 @@ leftColumn model =
             , whiteSpace noWrap
             ]
             []
-            [ treeContainer model ]
+            [ treeContainer model, substitutionModal model.substitutionModal model.substitution |> S.fromUnstyled ]
         ]
 
 
@@ -101,7 +107,21 @@ topBar model =
             , Button.button [ Button.small, Button.dark ] [ S.text "Export" |> S.toUnstyled ]
                 |> S.fromUnstyled
             , styled S.div [ width <| px 10 ] [] []
-            , Button.button [ Button.small, Button.dark, Button.onClick (HintMsg |> RuleTreeMsg) ] [ S.text "Hint" |> S.toUnstyled ]
+            , Button.button
+                [ Button.small
+                , Button.outlineLight
+                , Button.onClick (SettingsMsg <| Settings.Message.SidebarVisibilityChangedMsg (model.settings.showSidebar |> not))
+                , Button.attrs [ Html.Attributes.class "borderless-dropdown" ]
+                ]
+                [ S.text
+                    (if model.settings.showSidebar then
+                        ">"
+
+                     else
+                        "<"
+                    )
+                    |> S.toUnstyled
+                ]
                 |> S.fromUnstyled
             ]
         ]
@@ -159,22 +179,12 @@ rightColumn model =
         , overflow hidden
         , borderWidth4 (px 0) (px 0) (px 0) (px 1)
         , borderStyle solid
-        , marginLeft <| px -1
         , borderColor <| theme.line
+        , backgroundColor theme.inputBackground
         ]
         []
         [ ruleBar model
-        , styled S.div
-            [ displayFlex
-            , flexDirection column
-            , alignItems stretch
-            , justifyContent flexStart
-            , overflow auto
-            , whiteSpace noWrap
-            ]
-            []
-            [ ruleListContainer model
-            ]
+        , ruleListContainer model
         ]
 
 
@@ -182,10 +192,9 @@ ruleListContainer model =
     styled S.div
         [ displayFlex
         , flexDirection column
-        , backgroundColor theme.inputBackground
-        , justifyContent flexStart
+        , justifyContent stretch
         , alignItems stretch
-        , overflow scroll
+        , overflow auto
         ]
         []
         [ ruleList (getTypeSystem model.settings |> rulesForTypeSystem)

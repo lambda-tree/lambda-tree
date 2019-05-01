@@ -7,3 +7,4 @@ type Msg
     = CheckErrorsChangedMsg Bool
     | TypeSystemChangedMsg TypeSystem
     | UseCombinedRulesChangedMsg Bool
+    | SidebarVisibilityChangedMsg Bool

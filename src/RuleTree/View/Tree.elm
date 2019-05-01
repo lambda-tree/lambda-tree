@@ -37,7 +37,7 @@ treeView settings tree =
                     styled S.div
                         [ displayFlex, flexDirection column, alignItems center, justifyContent center, flex auto ]
                         []
-                        [ ruleDropdown content.dropdown { button = newRuleDDButton, path = path, rules = rules, substitution = content.substitution }
+                        [ ruleDropdown content.dropdown { button = newRuleDDButton, path = path, rules = rules }
                         , styled S.div [ width <| px 1, minWidth <| px 1, backgroundColor <| theme.darkLine, height <| px 10 ] [] []
                         ]
 
@@ -85,7 +85,6 @@ treeView settings tree =
                             , dropdown = content.dropdown
                             , statusPopover = content.statusPopover
                             , showStatus = settings.checkErrors
-                            , substitution = content.substitution
                             }
                         , proofCell settings.checkErrors content (TextChangedMsg path)
                         , styled S.div [ height <| px 10 ] [] []
@@ -115,7 +114,7 @@ treeView settings tree =
     drawTreeP (getTreeViewData typeSystem tree) [] 1 NoRule
 
 
-ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule, rules, result, substitution } =
+ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule, rules, result } =
     let
         statusContainer =
             styled S.span
@@ -158,7 +157,7 @@ ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule
 
                                   else
                                     Nothing
-                                , Just <| ruleDropdown dropdown { button = selectedRuleDDButton selectedRule, path = path, rules = rules, substitution = substitution }
+                                , Just <| ruleDropdown dropdown { button = selectedRuleDDButton selectedRule, path = path, rules = rules }
                                 ]
                             )
                     ]

@@ -207,12 +207,11 @@ checkRuleTest =
                             }
                         , top =
                             { ctx =
-                                [ ( "TypeVar3", TyVarBind )
-                                , ( "TypeVar2", TyVarBind )
+                                [ ( "TypeVar2", TyVarBind )
                                 , ( "TypeVar1", TyVarBind )
                                 ]
-                            , term = TmAbs I "termVar3" (Just <| TyVar 0 3) (TmVar I 0 4)
-                            , ty = TyArr (TyVar 0 3) (TyVar 0 3)
+                            , term = TmAbs I "termVar3" (Just <| TyName "TypeVar3") (TmVar I 0 3)
+                            , ty = TyArr (TyName "TypeVar3") (TyName "TypeVar3")
                             }
                         }
                     )

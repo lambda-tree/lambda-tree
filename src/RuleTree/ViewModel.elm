@@ -6,8 +6,9 @@ import Lambda.Expression exposing (TypeSystem)
 import Lambda.ExpressionUtils exposing (isCtxInTypeSystem, isTermInTypeSystem, isTyInTypeSystem)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
-import Lambda.Rule exposing (ExprError(..), ExprTree, Rule(..), TyRule, tryRule)
-import RuleTree.Model exposing (RuleTree)
+import Lambda.Rule exposing (ExprError(..), ExprTree, ExprTreeContent, Rule(..), TyRule, tryRule)
+import RuleTree.Model exposing (RuleTree, RuleTreeContent)
+import Substitutor.Model
 import Utils.Tree exposing (Tree(..))
 
 
@@ -19,16 +20,20 @@ type alias TreeViewDataResult =
     { text : String, error : Maybe ExprError }
 
 
+type alias TreeViewDataContent =
+    { ctx : TreeViewDataResult
+    , term : TreeViewDataResult
+    , ty : TreeViewDataResult
+    , rule : Rule
+    , result : Result String ()
+    , dropdown : Dropdown.State
+    , statusPopover : Popover.State
+    , substitution : Substitutor.Model.Model
+    }
+
+
 type alias TreeViewData =
-    Tree
-        { ctx : TreeViewDataResult
-        , term : TreeViewDataResult
-        , ty : TreeViewDataResult
-        , rule : Rule
-        , result : Result String ()
-        , dropdown : Dropdown.State
-        , statusPopover : Popover.State
-        }
+    Tree TreeViewDataContent
 
 
 getExprTree : TypeSystem -> RuleTree -> ExprTree
@@ -105,6 +110,7 @@ getExprTree typeSystem t =
 getTreeViewData : TypeSystem -> RuleTree -> TreeViewData
 getTreeViewData typeSystem tree =
     let
+        zipper : RuleTreeContent -> RuleTree -> ExprTreeContent -> ExprTree -> TreeViewDataContent
         zipper origNode _ exprNode exprTree =
             let
                 extractError result =
@@ -122,6 +128,7 @@ getTreeViewData typeSystem tree =
             , result = tryRule typeSystem exprTree
             , dropdown = origNode.dropdown
             , statusPopover = origNode.statusPopover
+            , substitution = origNode.substitution
             }
     in
     Utils.Tree.zipWithExtra zipper tree (getExprTree typeSystem tree)

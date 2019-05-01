@@ -4,6 +4,7 @@ import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Popover as Popover
 import Lambda.Rule exposing (Rule)
 import RuleTree.Model exposing (TextKind)
+import Substitutor.Message
 import Substitutor.Model
 
 
@@ -17,3 +18,4 @@ type Msg
     | DoSubstitutionMsg Substitutor.Model.Model
     | RuleDropdownMsg (List Int) Dropdown.State
     | RuleStatusPopoverMsg (List Int) Popover.State
+    | SubstitutionMsg (List Int) Substitutor.Message.Msg

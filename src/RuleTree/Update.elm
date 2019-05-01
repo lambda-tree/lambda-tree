@@ -10,6 +10,7 @@ import List.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (..)
 import Substitutor.Model
+import Substitutor.Update
 import Substitutor.Utils exposing (parsedType, parsedVar)
 import Utils.Tree exposing (Tree(..), mapContentAtPath)
 
@@ -43,6 +44,9 @@ update msg tree =
 
         RuleStatusPopoverMsg path state ->
             mapContentAtPath path (\c -> { c | statusPopover = state }) tree
+
+        SubstitutionMsg path m ->
+            mapContentAtPath path (\c -> { c | substitution = Substitutor.Update.update m c.substitution }) tree
 
 
 doHint : RuleTree -> RuleTree

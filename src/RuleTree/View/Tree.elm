@@ -37,7 +37,7 @@ treeView settings tree =
                     styled S.div
                         [ displayFlex, flexDirection column, alignItems center, justifyContent center, flex auto ]
                         []
-                        [ ruleDropdown content.dropdown { button = newRuleDDButton, path = path, rules = rules }
+                        [ ruleDropdown content.dropdown { button = newRuleDDButton, path = path, rules = rules, substitution = content.substitution }
                         , styled S.div [ width <| px 1, minWidth <| px 1, backgroundColor <| theme.darkLine, height <| px 10 ] [] []
                         ]
 
@@ -85,8 +85,9 @@ treeView settings tree =
                             , dropdown = content.dropdown
                             , statusPopover = content.statusPopover
                             , showStatus = settings.checkErrors
+                            , substitution = content.substitution
                             }
-                        , proofCell content (TextChangedMsg path)
+                        , proofCell settings.checkErrors content (TextChangedMsg path)
                         , styled S.div [ height <| px 10 ] [] []
                         , if List.isEmpty path then
                             S.div [] []
@@ -111,10 +112,10 @@ treeView settings tree =
                 -- Cells and hairline
                 ]
     in
-    drawTreeP (getTreeViewData typeSystem (Debug.log "tree" tree)) [] 1 NoRule
+    drawTreeP (getTreeViewData typeSystem tree) [] 1 NoRule
 
 
-ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule, rules, result } =
+ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule, rules, result, substitution } =
     let
         statusContainer =
             styled S.span
@@ -157,7 +158,7 @@ ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule
 
                                   else
                                     Nothing
-                                , Just <| ruleDropdown dropdown { button = selectedRuleDDButton selectedRule, path = path, rules = rules }
+                                , Just <| ruleDropdown dropdown { button = selectedRuleDDButton selectedRule, path = path, rules = rules, substitution = substitution }
                                 ]
                             )
                     ]

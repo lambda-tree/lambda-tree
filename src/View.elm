@@ -6,12 +6,14 @@ import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Lambda.Parse exposing (symbols)
+import Lambda.Rule exposing (rulesForTypeSystem)
 import Message exposing (Msg(..))
 import Model
 import RuleTree.Message exposing (Msg(..))
 import RuleTree.View.Tree exposing (treeView)
 import Settings.Message exposing (Msg(..))
 import Settings.Model exposing (TypeSystem(..))
+import Settings.Utils exposing (getTypeSystem)
 import Substitutor.Message
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
@@ -137,6 +139,7 @@ ruleBar model =
 appBar children =
     styled S.div
         [ height <| px 48
+        , minHeight <| px 48
         , backgroundColor <| theme.backgroundDark
         , displayFlex
         , justifyContent stretch
@@ -150,8 +153,8 @@ rightColumn model =
     styled S.div
         [ displayFlex
         , flexDirection column
-        , width <| px 250
-        , minWidth <| px 250
+        , width <| px 350
+        , minWidth <| px 350
         , justifyContent stretch
         , overflow hidden
         , borderWidth4 (px 0) (px 0) (px 0) (px 1)
@@ -179,18 +182,13 @@ ruleListContainer model =
     styled S.div
         [ displayFlex
         , flexDirection column
+        , backgroundColor theme.inputBackground
         , justifyContent flexStart
         , alignItems stretch
         , overflow scroll
         ]
         []
-        [ S.text
-            "Substitute free variable"
-        , lambdaExprInput [ View.Lambda.ExpressionInput.Value model.substitution.ty, View.Lambda.ExpressionInput.OnInput (Substitutor.Message.TyChangedMsg >> SubstitutionMsg) ]
-        , lambdaExprText "/"
-        , lambdaExprInput [ View.Lambda.ExpressionInput.Value model.substitution.var, View.Lambda.ExpressionInput.OnInput (Substitutor.Message.VarChangedMsg >> SubstitutionMsg) ]
-        , styled S.button [ margin <| rem 0.5 ] [ E.onClick (DoSubstitutionMsg model.substitution |> RuleTreeMsg) ] [ S.text "Substitute" ]
-        , ruleList <| (RuleClickedMsg >> RuleTreeMsg)
+        [ ruleList (getTypeSystem model.settings |> rulesForTypeSystem)
         ]
 
 

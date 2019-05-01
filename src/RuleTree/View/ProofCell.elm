@@ -35,8 +35,8 @@ getTitle =
         >> Maybe.Extra.toList
 
 
-proofCell : { a | ctx : TreeViewDataResult, term : TreeViewDataResult, ty : TreeViewDataResult } -> (TextKind -> String -> msg) -> S.Html msg
-proofCell content msgCreator =
+proofCell : Bool -> { a | ctx : TreeViewDataResult, term : TreeViewDataResult, ty : TreeViewDataResult } -> (TextKind -> String -> msg) -> S.Html msg
+proofCell checkErrors content msgCreator =
     S.div
         []
         [ styled S.div
@@ -50,7 +50,12 @@ proofCell content msgCreator =
                 [ lambdaExprInput
                     [ View.Lambda.ExpressionInput.Value content.ctx.text
                     , View.Lambda.ExpressionInput.OnInput (msgCreator CtxKind)
-                    , View.Lambda.ExpressionInput.Error content.ctx.error
+                    , View.Lambda.ExpressionInput.Error <|
+                        if checkErrors then
+                            content.ctx.error
+
+                        else
+                            Nothing
                     ]
                 ]
             , lambdaExprText "⊢"
@@ -62,7 +67,12 @@ proofCell content msgCreator =
                 [ lambdaExprInput
                     [ View.Lambda.ExpressionInput.Value content.term.text
                     , View.Lambda.ExpressionInput.OnInput (msgCreator TermKind)
-                    , View.Lambda.ExpressionInput.Error content.term.error
+                    , View.Lambda.ExpressionInput.Error <|
+                        if checkErrors then
+                            content.term.error
+
+                        else
+                            Nothing
                     ]
                 ]
             , lambdaExprText ":"
@@ -74,7 +84,12 @@ proofCell content msgCreator =
                 [ lambdaExprInput
                     [ View.Lambda.ExpressionInput.Value content.ty.text
                     , View.Lambda.ExpressionInput.OnInput (msgCreator TyKind)
-                    , View.Lambda.ExpressionInput.Error content.ty.error
+                    , View.Lambda.ExpressionInput.Error <|
+                        if checkErrors then
+                            content.ty.error
+
+                        else
+                            Nothing
                     ]
                 ]
             ]

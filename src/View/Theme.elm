@@ -15,6 +15,7 @@ theme :
     , secondaryOnDark : Color
     , line : Color
     , darkLine : Color
+    , lightLine : Color
     , clear : Color
     , inputBackground : Color
     , active : Color
@@ -30,10 +31,11 @@ theme =
     , errorText = rgb 230 55 86
     , successText = rgb 75 181 67
     , textOnDark = rgb 247 247 247
-    , secondary = rgb 250 240 230
+    , secondary = rgb 50 50 50
     , secondaryOnDark = rgb 222 222 222
     , line = rgba 195 195 195 0.4
     , darkLine = rgb 140 140 140
+    , lightLine = rgb 185 185 185
     , clear = rgba 0 0 0 0
     , inputBackground = rgb 249 249 249
     , active = rgb 33 150 243

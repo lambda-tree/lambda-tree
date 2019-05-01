@@ -8,6 +8,8 @@ theme :
     , backgroundDark : Color
     , text : Color
     , error : Color
+    , errorText : Color
+    , successText : Color
     , textOnDark : Color
     , secondary : Color
     , secondaryOnDark : Color
@@ -25,6 +27,8 @@ theme =
     , backgroundDark = rgb 38 50 56
     , text = rgb 40 40 40
     , error = rgb 253 220 229
+    , errorText = rgb 230 55 86
+    , successText = rgb 75 181 67
     , textOnDark = rgb 247 247 247
     , secondary = rgb 250 240 230
     , secondaryOnDark = rgb 222 222 222

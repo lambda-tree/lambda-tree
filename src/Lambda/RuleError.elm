@@ -35,3 +35,7 @@ wrongRuleTerm =
 
 wrongRuleType =
     "Incorrect rule for this type"
+
+
+topRuleParse =
+    "Top rule parse Error"

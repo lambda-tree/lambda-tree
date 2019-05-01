@@ -1,10 +1,10 @@
 module RuleTree.ViewModel exposing (..)
 
 import Bootstrap.Dropdown as Dropdown
+import Bootstrap.Popover as Popover
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Rule exposing (ExprError(..), ExprTree, Rule(..), TyRule, tryRule)
-import Result.Extra
 import RuleTree.Model exposing (RuleTree)
 import Utils.Tree exposing (Tree(..))
 
@@ -23,8 +23,9 @@ type alias TreeViewData =
         , term : TreeViewDataResult
         , ty : TreeViewDataResult
         , rule : Rule
-        , result : String
+        , result : Result String ()
         , dropdown : Dropdown.State
+        , statusPopover : Popover.State
         }
 
 
@@ -92,8 +93,9 @@ getTreeViewData t =
             , term = { text = origNode.term, error = extractError exprNode.term }
             , ty = { text = origNode.ty, error = extractError exprNode.ty }
             , rule = origNode.rule
-            , result = tryRule exprTree |> Result.map (\_ -> "OK") |> Result.Extra.merge
+            , result = tryRule exprTree
             , dropdown = origNode.dropdown
+            , statusPopover = origNode.statusPopover
             }
     in
     Utils.Tree.zipWithExtra zipper t (getExprTree t)

@@ -10,6 +10,7 @@ import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (RuleTree)
 import RuleTree.View.ProofCell exposing (proofCell)
 import RuleTree.View.RuleDropdown exposing (newRuleDDButton, ruleDropdown, selectedRuleDDButton)
+import RuleTree.View.RuleStatus exposing (ruleStatus)
 import RuleTree.ViewModel exposing (TreeViewData, getTreeViewData)
 import Settings.Model
 import Settings.Utils exposing (getTypeSystem)
@@ -75,7 +76,16 @@ treeView settings tree =
                         ]
                         []
                         [ -- hairline and rule selector above rule
-                          ruleLine content.dropdown { showDropdown = content.rule /= NoRule, path = path, selectedRule = content.rule, rules = rules, result = content.result }
+                          ruleLine
+                            { showDropdown = content.rule /= NoRule
+                            , path = path
+                            , selectedRule = content.rule
+                            , rules = rules
+                            , result = content.result
+                            , dropdown = content.dropdown
+                            , statusPopover = content.statusPopover
+                            , showStatus = settings.checkErrors
+                            }
                         , proofCell content (TextChangedMsg path)
                         , styled S.div [ height <| px 10 ] [] []
                         , if List.isEmpty path then
@@ -104,29 +114,54 @@ treeView settings tree =
     drawTreeP (getTreeViewData (Debug.log "tree" tree)) [] 1 NoRule
 
 
-ruleLine dropdownState { showDropdown, path, selectedRule, rules, result } =
+ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule, rules, result } =
+    let
+        statusContainer =
+            styled S.span
+                [ displayFlex
+                , width <| rem 1.125
+                , marginRight <| px 4
+                , marginLeft <| px 8
+                , justifyContent center
+                ]
+                []
+    in
     styled S.div
         [ displayFlex, justifyContent stretch, alignItems center, height <| px 18, minHeight <| px 20 ]
         []
         [ hairLine
         , if showDropdown then
             styled S.span
-                [ displayFlex, backgroundColor theme.background, alignItems center ]
+                [ displayFlex, alignItems center, transform <| translateX <| px -6 ]
                 []
-                [ styled S.span [ width <| px 10, backgroundColor theme.background ] [] []
-                , resultBut (RemoveMsg path)
-                , S.text result
-                , styled S.span
-                    [ width <| px 2, height <| pct 100 ]
-                    []
-                    []
-                , ruleDropdown dropdownState { button = selectedRuleDDButton selectedRule, path = path, rules = rules }
-                , styled
-                    S.span
-                    [ width <| px 10 ]
-                    []
-                    []
-                ]
+                (List.filterMap identity
+                    [ if showStatus then
+                        Nothing
+
+                      else
+                        Just <| statusContainer []
+                    , Just <|
+                        styled S.span
+                            [ displayFlex
+                            , backgroundColor theme.background
+                            , alignItems center
+                            , padding2 (px 0) (px 10)
+                            ]
+                            []
+                            (List.filterMap identity
+                                [ if showStatus then
+                                    Just <|
+                                        statusContainer
+                                            [ ruleStatus { popover = statusPopover, path = path, result = result }
+                                            ]
+
+                                  else
+                                    Nothing
+                                , Just <| ruleDropdown dropdown { button = selectedRuleDDButton selectedRule, path = path, rules = rules }
+                                ]
+                            )
+                    ]
+                )
 
           else
             S.span [] []
@@ -136,34 +171,6 @@ ruleLine dropdownState { showDropdown, path, selectedRule, rules, result } =
 
 hairLine =
     styled S.div [ height <| px 1, minHeight <| px 1, backgroundColor <| theme.darkLine, flex auto ] [] []
-
-
-resultBut msg =
-    styled S.button
-        [ --        backgroundColor <| rgb 230 55 86
-          --        , color <| rgb 234 230 220
-          backgroundColor <| theme.clear
-        , color <| rgb 230 55 86
-        , padding <| px 2
-        , borderRadius <| px 10
-        , width <| px 18
-        , height <| px 18
-        , fontFamilies [ "cmunrm" ]
-        , fontSize <| rem 0.7
-        , outline zero
-        , borderWidth zero
-        , cursor pointer
-        , hover
-            [ boxShadow4 (px 0) (px 0) (px 5) (rgba 0 0 0 0.3)
-            ]
-        , active
-            [ opacity <| num 0.7
-            , outline zero
-            ]
-        , focus [ outline zero ]
-        ]
-        [ E.onClick msg ]
-        [ S.i [ A.class "fas fa-exclamation" ] [] ]
 
 
 ruleFiller =

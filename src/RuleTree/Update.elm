@@ -1,6 +1,5 @@
 module RuleTree.Update exposing (..)
 
-import Bootstrap.Dropdown as Dropdown
 import Inferer.Inferer exposing (buildTree)
 import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx, substFtvTerm)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
@@ -19,7 +18,7 @@ update : Msg -> RuleTree -> RuleTree
 update msg tree =
     case Debug.log "update :: Msg" msg of
         TextChangedMsg path kind text ->
-            updateTextInPath kind tree text path
+            updateTextInPath kind text path tree
 
         HintMsg ->
             doHint tree
@@ -40,11 +39,14 @@ update msg tree =
             Debug.todo "Update: SelectRuleMsg"
 
         RuleDropdownMsg path state ->
-            setDropdown path state tree
+            mapContentAtPath path (\c -> { c | dropdown = state }) tree
+
+        RuleStatusPopoverMsg path state ->
+            mapContentAtPath path (\c -> { c | statusPopover = state }) tree
 
 
 doHint : RuleTree -> RuleTree
-doHint ((Node { ctx, term, dropdown } _) as t1) =
+doHint ((Node ({ ctx, term } as content) _) as t1) =
     let
         maybeCtx =
             parseCtx ctx
@@ -67,12 +69,12 @@ doHint ((Node { ctx, term, dropdown } _) as t1) =
                 |> Result.toMaybe
                 |> Maybe.map
                     (Utils.Tree.map
-                        (\content ->
-                            { ctx = showCtx content.ctx
-                            , term = showTerm content.ctx content.term
-                            , ty = showType justCtx content.ty
-                            , rule = content.rule
-                            , dropdown = dropdown
+                        (\inferredContent ->
+                            { content
+                                | ctx = showCtx inferredContent.ctx
+                                , term = showTerm inferredContent.ctx inferredContent.term
+                                , ty = showType justCtx inferredContent.ty
+                                , rule = content.rule
                             }
                         )
                     )
@@ -167,11 +169,6 @@ doSubstitution sm tree =
             tree
 
 
-setDropdown : List Int -> Dropdown.State -> RuleTree -> RuleTree
-setDropdown path state =
-    mapContentAtPath path (\c -> { c | dropdown = state })
-
-
 setRule : List Int -> Rule -> RuleTree -> RuleTree
 setRule path rule tree =
     case tree of
@@ -225,7 +222,7 @@ setRule path rule tree =
                     Node content (children |> List.Extra.updateAt idx (setRule subPath rule))
 
 
-updateTextInPath kind tree text path =
+updateTextInPath kind text path tree =
     let
         preprocessed =
             Lambda.Parse.preprocess text
@@ -250,7 +247,7 @@ updateTextInPath kind tree text path =
                             List.indexedMap
                                 (\i t ->
                                     if i == idx then
-                                        updateTextInPath kind t text subPath
+                                        updateTextInPath kind text subPath t
 
                                     else
                                         t

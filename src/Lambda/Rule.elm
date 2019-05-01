@@ -60,13 +60,16 @@ type ExprError
     | PrerequisiteDataError
 
 
+type alias ExprTreeContent =
+    { ctx : Result ExprError Lambda.Context.Context
+    , term : Result ExprError Lambda.Expression.Term
+    , ty : Result ExprError Lambda.Expression.Ty
+    , rule : Rule
+    }
+
+
 type alias ExprTree =
-    Tree
-        { ctx : Result ExprError Lambda.Context.Context
-        , term : Result ExprError Lambda.Expression.Term
-        , ty : Result ExprError Lambda.Expression.Ty
-        , rule : Rule
-        }
+    Tree ExprTreeContent
 
 
 checkRule : TyRule -> Result String ()
@@ -396,285 +399,279 @@ tryRule t =
     in
     case erasedErrorTree of
         Node (Result.Ok r) children ->
-            case r.rule of
-                TVar ->
-                    case r.term of
-                        TmVar _ _ _ ->
-                            case children of
-                                [ Node (Result.Ok c1) _ ] ->
-                                    checkRule
-                                        (TyRuleTVar
-                                            { bottom =
-                                                { ctx = r.ctx
-                                                , term = r.term
-                                                , ty = r.ty
+            canApplyRule r
+                |> Result.andThen
+                    (\() ->
+                        case r.rule of
+                            TVar ->
+                                case children of
+                                    [ Node (Result.Ok c1) _ ] ->
+                                        checkRule
+                                            (TyRuleTVar
+                                                { bottom =
+                                                    { ctx = r.ctx
+                                                    , term = r.term
+                                                    , ty = r.ty
+                                                    }
+                                                , top =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
                                                 }
-                                            , top =
-                                                { ctx = c1.ctx
-                                                , term = c1.term
-                                                , ty = c1.ty
+                                            )
+
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
+
+                            TVarInst ->
+                                case children of
+                                    [ Node (Result.Ok c1) _ ] ->
+                                        checkRule
+                                            (TyRuleTVarInst
+                                                { bottom =
+                                                    { ctx = r.ctx
+                                                    , term = r.term
+                                                    , ty = r.ty
+                                                    }
+                                                , top =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
                                                 }
-                                            }
-                                        )
+                                            )
 
-                                _ ->
-                                    Err "Top rule parse Error"
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "wrongRule"
-
-                TVarInst ->
-                    case r.term of
-                        TmVar _ _ _ ->
-                            case children of
-                                [ Node (Result.Ok c1) _ ] ->
-                                    checkRule
-                                        (TyRuleTVarInst
-                                            { bottom =
-                                                { ctx = r.ctx
-                                                , term = r.term
-                                                , ty = r.ty
+                            TIf ->
+                                case children of
+                                    [ Node (Result.Ok c1) _, Node (Result.Ok c2) _, Node (Result.Ok c3) _ ] ->
+                                        checkRule
+                                            (TyRuleTIf
+                                                { bottom =
+                                                    { ctx = r.ctx
+                                                    , term = r.term
+                                                    , ty = r.ty
+                                                    }
+                                                , top1 =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                , top2 =
+                                                    { ctx = c2.ctx
+                                                    , term = c2.term
+                                                    , ty = c2.ty
+                                                    }
+                                                , top3 =
+                                                    { ctx = c3.ctx
+                                                    , term = c3.term
+                                                    , ty = c3.ty
+                                                    }
                                                 }
-                                            , top =
-                                                { ctx = c1.ctx
-                                                , term = c1.term
-                                                , ty = c1.ty
+                                            )
+
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
+
+                            TTrue ->
+                                case children of
+                                    [ Node (Result.Ok c1) _ ] ->
+                                        checkRule
+                                            (TyRuleTTrue
+                                                { bottom =
+                                                    { ctx = r.ctx
+                                                    , term = r.term
+                                                    , ty = r.ty
+                                                    }
+                                                , top =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
                                                 }
-                                            }
-                                        )
+                                            )
 
-                                _ ->
-                                    Err "Top rule parse Error"
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "wrongRule"
+                            TFalse ->
+                                case children of
+                                    [ Node (Result.Ok c1) _ ] ->
+                                        checkRule
+                                            (TyRuleTTrue
+                                                { bottom =
+                                                    { ctx = r.ctx
+                                                    , term = r.term
+                                                    , ty = r.ty
+                                                    }
+                                                , top =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                }
+                                            )
 
-                TIf ->
-                    case children of
-                        [ Node (Result.Ok c1) _, Node (Result.Ok c2) _, Node (Result.Ok c3) _ ] ->
-                            checkRule
-                                (TyRuleTIf
-                                    { bottom =
-                                        { ctx = r.ctx
-                                        , term = r.term
-                                        , ty = r.ty
-                                        }
-                                    , top1 =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    , top2 =
-                                        { ctx = c2.ctx
-                                        , term = c2.term
-                                        , ty = c2.ty
-                                        }
-                                    , top3 =
-                                        { ctx = c3.ctx
-                                        , term = c3.term
-                                        , ty = c3.ty
-                                        }
-                                    }
-                                )
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "Top rule parse Error"
+                            TAbs ->
+                                case children of
+                                    [ Node (Result.Ok c1) _ ] ->
+                                        checkRule
+                                            (TyRuleTAbs
+                                                { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                                , top =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                }
+                                            )
 
-                TTrue ->
-                    case children of
-                        [ Node (Result.Ok c1) _ ] ->
-                            checkRule
-                                (TyRuleTTrue
-                                    { bottom =
-                                        { ctx = r.ctx
-                                        , term = r.term
-                                        , ty = r.ty
-                                        }
-                                    , top =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    }
-                                )
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "Top rule parse Error"
+                            TApp ->
+                                case children of
+                                    [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
+                                        checkRule
+                                            (TyRuleTApp
+                                                { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                                , top1 =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                , top2 =
+                                                    { ctx = c2.ctx
+                                                    , term = c2.term
+                                                    , ty = c2.ty
+                                                    }
+                                                }
+                                            )
 
-                TFalse ->
-                    case children of
-                        [ Node (Result.Ok c1) _ ] ->
-                            checkRule
-                                (TyRuleTTrue
-                                    { bottom =
-                                        { ctx = r.ctx
-                                        , term = r.term
-                                        , ty = r.ty
-                                        }
-                                    , top =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    }
-                                )
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "Top rule parse Error"
+                            TTAbs ->
+                                case children of
+                                    [ Node (Result.Ok c1) _ ] ->
+                                        checkRule
+                                            (TyRuleTTAbs
+                                                { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                                , top =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                }
+                                            )
 
-                TAbs ->
-                    case children of
-                        [ Node (Result.Ok c1) _ ] ->
-                            checkRule
-                                (TyRuleTAbs
-                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
-                                    , top =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    }
-                                )
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "Top rule parse Error"
+                            TTApp ->
+                                case children of
+                                    [ Node (Result.Ok c1) _ ] ->
+                                        checkRule
+                                            (TyRuleTTApp
+                                                { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                                , top =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                }
+                                            )
 
-                TTAbs ->
-                    case children of
-                        [ Node (Result.Ok c1) _ ] ->
-                            checkRule
-                                (TyRuleTTAbs
-                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
-                                    , top =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    }
-                                )
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "Top rule parse Error"
+                            TLet ->
+                                case children of
+                                    [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
+                                        checkRule
+                                            (TyRuleTLet
+                                                { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                                , top1 =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                , top2 =
+                                                    { ctx = c2.ctx
+                                                    , term = c2.term
+                                                    , ty = c2.ty
+                                                    }
+                                                }
+                                            )
 
-                TApp ->
-                    case children of
-                        [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
-                            checkRule
-                                (TyRuleTApp
-                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
-                                    , top1 =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    , top2 =
-                                        { ctx = c2.ctx
-                                        , term = c2.term
-                                        , ty = c2.ty
-                                        }
-                                    }
-                                )
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "Top rule parse Error"
+                            TLetGen ->
+                                case children of
+                                    [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
+                                        checkRule
+                                            (TyRuleTLetGen
+                                                { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                                , top1 =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                , top2 =
+                                                    { ctx = c2.ctx
+                                                    , term = c2.term
+                                                    , ty = c2.ty
+                                                    }
+                                                }
+                                            )
 
-                TTApp ->
-                    case children of
-                        [ Node (Result.Ok c1) _ ] ->
-                            checkRule
-                                (TyRuleTTApp
-                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
-                                    , top =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    }
-                                )
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "Top rule parse Error"
+                            TGen ->
+                                case children of
+                                    [ Node (Result.Ok c1) _ ] ->
+                                        checkRule
+                                            (TyRuleTGen
+                                                { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                                , top =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                }
+                                            )
 
-                TLet ->
-                    case children of
-                        [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
-                            checkRule
-                                (TyRuleTLet
-                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
-                                    , top1 =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    , top2 =
-                                        { ctx = c2.ctx
-                                        , term = c2.term
-                                        , ty = c2.ty
-                                        }
-                                    }
-                                )
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "Top rule parse Error"
+                            TInst ->
+                                case children of
+                                    [ Node (Result.Ok c1) _ ] ->
+                                        checkRule
+                                            (TyRuleTInst
+                                                { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
+                                                , top =
+                                                    { ctx = c1.ctx
+                                                    , term = c1.term
+                                                    , ty = c1.ty
+                                                    }
+                                                }
+                                            )
 
-                TLetGen ->
-                    case children of
-                        [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
-                            checkRule
-                                (TyRuleTLetGen
-                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
-                                    , top1 =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    , top2 =
-                                        { ctx = c2.ctx
-                                        , term = c2.term
-                                        , ty = c2.ty
-                                        }
-                                    }
-                                )
+                                    _ ->
+                                        Err Lambda.RuleError.topRuleParse
 
-                        _ ->
-                            Err "Top rule parse Error"
-
-                TGen ->
-                    case children of
-                        [ Node (Result.Ok c1) _ ] ->
-                            checkRule
-                                (TyRuleTGen
-                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
-                                    , top =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    }
-                                )
-
-                        _ ->
-                            Err "Top rule parse Error"
-
-                TInst ->
-                    case children of
-                        [ Node (Result.Ok c1) _ ] ->
-                            checkRule
-                                (TyRuleTInst
-                                    { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
-                                    , top =
-                                        { ctx = c1.ctx
-                                        , term = c1.term
-                                        , ty = c1.ty
-                                        }
-                                    }
-                                )
-
-                        _ ->
-                            Err "Top rule parse Error"
-
-                _ ->
-                    Err "Unimplemented Rule"
+                            NoRule ->
+                                Ok ()
+                    )
 
         _ ->
             Err "Bottom expression error"
@@ -772,3 +769,109 @@ isTerminalRule rule =
 
         NoRule ->
             False
+
+
+canApplyRule : { rule : Rule, ctx : Context, term : Term, ty : Ty } -> Result String ()
+canApplyRule { rule, term, ty, ctx } =
+    case rule of
+        TVar ->
+            case term of
+                TmVar _ _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TVarInst ->
+            case term of
+                TmVar _ _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TIf ->
+            case term of
+                TmIf _ _ _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TTrue ->
+            case term of
+                TmConst _ TmTrue ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TFalse ->
+            case term of
+                TmConst _ TmFalse ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TAbs ->
+            case term of
+                TmAbs _ _ _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TApp ->
+            case term of
+                TmApp _ _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TTAbs ->
+            case term of
+                TmTAbs _ _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TTApp ->
+            case term of
+                TmTApp _ _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TLet ->
+            case term of
+                TmLet _ _ _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TLetGen ->
+            case term of
+                TmLet _ _ _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TGen ->
+            case ty of
+                TyAll _ _ ->
+                    Ok ()
+
+                _ ->
+                    Err Lambda.RuleError.wrongRuleTerm
+
+        TInst ->
+            Ok ()
+
+        NoRule ->
+            Ok ()

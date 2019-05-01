@@ -1,6 +1,6 @@
 module RuleTree.Update exposing (..)
 
-import Inferer.Inferer exposing (buildTree)
+import Inferer.Inferer exposing (inferTree)
 import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx, substFtvTerm)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
@@ -44,6 +44,21 @@ update msg tree =
         OpenSubstitutionMsg _ ->
             tree
 
+        HintTree path ->
+            doHint tree
+
+        HintRuleSelection path ->
+            hintRuleSelection path tree
+
+
+hintRuleSelection : List Int -> RuleTree -> RuleTree
+hintRuleSelection path tree =
+    let
+        (Node { rule } _) =
+            Debug.log "hintTree:" <| doHint tree
+    in
+    setRule path rule tree
+
 
 doHint : RuleTree -> RuleTree
 doHint ((Node ({ ctx, term } as content) _) as t1) =
@@ -64,17 +79,17 @@ doHint ((Node ({ ctx, term } as content) _) as t1) =
     in
     case ( maybeCtx, maybeTerm ) of
         ( Just justCtx, Just justTerm ) ->
-            buildTree justCtx justTerm
+            inferTree justCtx justTerm
                 |> Result.mapError (Debug.log "doHint: buildTree error:")
                 |> Result.toMaybe
                 |> Maybe.map
                     (Utils.Tree.map
                         (\inferredContent ->
-                            { content
+                            { emptyTreeContent
                                 | ctx = showCtx inferredContent.ctx
                                 , term = showTerm inferredContent.ctx inferredContent.term
                                 , ty = showType justCtx inferredContent.ty
-                                , rule = content.rule
+                                , rule = inferredContent.rule
                             }
                         )
                     )

@@ -132,7 +132,7 @@ ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule
         [ hairLine
         , if showDropdown then
             styled S.span
-                [ displayFlex, alignItems center, transform <| translateX <| px -6 ]
+                [ displayFlex, alignItems center, marginLeft <| px -12 ]
                 []
                 (List.filterMap identity
                     [ if showStatus then

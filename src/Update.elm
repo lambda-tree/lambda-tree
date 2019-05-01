@@ -12,7 +12,7 @@ import Substitutor.Update
 
 update : Msg -> Model -> Model
 update msg model =
-    case Debug.log "update :: Msg" msg of
+    case msg of
         SubstitutionMsg m ->
             { model | substitution = Substitutor.Update.update m model.substitution }
 

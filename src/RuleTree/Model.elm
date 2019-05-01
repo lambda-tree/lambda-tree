@@ -26,14 +26,16 @@ type alias RuleTree =
     Tree RuleTreeContent
 
 
+emptyTreeContent =
+    { ctx = ""
+    , term = ""
+    , ty = ""
+    , rule = NoRule
+    , dropdown = Dropdown.initialState
+    , statusPopover = Popover.initialState
+    }
+
+
 emptyTree : RuleTree
 emptyTree =
-    Node
-        { ctx = ""
-        , term = ""
-        , ty = ""
-        , rule = NoRule
-        , dropdown = Dropdown.initialState
-        , statusPopover = Popover.initialState
-        }
-        []
+    Node emptyTreeContent []

@@ -34,8 +34,8 @@ type TyRule
     = TyRuleTVar { bottom : TypeStatement, top : TypeStatement }
     | TyRuleTVarInst { bottom : TypeStatement, top : TypeStatement }
     | TyRuleTIf { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement, top3 : TypeStatement }
-    | TyRuleTTrue { bottom : TypeStatement, top : TypeStatement }
-    | TyRuleTFalse { bottom : TypeStatement, top : TypeStatement }
+    | TyRuleTTrue { bottom : TypeStatement }
+    | TyRuleTFalse { bottom : TypeStatement }
     | TyRuleTAbs { bottom : TypeStatement, top : TypeStatement }
     | TyRuleTApp { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement }
     | TyRuleTTAbs { bottom : TypeStatement, top : TypeStatement }
@@ -148,24 +148,20 @@ checkRule rule =
                 _ ->
                     Err Lambda.RuleError.wrongRuleTerm
 
-        TyRuleTTrue { bottom, top } ->
+        TyRuleTTrue { bottom } ->
             case bottom.term of
                 TmConst _ TmTrue ->
                     Ok ()
-                        |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
-                        |> check ( Lambda.RuleError.termSame, top.term == bottom.term )
-                        |> check ( Lambda.RuleError.tyBool, equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
+                        |> check ( Lambda.RuleError.tyBool, equalTypes bottom.ctx bottom.ty bottom.ctx (TyConst TyBool) )
 
                 _ ->
                     Err Lambda.RuleError.wrongRuleTerm
 
-        TyRuleTFalse { bottom, top } ->
+        TyRuleTFalse { bottom } ->
             case bottom.term of
                 TmConst _ TmFalse ->
                     Ok ()
-                        |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
-                        |> check ( Lambda.RuleError.termSame, top.term == bottom.term )
-                        |> check ( Lambda.RuleError.tyBool, equalTypes top.ctx top.ty bottom.ctx (TyConst TyBool) )
+                        |> check ( Lambda.RuleError.tyBool, equalTypes bottom.ctx bottom.ty bottom.ctx (TyConst TyBool) )
 
                 _ ->
                     Err Lambda.RuleError.wrongRuleTerm
@@ -481,18 +477,13 @@ tryRule typeSystem tree =
 
                             TTrue ->
                                 case children of
-                                    [ Node (Result.Ok c1) _ ] ->
+                                    [] ->
                                         checkRule
                                             (TyRuleTTrue
                                                 { bottom =
                                                     { ctx = r.ctx
                                                     , term = r.term
                                                     , ty = r.ty
-                                                    }
-                                                , top =
-                                                    { ctx = c1.ctx
-                                                    , term = c1.term
-                                                    , ty = c1.ty
                                                     }
                                                 }
                                             )
@@ -502,18 +493,13 @@ tryRule typeSystem tree =
 
                             TFalse ->
                                 case children of
-                                    [ Node (Result.Ok c1) _ ] ->
+                                    [] ->
                                         checkRule
-                                            (TyRuleTTrue
+                                            (TyRuleTFalse
                                                 { bottom =
                                                     { ctx = r.ctx
                                                     , term = r.term
                                                     , ty = r.ty
-                                                    }
-                                                , top =
-                                                    { ctx = c1.ctx
-                                                    , term = c1.term
-                                                    , ty = c1.ty
                                                     }
                                                 }
                                             )

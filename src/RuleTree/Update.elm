@@ -201,10 +201,10 @@ setRule path rule tree =
                             Node { content | rule = rule } []
 
                         TVar ->
-                            Node { content | rule = rule } [ emptyTree ]
+                            Node { content | rule = rule } []
 
                         TVarInst ->
-                            Node { content | rule = rule } [ emptyTree ]
+                            Node { content | rule = rule } []
 
                         TAbs ->
                             Node { content | rule = rule } [ emptyTree ]

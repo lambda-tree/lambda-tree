@@ -31,8 +31,8 @@ type Rule
 
 
 type TyRule
-    = TyRuleTVar { bottom : TypeStatement, top : TypeStatement }
-    | TyRuleTVarInst { bottom : TypeStatement, top : TypeStatement }
+    = TyRuleTVar { bottom : TypeStatement }
+    | TyRuleTVarInst { bottom : TypeStatement }
     | TyRuleTIf { bottom : TypeStatement, top1 : TypeStatement, top2 : TypeStatement, top3 : TypeStatement }
     | TyRuleTTrue { bottom : TypeStatement }
     | TyRuleTFalse { bottom : TypeStatement }
@@ -77,21 +77,18 @@ type alias ExprTree =
 checkRule : TyRule -> Result String ()
 checkRule rule =
     case rule of
-        TyRuleTVar { bottom, top } ->
+        TyRuleTVar { bottom } ->
             case bottom.term of
                 TmVar _ _ _ ->
                     Ok ()
-                        |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
-                        |> check ( Lambda.RuleError.termSame, bottom.term == top.term )
-                        |> check ( Lambda.RuleError.tySame, bottom.ty == top.ty )
                         |> check
                             ( Lambda.RuleError.varTyCtx
                             , case bottom.term of
                                 TmVar _ x _ ->
-                                    case getbinding top.ctx x of
+                                    case getbinding bottom.ctx x of
                                         Just (VarBind ty1) ->
                                             equalTypes
-                                                (List.drop (x + 1) top.ctx)
+                                                (List.drop (x + 1) bottom.ctx)
                                                 ty1
                                                 bottom.ctx
                                                 bottom.ty
@@ -106,20 +103,17 @@ checkRule rule =
                 _ ->
                     Err Lambda.RuleError.wrongRuleTerm
 
-        TyRuleTVarInst { bottom, top } ->
+        TyRuleTVarInst { bottom } ->
             case bottom.term of
                 TmVar _ _ _ ->
                     Ok ()
-                        |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
-                        |> check ( Lambda.RuleError.termSame, bottom.term == top.term )
-                        |> check ( Lambda.RuleError.tySame, bottom.ty == top.ty )
                         |> checkWithDetails
                             ( Lambda.RuleError.varSpec
                             , case bottom.term of
                                 TmVar _ x _ ->
-                                    case getbinding top.ctx x of
+                                    case getbinding bottom.ctx x of
                                         Just (VarBind ty1) ->
-                                            isSpecializedType top.ctx
+                                            isSpecializedType bottom.ctx
                                                 ty1
                                                 bottom.ty
 
@@ -404,18 +398,13 @@ tryRule typeSystem tree =
                         case r.rule of
                             TVar ->
                                 case children of
-                                    [ Node (Result.Ok c1) _ ] ->
+                                    [] ->
                                         checkRule
                                             (TyRuleTVar
                                                 { bottom =
                                                     { ctx = r.ctx
                                                     , term = r.term
                                                     , ty = r.ty
-                                                    }
-                                                , top =
-                                                    { ctx = c1.ctx
-                                                    , term = c1.term
-                                                    , ty = c1.ty
                                                     }
                                                 }
                                             )
@@ -425,18 +414,13 @@ tryRule typeSystem tree =
 
                             TVarInst ->
                                 case children of
-                                    [ Node (Result.Ok c1) _ ] ->
+                                    [] ->
                                         checkRule
                                             (TyRuleTVarInst
                                                 { bottom =
                                                     { ctx = r.ctx
                                                     , term = r.term
                                                     , ty = r.ty
-                                                    }
-                                                , top =
-                                                    { ctx = c1.ctx
-                                                    , term = c1.term
-                                                    , ty = c1.ty
                                                     }
                                                 }
                                             )

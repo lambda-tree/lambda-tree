@@ -28,7 +28,7 @@ substitutor substitution =
         [ styled S.div [ marginBottom <| rem 0.5 ] [] [ S.text "Type" ]
         , lambdaExprInput
             [ View.Lambda.ExpressionInput.Value substitution.ty
-            , View.Lambda.ExpressionInput.Placeholder "E.g. 'Bool'"
+            , View.Lambda.ExpressionInput.Placeholder "E.g. 'X2 → Bool'"
             , View.Lambda.ExpressionInput.Error (parsedType substitution |> extractError |> Maybe.map ParseError)
             , View.Lambda.ExpressionInput.OnInput (Substitutor.Message.TyChangedMsg >> SubstitutionMsg)
             ]
@@ -38,6 +38,7 @@ substitutor substitution =
             , View.Lambda.ExpressionInput.Placeholder "E.g. 'X1'"
             , View.Lambda.ExpressionInput.Error (parsedVar substitution |> extractError |> Maybe.map ParseError)
             , View.Lambda.ExpressionInput.OnInput (Substitutor.Message.VarChangedMsg >> SubstitutionMsg)
+            , View.Lambda.ExpressionInput.OnEnter (\_ -> DoSubstitutionMsg)
             ]
         ]
 

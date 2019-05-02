@@ -40,60 +40,54 @@ getTitle =
 
 proofCell : Bool -> { a | ctx : TreeViewDataResult, term : TreeViewDataResult, ty : TreeViewDataResult } -> (TextKind -> String -> msg) -> S.Html msg
 proofCell checkErrors content msgCreator =
-    S.div
+    styled S.div
+        [ displayFlex, flexShrink <| int 0, alignItems center, margin <| rem 0.5, justifyContent center, minHeight <| px 32 ]
         []
         [ styled S.div
-            [ displayFlex, flexShrink <| int 0, alignItems center, margin <| rem 0.5, justifyContent center, minHeight <| px 32 ]
-            []
-            [ styled S.div
-                [ displayFlex
-                , width <| px 170
-                ]
-                (getTitle content.ctx.error)
-                [ lambdaExprInput
-                    [ View.Lambda.ExpressionInput.Value content.ctx.text
-                    , View.Lambda.ExpressionInput.OnInput (msgCreator CtxKind)
-                    , View.Lambda.ExpressionInput.Error <|
-                        if checkErrors then
-                            content.ctx.error
+            [ displayFlex
+            ]
+            (getTitle content.ctx.error)
+            [ lambdaExprInput
+                [ View.Lambda.ExpressionInput.Value content.ctx.text
+                , View.Lambda.ExpressionInput.OnInput (msgCreator CtxKind)
+                , View.Lambda.ExpressionInput.Error <|
+                    if checkErrors then
+                        content.ctx.error
 
-                        else
-                            Nothing
-                    ]
+                    else
+                        Nothing
                 ]
-            , lambdaExprText "⊢"
-            , styled S.div
-                [ displayFlex
-                , width <| px 340
-                ]
-                (getTitle content.term.error)
-                [ lambdaExprInput
-                    [ View.Lambda.ExpressionInput.Value content.term.text
-                    , View.Lambda.ExpressionInput.OnInput (msgCreator TermKind)
-                    , View.Lambda.ExpressionInput.Error <|
-                        if checkErrors then
-                            content.term.error
+            ]
+        , lambdaExprText "⊢"
+        , styled S.div
+            [ displayFlex
+            ]
+            (getTitle content.term.error)
+            [ lambdaExprInput
+                [ View.Lambda.ExpressionInput.Value content.term.text
+                , View.Lambda.ExpressionInput.OnInput (msgCreator TermKind)
+                , View.Lambda.ExpressionInput.Error <|
+                    if checkErrors then
+                        content.term.error
 
-                        else
-                            Nothing
-                    ]
+                    else
+                        Nothing
                 ]
-            , lambdaExprText ":"
-            , styled S.div
-                [ displayFlex
-                , width <| px 170
-                ]
-                (getTitle content.ty.error)
-                [ lambdaExprInput
-                    [ View.Lambda.ExpressionInput.Value content.ty.text
-                    , View.Lambda.ExpressionInput.OnInput (msgCreator TyKind)
-                    , View.Lambda.ExpressionInput.Error <|
-                        if checkErrors then
-                            content.ty.error
+            ]
+        , lambdaExprText ":"
+        , styled S.div
+            [ displayFlex
+            ]
+            (getTitle content.ty.error)
+            [ lambdaExprInput
+                [ View.Lambda.ExpressionInput.Value content.ty.text
+                , View.Lambda.ExpressionInput.OnInput (msgCreator TyKind)
+                , View.Lambda.ExpressionInput.Error <|
+                    if checkErrors then
+                        content.ty.error
 
-                        else
-                            Nothing
-                    ]
+                    else
+                        Nothing
                 ]
             ]
         ]

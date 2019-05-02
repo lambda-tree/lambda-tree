@@ -47,6 +47,7 @@ treeView settings tree =
                   styled S.div
                     [ displayFlex
                     , alignItems flexEnd
+                    , justifyContent center
                     , marginBottom <| px -11
                     ]
                     []

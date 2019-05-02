@@ -16,6 +16,7 @@ type LambdaExprInputOption msg
     | OnEnter (String -> msg)
     | Error (Maybe ExprError)
     | Placeholder String
+    | Size Int
 
 
 lambdaExprInput : List (LambdaExprInputOption msg) -> Html msg
@@ -38,6 +39,9 @@ lambdaExprInput options =
                 |> List.filterMap
                     (\x ->
                         case x of
+                            Value "" ->
+                                Nothing
+
                             Value str ->
                                 Just <| str
 
@@ -76,17 +80,34 @@ lambdaExprInput options =
                     )
                 |> List.head
 
-        placeholder =
+        placeholderStrings =
             options
                 |> List.filterMap
                     (\x ->
                         case x of
                             Placeholder s ->
-                                Just <| A.placeholder s
+                                Just <| s
 
                             _ ->
                                 Nothing
                     )
+
+        placeholder =
+            List.map A.placeholder placeholderStrings
+
+        size =
+            options
+                |> List.filterMap
+                    (\x ->
+                        case x of
+                            Size i ->
+                                Just <| i
+
+                            _ ->
+                                Nothing
+                    )
+                |> List.head
+                |> Maybe.withDefault 1
 
         paddingHorizontal =
             px 10
@@ -126,7 +147,7 @@ lambdaExprInput options =
             , padding2 (rem 0.3) paddingHorizontal
             , borderRadius <| rem 0.5
             ]
-            (value ++ onInput ++ onEnter ++ placeholder ++ [ A.autocomplete False, A.spellcheck False, A.size 1 ])
+            (value ++ onInput ++ onEnter ++ placeholder ++ [ A.autocomplete False, A.spellcheck False, A.size size ])
             []
         , styled S.span
             [ commonStyles
@@ -136,5 +157,14 @@ lambdaExprInput options =
             , marginRight <| px 3
             ]
             []
-            [ S.text <| String.replace " " "\u{00A0}" (List.head valueStrings |> Maybe.withDefault "") ]
+            [ S.text <|
+                String.replace " "
+                    "\u{00A0}"
+                    (List.head valueStrings
+                        |> Maybe.withDefault
+                            (List.head placeholderStrings
+                                |> Maybe.withDefault ""
+                            )
+                    )
+            ]
         ]

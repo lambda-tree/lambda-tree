@@ -25,7 +25,7 @@ update msg model =
                     }
 
                 _ ->
-                    { model | ruleTree = RuleTree.Update.update m model.ruleTree }
+                    { model | ruleTree = RuleTree.Update.update m model.settings model.ruleTree }
 
         SettingsMsg m ->
             { model | settings = Settings.Update.update m model.settings }

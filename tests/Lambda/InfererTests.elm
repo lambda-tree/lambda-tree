@@ -13,6 +13,6 @@ buildTreeTest =
     describe "buildTree"
         [ test "should build tree" <|
             \_ ->
-                inferTree [] (TmConst I TmTrue)
+                inferTree (HM SyntaxDirected) [] (TmConst I TmTrue)
                     |> Expect.equal (Ok <| Node { ctx = [], term = TmConst I TmTrue, ty = TyConst TyBool, rule = TTrue, ss = [] } [])
         ]

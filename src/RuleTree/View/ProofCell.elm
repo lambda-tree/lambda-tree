@@ -38,8 +38,8 @@ getTitle =
         >> Maybe.Extra.toList
 
 
-proofCell : Bool -> { a | ctx : TreeViewDataResult, term : TreeViewDataResult, ty : TreeViewDataResult } -> (TextKind -> String -> msg) -> S.Html msg
-proofCell checkErrors content msgCreator =
+proofCell : Bool -> Bool -> { a | ctx : TreeViewDataResult, term : TreeViewDataResult, ty : TreeViewDataResult } -> (TextKind -> String -> msg) -> S.Html msg
+proofCell showPlaceholders checkErrors content msgCreator =
     styled S.div
         [ displayFlex, flexShrink <| int 0, alignItems center, margin <| rem 0.5, justifyContent center, minHeight <| px 32 ]
         []
@@ -47,7 +47,7 @@ proofCell checkErrors content msgCreator =
             [ displayFlex
             ]
             (getTitle content.ctx.error)
-            [ lambdaExprInput
+            [ lambdaExprInput <|
                 [ View.Lambda.ExpressionInput.Value content.ctx.text
                 , View.Lambda.ExpressionInput.OnInput (msgCreator CtxKind)
                 , View.Lambda.ExpressionInput.Error <|
@@ -57,13 +57,20 @@ proofCell checkErrors content msgCreator =
                     else
                         Nothing
                 ]
+                    ++ (if showPlaceholders then
+                            [ View.Lambda.ExpressionInput.Placeholder "e.g.   y: A, z: Bool, id: ∀B. B→B"
+                            ]
+
+                        else
+                            []
+                       )
             ]
         , lambdaExprText "⊢"
         , styled S.div
             [ displayFlex
             ]
             (getTitle content.term.error)
-            [ lambdaExprInput
+            [ lambdaExprInput <|
                 [ View.Lambda.ExpressionInput.Value content.term.text
                 , View.Lambda.ExpressionInput.OnInput (msgCreator TermKind)
                 , View.Lambda.ExpressionInput.Error <|
@@ -73,13 +80,20 @@ proofCell checkErrors content msgCreator =
                     else
                         Nothing
                 ]
+                    ++ (if showPlaceholders then
+                            [ View.Lambda.ExpressionInput.Placeholder "e.g.   (λx: A. x) y"
+                            ]
+
+                        else
+                            []
+                       )
             ]
         , lambdaExprText ":"
         , styled S.div
             [ displayFlex
             ]
             (getTitle content.ty.error)
-            [ lambdaExprInput
+            [ lambdaExprInput <|
                 [ View.Lambda.ExpressionInput.Value content.ty.text
                 , View.Lambda.ExpressionInput.OnInput (msgCreator TyKind)
                 , View.Lambda.ExpressionInput.Error <|
@@ -89,5 +103,12 @@ proofCell checkErrors content msgCreator =
                     else
                         Nothing
                 ]
+                    ++ (if showPlaceholders then
+                            [ View.Lambda.ExpressionInput.Placeholder "e.g.   Z"
+                            ]
+
+                        else
+                            []
+                       )
             ]
         ]

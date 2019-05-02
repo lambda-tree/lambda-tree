@@ -87,7 +87,15 @@ treeView settings tree =
                             , statusPopover = content.statusPopover
                             , showStatus = settings.checkErrors
                             }
-                        , proofCell settings.checkErrors content (TextChangedMsg path)
+                        , proofCell
+                            (List.isEmpty path
+                                && String.isEmpty content.term.text
+                                && String.isEmpty content.ty.text
+                                && String.isEmpty content.ctx.text
+                            )
+                            settings.checkErrors
+                            content
+                            (TextChangedMsg path)
                         , styled S.div [ height <| px 10 ] [] []
                         , if List.isEmpty path then
                             S.div [] []

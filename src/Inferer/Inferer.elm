@@ -32,8 +32,8 @@ applySSTree ((Node { ss } _) as tree) =
             )
 
 
-inferTree : Context -> Term -> Result String InferredTree
-inferTree =
+inferTree : TypeSystem -> Context -> Term -> Result String InferredTree
+inferTree typeSystem =
     let
         buildTree ctx t =
             case t of
@@ -64,15 +64,51 @@ inferTree =
                 TmVar _ x _ ->
                     case getbinding ctx x of
                         Just (VarBind ty) ->
-                            Ok <|
-                                Node
-                                    { ctx = ctx
-                                    , term = t
-                                    , ty = inst ctx ty
-                                    , ss = []
-                                    , rule = TVarInst
-                                    }
-                                    []
+                            case typeSystem of
+                                HM SyntaxDirected ->
+                                    Ok <|
+                                        Node
+                                            { ctx = ctx
+                                            , term = t
+                                            , ty = inst ctx ty
+                                            , ss = []
+                                            , rule = TVarInst
+                                            }
+                                            []
+
+                                HM NonDeterministic ->
+                                    Ok <|
+                                        let
+                                            instTy =
+                                                inst ctx ty
+                                        in
+                                        Node
+                                            { ctx = ctx
+                                            , term = t
+                                            , ty = instTy
+                                            , ss = []
+                                            , rule = TInst
+                                            }
+                                            [ Node
+                                                { ctx = ctx
+                                                , term = t
+                                                , ty = instTy
+                                                , ss = []
+                                                , rule = TVar
+                                                }
+                                                []
+                                            ]
+
+                                _ ->
+                                    Ok <|
+                                        Node
+                                            { ctx = ctx
+                                            , term = t
+                                            , ty = ty
+                                            , ss = []
+                                            , rule = TVar
+                                            }
+                                            []
 
                         _ ->
                             Err "Var is not bound in the context with type"
@@ -135,25 +171,62 @@ inferTree =
                     buildTree ctx t1
                         |> Result.andThen
                             (\((Node n1 _) as bt1) ->
-                                let
-                                    ctx1 =
-                                        substFtvCtx n1.ss ctx
+                                case typeSystem of
+                                    HM hmType ->
+                                        let
+                                            ctx1 =
+                                                substFtvCtx n1.ss ctx
 
-                                    genTy =
-                                        gen ctx1 n1.ty
-                                in
-                                buildTree (addbinding ctx varName (VarBind genTy)) t2
-                                    |> Result.map
-                                        (\((Node n2 _) as bt2) ->
-                                            Node
-                                                { ctx = ctx
-                                                , term = t
-                                                , ty = n2.ty
-                                                , rule = TLetGen
-                                                , ss = n2.ss ++ n1.ss
-                                                }
-                                                [ bt1, bt2 ]
-                                        )
+                                            genTy =
+                                                gen ctx1 n1.ty
+                                        in
+                                        buildTree (addbinding ctx varName (VarBind genTy)) t2
+                                            |> Result.map
+                                                (\((Node n2 _) as bt2) ->
+                                                    case hmType of
+                                                        SyntaxDirected ->
+                                                            Node
+                                                                { ctx = ctx
+                                                                , term = t
+                                                                , ty = n2.ty
+                                                                , rule = TLetGen
+                                                                , ss = n2.ss ++ n1.ss
+                                                                }
+                                                                [ bt1, bt2 ]
+
+                                                        NonDeterministic ->
+                                                            Node
+                                                                { ctx = ctx
+                                                                , term = t
+                                                                , ty = n2.ty
+                                                                , rule = TLet
+                                                                , ss = n2.ss ++ n1.ss
+                                                                }
+                                                                [ Node
+                                                                    { ctx = n1.ctx
+                                                                    , term = n1.term
+                                                                    , ty = genTy
+                                                                    , rule = TGen
+                                                                    , ss = n1.ss
+                                                                    }
+                                                                    [ bt1 ]
+                                                                , bt2
+                                                                ]
+                                                )
+
+                                    _ ->
+                                        buildTree (addbinding ctx varName (VarBind n1.ty)) t2
+                                            |> Result.map
+                                                (\((Node n2 _) as bt2) ->
+                                                    Node
+                                                        { ctx = ctx
+                                                        , term = t
+                                                        , ty = n2.ty
+                                                        , rule = TLet
+                                                        , ss = n2.ss ++ n1.ss
+                                                        }
+                                                        [ bt1, bt2 ]
+                                                )
                             )
 
                 -- Extension of W to work with System F terms

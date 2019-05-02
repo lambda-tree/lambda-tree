@@ -1,6 +1,7 @@
 module RuleTree.Update exposing (..)
 
 import Inferer.Inferer exposing (inferTree)
+import Lambda.Expression exposing (TypeSystem)
 import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx, substFtvTerm)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
@@ -9,19 +10,21 @@ import Lambda.Show exposing (showCtx, showTerm, showType)
 import List.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (..)
+import Settings.Model
+import Settings.Utils exposing (getTypeSystem)
 import Substitutor.Model
 import Substitutor.Utils exposing (parsedType, parsedVar)
 import Utils.Tree exposing (Tree(..), mapContentAtPath)
 
 
-update : Msg -> RuleTree -> RuleTree
-update msg tree =
+update : Msg -> Settings.Model.Model -> RuleTree -> RuleTree
+update msg settings tree =
     case msg of
         TextChangedMsg path kind text ->
             updateTextInPath kind text path tree
 
         HintMsg ->
-            doHint tree
+            doHint (getTypeSystem settings) tree
 
         RemoveMsg path ->
             setRule path NoRule tree
@@ -45,23 +48,23 @@ update msg tree =
             tree
 
         HintTree path ->
-            doHint tree
+            doHint (getTypeSystem settings) tree
 
         HintRuleSelection path ->
-            hintRuleSelection path tree
+            hintRuleSelection (getTypeSystem settings) path tree
 
 
-hintRuleSelection : List Int -> RuleTree -> RuleTree
-hintRuleSelection path tree =
+hintRuleSelection : TypeSystem -> List Int -> RuleTree -> RuleTree
+hintRuleSelection typeSystem path tree =
     let
         (Node { rule } _) =
-            Debug.log "hintTree:" <| doHint tree
+            Debug.log "hintTree:" <| doHint typeSystem tree
     in
     setRule path rule tree
 
 
-doHint : RuleTree -> RuleTree
-doHint ((Node ({ ctx, term } as content) _) as t1) =
+doHint : TypeSystem -> RuleTree -> RuleTree
+doHint typeSystem ((Node ({ ctx, term } as content) _) as t1) =
     let
         maybeCtx =
             parseCtx ctx
@@ -79,7 +82,7 @@ doHint ((Node ({ ctx, term } as content) _) as t1) =
     in
     case ( maybeCtx, maybeTerm ) of
         ( Just justCtx, Just justTerm ) ->
-            inferTree justCtx justTerm
+            inferTree typeSystem justCtx justTerm
                 |> Result.mapError (Debug.log "doHint: buildTree error:")
                 |> Result.toMaybe
                 |> Maybe.map

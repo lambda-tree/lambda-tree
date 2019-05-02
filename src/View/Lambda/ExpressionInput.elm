@@ -145,6 +145,9 @@ lambdaExprInput options =
                 )
                 (rgba 255 0 0 0.5)
             , padding2 (rem 0.3) paddingHorizontal
+            , pseudoElement "placeholder"
+                [ opacity <| num 0.9
+                ]
             , borderRadius <| rem 0.5
             ]
             (value ++ onInput ++ onEnter ++ placeholder ++ [ A.autocomplete False, A.spellcheck False, A.size size ])

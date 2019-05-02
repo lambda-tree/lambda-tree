@@ -38,11 +38,6 @@ checkRuleTest =
                             , term = TmVar I 0 1
                             , ty = TyConst TyBool
                             }
-                        , top =
-                            { ctx = [ ( "x", VarBind <| TyConst TyBool ) ]
-                            , term = TmVar I 0 1
-                            , ty = TyConst TyBool
-                            }
                         }
                     )
                     |> Expect.equal (Ok ())
@@ -51,16 +46,6 @@ checkRuleTest =
                 checkRule
                     (TyRuleTVar
                         { bottom =
-                            { ctx =
-                                [ ( "Z", TyVarBind )
-                                , ( "x", VarBind <| TyAll "A" <| TyArr (TyVar 0 3) (TyVar 1 3) )
-                                , ( "X", TyVarBind )
-                                , ( "Y", TyVarBind )
-                                ]
-                            , term = TmVar I 1 4
-                            , ty = TyAll "A" <| TyArr (TyVar 0 5) (TyVar 3 5)
-                            }
-                        , top =
                             { ctx =
                                 [ ( "Z", TyVarBind )
                                 , ( "x", VarBind <| TyAll "A" <| TyArr (TyVar 0 3) (TyVar 1 3) )
@@ -109,11 +94,6 @@ checkRuleTest =
                             , term = TmConst I TmTrue
                             , ty = TyConst TyBool
                             }
-                        , top =
-                            { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
-                            , term = TmConst I TmTrue
-                            , ty = TyConst TyBool
-                            }
                         }
                     )
                     |> Expect.equal (Ok ())
@@ -122,11 +102,6 @@ checkRuleTest =
                 checkRule
                     (TyRuleTFalse
                         { bottom =
-                            { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
-                            , term = TmConst I TmFalse
-                            , ty = TyConst TyBool
-                            }
-                        , top =
                             { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
                             , term = TmConst I TmFalse
                             , ty = TyConst TyBool

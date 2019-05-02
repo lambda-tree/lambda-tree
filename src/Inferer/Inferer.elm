@@ -9,17 +9,17 @@ import Set exposing (Set)
 import Utils.Tree exposing (Tree(..))
 
 
-type alias BuiltTreeContent =
+type alias InferredTreeContent =
     { ctx : Context, term : Term, ty : Ty, rule : Rule, ss : SubstitutionFtv }
 
 
-type alias BuiltTree =
-    Tree BuiltTreeContent
+type alias InferredTree =
+    Tree InferredTreeContent
 
 
 {-| Optimize by running only on the final tree
 -}
-applySSTree : BuiltTree -> BuiltTree
+applySSTree : InferredTree -> InferredTree
 applySSTree ((Node { ss } _) as tree) =
     tree
         |> Utils.Tree.map
@@ -32,7 +32,7 @@ applySSTree ((Node { ss } _) as tree) =
             )
 
 
-inferTree : Context -> Term -> Result String BuiltTree
+inferTree : Context -> Term -> Result String InferredTree
 inferTree =
     let
         buildTree ctx t =

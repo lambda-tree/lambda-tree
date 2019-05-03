@@ -15,7 +15,8 @@
             "elm-community/maybe-extra": "5.0.0",
             "elm-community/result-extra": "2.2.1",
             "rtfeldman/elm-css": "16.0.0",
-            "rundis/elm-bootstrap": "5.1.0"
+            "rundis/elm-bootstrap": "5.1.0",
+            "truqu/elm-base64": "2.0.4"
         },
         "indirect": {
             "Skinney/murmur3": "2.0.8",

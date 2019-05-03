@@ -3,6 +3,7 @@ module Update exposing (..)
 import Bootstrap.Modal as Modal
 import Message exposing (..)
 import Model exposing (..)
+import RuleTree.Encode
 import RuleTree.Message
 import RuleTree.Update exposing (doSubstitution)
 import Settings.Update
@@ -12,6 +13,13 @@ import Substitutor.Update
 
 update : Msg -> Model -> Model
 update msg model =
+    let
+        _ =
+            Debug.log "---" (RuleTree.Encode.toString model.ruleTree)
+
+        _ =
+            Debug.log "+++" (RuleTree.Encode.toBase64String model.ruleTree)
+    in
     case msg of
         SubstitutionMsg m ->
             { model | substitution = Substitutor.Update.update m model.substitution }

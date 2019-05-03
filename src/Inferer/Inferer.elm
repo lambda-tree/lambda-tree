@@ -77,27 +77,35 @@ inferTree typeSystem =
                                             []
 
                                 HM NonDeterministic ->
-                                    Ok <|
-                                        let
-                                            instTy =
-                                                inst ctx ty
-                                        in
-                                        Node
-                                            { ctx = ctx
-                                            , term = t
-                                            , ty = instTy
-                                            , ss = []
-                                            , rule = TInst
-                                            }
-                                            [ Node
+                                    if Set.size (topBoundVars ty) > 0 then
+                                        Ok <|
+                                            Node
                                                 { ctx = ctx
                                                 , term = t
-                                                , ty = instTy
+                                                , ty = inst ctx ty
+                                                , ss = []
+                                                , rule = TInst
+                                                }
+                                                [ Node
+                                                    { ctx = ctx
+                                                    , term = t
+                                                    , ty = ty
+                                                    , ss = []
+                                                    , rule = TVar
+                                                    }
+                                                    []
+                                                ]
+
+                                    else
+                                        Ok <|
+                                            Node
+                                                { ctx = ctx
+                                                , term = t
+                                                , ty = ty
                                                 , ss = []
                                                 , rule = TVar
                                                 }
                                                 []
-                                            ]
 
                                 _ ->
                                     Ok <|

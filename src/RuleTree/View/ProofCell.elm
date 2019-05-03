@@ -58,7 +58,7 @@ proofCell showPlaceholders checkErrors content msgCreator =
                         Nothing
                 ]
                     ++ (if showPlaceholders then
-                            [ View.Lambda.ExpressionInput.Placeholder "e.g.   y: A, z: Bool, id: ∀B. B→B"
+                            [ View.Lambda.ExpressionInput.Placeholder "e.g.   y: A, z: Bool→Bool"
                             ]
 
                         else

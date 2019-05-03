@@ -10,14 +10,11 @@ import Lambda.Parse exposing (symbols)
 import Lambda.Rule exposing (rulesForTypeSystem)
 import Message exposing (Msg(..))
 import Model
-import RuleTree.Message exposing (Msg(..))
+import RuleTree.View.ExportButton exposing (exportButton)
 import RuleTree.View.Tree exposing (treeView)
 import Settings.Message exposing (Msg(..))
 import Settings.Model exposing (TypeSystem(..))
 import Settings.Utils exposing (getTypeSystem)
-import Substitutor.Message
-import View.Lambda.ExpressionInput exposing (lambdaExprInput)
-import View.Lambda.ExpressionText exposing (lambdaExprText)
 import View.Lambda.RuleList exposing (ruleList)
 import View.SegmentedControl exposing (segmentedControl)
 import View.SubstitutionModal exposing (substitutionModal)
@@ -104,8 +101,7 @@ topBar model =
             , styled S.div [ flex <| int 1 ] [] []
             , checkSwitch model
             , styled S.div [ width <| px 20 ] [] []
-            , Button.button [ Button.small, Button.dark ] [ S.text "Export" |> S.toUnstyled ]
-                |> S.fromUnstyled
+            , exportButton model.ruleTree
             , styled S.div [ width <| px 10 ] [] []
             , Button.button
                 [ Button.small

@@ -1,5 +1,7 @@
 module Utils.Tree exposing (..)
 
+import Json.Decode as D
+import Json.Encode as E
 import List.Extra
 
 
@@ -69,6 +71,29 @@ foldr f acc (Node content children) =
     f content <| List.foldr (\t1 r -> foldr f r t1) acc children
 
 
+foldTree : (a -> List b -> b) -> Tree a -> b
+foldTree f (Node content children) =
+    f content (List.map (foldTree f) children)
+
+
 toList : Tree a -> List a
 toList =
     foldr (::) []
+
+
+encodeTree : (a -> E.Value) -> Tree a -> E.Value
+encodeTree encodeContent =
+    foldTree
+        (\content childrenValues ->
+            E.object
+                [ ( "content", encodeContent content )
+                , ( "children", E.list identity childrenValues )
+                ]
+        )
+
+
+decodeTree : D.Decoder a -> D.Decoder (Tree a)
+decodeTree decodeContent =
+    D.map2 Node
+        (D.field "content" decodeContent)
+        (D.field "children" <| D.list <| D.lazy (\_ -> decodeTree decodeContent))

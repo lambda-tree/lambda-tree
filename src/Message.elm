@@ -1,5 +1,6 @@
 module Message exposing (..)
 
+import File exposing (File)
 import RuleTree.Message
 import Settings.Message
 import Substitutor.Message
@@ -12,3 +13,7 @@ type Msg
     | DoSubstitutionMsg
     | HideSubstitutionModalMsg
     | SettingsMsg Settings.Message.Msg
+    | FileImportedMsg File
+    | ImportFileMsg
+    | RuleTreeImportedMsg String
+    | ExportMsg

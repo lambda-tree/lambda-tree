@@ -15,7 +15,7 @@ main : Program () Model Msg
 main =
     Browser.document
         { init = \_ -> ( Init.init, Cmd.none )
-        , update = \msg model -> ( Update.update msg model, Cmd.none )
+        , update = \msg model -> Update.update msg model
         , view =
             \model ->
                 { title = "Lambda Tree"

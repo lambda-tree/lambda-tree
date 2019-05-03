@@ -1,6 +1,5 @@
 module RuleTree.Decode exposing (..)
 
-import Base64
 import Json.Decode as D
 import Lambda.Rule exposing (Rule(..))
 import RuleTree.Model exposing (..)

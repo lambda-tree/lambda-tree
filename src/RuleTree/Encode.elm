@@ -1,6 +1,5 @@
 module RuleTree.Encode exposing (..)
 
-import Base64
 import Json.Encode as E exposing (..)
 import Lambda.Rule exposing (Rule(..))
 import RuleTree.Model exposing (..)
@@ -72,10 +71,3 @@ toString : RuleTree -> String
 toString =
     encodeRuleTree
         >> E.encode 2
-
-
-toBase64String : RuleTree -> String
-toBase64String =
-    encodeRuleTree
-        >> E.encode 0
-        >> Base64.encode

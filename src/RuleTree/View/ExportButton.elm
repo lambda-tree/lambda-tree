@@ -4,20 +4,15 @@ import Bootstrap.Button as Button
 import Html
 import Html.Attributes
 import Html.Styled as S
+import Message exposing (Msg(..))
 import RuleTree.Encode
 
 
-exportButton ruleTree =
-    Button.linkButton
+exportButton =
+    Button.button
         [ Button.small
         , Button.dark
-        , Button.attrs
-            [ Html.Attributes.download "tree.json"
-            , Html.Attributes.href
-                ("data:application/octet-stream;charset=utf-8;base64,"
-                    ++ RuleTree.Encode.toBase64String ruleTree
-                )
-            ]
+        , Button.onClick ExportMsg
         ]
         [ Html.text "Export" ]
         |> S.fromUnstyled

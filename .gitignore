@@ -3,6 +3,7 @@
 
 # Elm
 elm-stuff/
+/index.html
 
 # IntelliJ
 .idea

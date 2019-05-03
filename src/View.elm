@@ -65,7 +65,6 @@ leftColumn model =
         ]
 
 
-topBar : Model.Model -> S.Html Message.Msg
 topBar model =
     appBar
         [ styled
@@ -101,8 +100,17 @@ topBar model =
             , styled S.div [ flex <| int 1 ] [] []
             , checkSwitch model
             , styled S.div [ width <| px 20 ] [] []
-            , exportButton model.ruleTree
+            , exportButton
             , styled S.div [ width <| px 10 ] [] []
+            , Button.button
+                [ Button.small
+                , Button.outlineLight
+                , Button.onClick ImportFileMsg
+                , Button.attrs []
+                ]
+                [ S.text "Import" |> S.toUnstyled
+                ]
+                |> S.fromUnstyled
             , Button.button
                 [ Button.small
                 , Button.outlineLight

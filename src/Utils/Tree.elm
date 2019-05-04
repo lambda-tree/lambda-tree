@@ -16,6 +16,13 @@ map f t =
             Node (f x) (List.map (map f) nodes)
 
 
+mapWithExtra : (a -> Tree a -> b) -> Tree a -> Tree b
+mapWithExtra f t =
+    case t of
+        Node x nodes ->
+            Node (f x t) (List.map (mapWithExtra f) nodes)
+
+
 indexedMap : (List Int -> a -> b) -> Tree a -> Tree b
 indexedMap =
     let
@@ -81,8 +88,8 @@ toList =
     foldr (::) []
 
 
-encodeTree : (a -> E.Value) -> Tree a -> E.Value
-encodeTree encodeContent =
+treeEncoder : (a -> E.Value) -> Tree a -> E.Value
+treeEncoder encodeContent =
     foldTree
         (\content childrenValues ->
             E.object
@@ -92,8 +99,8 @@ encodeTree encodeContent =
         )
 
 
-decodeTree : D.Decoder a -> D.Decoder (Tree a)
-decodeTree decodeContent =
+treeDecoder : D.Decoder a -> D.Decoder (Tree a)
+treeDecoder contentDecoder =
     D.map2 Node
-        (D.field "content" decodeContent)
-        (D.field "children" <| D.list <| D.lazy (\_ -> decodeTree decodeContent))
+        (D.field "content" contentDecoder)
+        (D.field "children" <| D.list <| D.lazy (\_ -> treeDecoder contentDecoder))

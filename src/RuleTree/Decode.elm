@@ -3,11 +3,11 @@ module RuleTree.Decode exposing (..)
 import Json.Decode as D
 import Lambda.Rule exposing (Rule(..))
 import RuleTree.Model exposing (..)
-import Utils.Tree exposing (Tree, decodeTree)
+import Utils.Tree exposing (Tree, treeDecoder)
 
 
-decodeRule : D.Decoder Rule
-decodeRule =
+ruleDecoder : D.Decoder Rule
+ruleDecoder =
     D.string
         |> D.andThen
             (\r ->
@@ -59,21 +59,21 @@ decodeRule =
             )
 
 
-decodeRuleTreeContent : D.Decoder RuleTreeContent
-decodeRuleTreeContent =
+ruleTreeContentDecoder : D.Decoder RuleTreeContent
+ruleTreeContentDecoder =
     D.map4 (\ctx term ty rule -> { emptyTreeContent | ctx = ctx, term = term, ty = ty, rule = rule })
         (D.field "ctx" D.string)
         (D.field "term" D.string)
         (D.field "ty" D.string)
-        (D.field "rule" decodeRule)
+        (D.field "rule" ruleDecoder)
 
 
-decodeRuleTree : D.Decoder RuleTree
-decodeRuleTree =
-    decodeTree decodeRuleTreeContent
+ruleTreeDecoder : D.Decoder RuleTree
+ruleTreeDecoder =
+    treeDecoder ruleTreeContentDecoder
 
 
 fromString : String -> Result String RuleTree
 fromString =
-    D.decodeString decodeRuleTree
+    D.decodeString ruleTreeDecoder
         >> Result.mapError D.errorToString

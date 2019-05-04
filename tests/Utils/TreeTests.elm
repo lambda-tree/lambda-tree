@@ -3,7 +3,7 @@ module Utils.TreeTests exposing (..)
 import Expect exposing (Expectation)
 import Json.Decode as D
 import Test exposing (..)
-import Utils.Tree exposing (Tree(..), decodeTree)
+import Utils.Tree exposing (Tree(..), treeDecoder)
 
 
 decodeTreeTest : Test
@@ -11,7 +11,7 @@ decodeTreeTest =
     describe "decodeTree"
         [ test "should decode single node int tree" <|
             \_ ->
-                D.decodeString (decodeTree D.int) """
+                D.decodeString (treeDecoder D.int) """
                     {
                         "content": 4,
                         "children":[]
@@ -20,7 +20,7 @@ decodeTreeTest =
                     |> Expect.equal (Ok <| Node 4 [])
         , test "should decode deep int tree" <|
             \_ ->
-                D.decodeString (decodeTree D.int) """
+                D.decodeString (treeDecoder D.int) """
                     {
                         "content": 1,
                         "children":[

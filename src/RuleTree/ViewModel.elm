@@ -12,10 +12,6 @@ import Utils.Tree exposing (Tree(..))
 import Utils.Utils exposing (extractError)
 
 
-type alias TreeViewDataError =
-    { row : Int, col : Int }
-
-
 type alias TreeViewDataResult =
     { text : String, error : Maybe ExprError }
 

@@ -3,11 +3,11 @@ module RuleTree.Encode exposing (..)
 import Json.Encode as E exposing (..)
 import Lambda.Rule exposing (Rule(..))
 import RuleTree.Model exposing (..)
-import Utils.Tree exposing (Tree, encodeTree)
+import Utils.Tree exposing (Tree, treeEncoder)
 
 
-encodeRule : Rule -> E.Value
-encodeRule r =
+ruleEncoder : Rule -> E.Value
+ruleEncoder r =
     case r of
         TTrue ->
             E.string "TTrue"
@@ -52,22 +52,22 @@ encodeRule r =
             E.string "NoRule"
 
 
-encodeRuleTreeContent : RuleTreeContent -> E.Value
-encodeRuleTreeContent c =
+ruleTreeContentEncoder : RuleTreeContent -> E.Value
+ruleTreeContentEncoder c =
     E.object
         [ ( "ctx", E.string c.ctx )
         , ( "term", E.string c.term )
         , ( "ty", E.string c.ty )
-        , ( "rule", encodeRule c.rule )
+        , ( "rule", ruleEncoder c.rule )
         ]
 
 
-encodeRuleTree : RuleTree -> E.Value
-encodeRuleTree =
-    encodeTree encodeRuleTreeContent
+ruleTreeEncoder : RuleTree -> E.Value
+ruleTreeEncoder =
+    treeEncoder ruleTreeContentEncoder
 
 
 toString : RuleTree -> String
 toString =
-    encodeRuleTree
+    ruleTreeEncoder
         >> E.encode 2

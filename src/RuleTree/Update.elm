@@ -21,7 +21,7 @@ update : Msg -> Settings.Model.Model -> RuleTree -> RuleTree
 update msg settings tree =
     case msg of
         TextChangedMsg path kind text ->
-            updateTextInPath kind text path tree
+            updateTextAtPath path kind text tree
 
         HintMsg ->
             doHint (getTypeSystem settings) tree
@@ -240,7 +240,8 @@ setRule path rule tree =
                     Node content (children |> List.Extra.updateAt idx (setRule subPath rule))
 
 
-updateTextInPath kind text path tree =
+updateTextAtPath : List Int -> TextKind -> String -> RuleTree -> RuleTree
+updateTextAtPath path kind text tree =
     let
         preprocessed =
             Lambda.Parse.preprocess text
@@ -265,7 +266,7 @@ updateTextInPath kind text path tree =
                             List.indexedMap
                                 (\i t ->
                                     if i == idx then
-                                        updateTextInPath kind text subPath t
+                                        updateTextAtPath subPath kind text t
 
                                     else
                                         t

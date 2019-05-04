@@ -175,7 +175,7 @@ appBar children =
         children
 
 
-rightColumn : Model.Model -> S.Html Message.Msg =
+rightColumn : Model.Model -> S.Html Message.Msg
 rightColumn model =
     styled S.div
         [ displayFlex

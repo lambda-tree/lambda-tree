@@ -1,12 +1,12 @@
 module RuleTree.Update exposing (..)
 
-import Inferer.Inferer exposing (inferTree)
 import Lambda.Expression exposing (TypeSystem)
 import Lambda.ExpressionUtils exposing (substFtvCtx, substFtvTerm, substFtvTy)
+import Lambda.Inferer exposing (inferTree)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Rule exposing (Rule(..))
-import Lambda.Show.Base exposing (showCtx, showTerm, showType)
+import Lambda.Show.Text exposing (showCtx, showTerm, showType)
 import List.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (..)
@@ -134,7 +134,7 @@ doSubstitution sm tree =
                                             else
                                                 Just substituted
                                         )
-                                    |> Maybe.map Lambda.Show.Base.showCtx
+                                    |> Maybe.map Lambda.Show.Text.showCtx
                                     |> Maybe.withDefault ctx
                             , term =
                                 maybeCtx
@@ -155,7 +155,7 @@ doSubstitution sm tree =
                                                         else
                                                             Just substituted
                                                     )
-                                                |> Maybe.map (Lambda.Show.Base.showTerm justCtx)
+                                                |> Maybe.map (Lambda.Show.Text.showTerm justCtx)
                                         )
                                     |> Maybe.withDefault term
                             , ty =
@@ -177,7 +177,7 @@ doSubstitution sm tree =
                                                         else
                                                             Just substituted
                                                     )
-                                                |> Maybe.map (Lambda.Show.Base.showType justCtx)
+                                                |> Maybe.map (Lambda.Show.Text.showType justCtx)
                                         )
                                     |> Maybe.withDefault ty
                         }

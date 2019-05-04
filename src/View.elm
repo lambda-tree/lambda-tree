@@ -16,7 +16,7 @@ import Settings.Message exposing (Msg(..))
 import Settings.Model exposing (TypeSystem(..))
 import Settings.Utils exposing (getTypeSystem)
 import Substitutor.View
-import View.Lambda.RuleList exposing (ruleList)
+import View.RuleList exposing (ruleList)
 import View.SegmentedControl exposing (segmentedControl)
 import View.SubstitutionModal exposing (substitutionModal)
 import View.Switch as Switch

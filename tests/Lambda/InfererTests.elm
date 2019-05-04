@@ -1,8 +1,8 @@
 module Lambda.InfererTests exposing (..)
 
 import Expect exposing (Expectation)
-import Inferer.Inferer exposing (inferTree)
 import Lambda.Expression exposing (..)
+import Lambda.Inferer exposing (inferTree)
 import Lambda.Rule exposing (Rule(..))
 import Test exposing (..)
 import Utils.Tree exposing (Tree(..))

@@ -9,7 +9,7 @@ import Html.Events as HtmlE
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Events as E
 import Lambda.Rule exposing (Rule(..))
-import Lambda.Show.Base exposing (showRule)
+import Lambda.Show.Text exposing (showRule)
 import Message exposing (Msg(..))
 import RuleTree.Message exposing (Msg(..))
 

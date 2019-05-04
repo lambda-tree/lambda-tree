@@ -1,4 +1,4 @@
-module Inferer.Inferer exposing (..)
+module Lambda.Inferer exposing (..)
 
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (addbinding, getbinding)

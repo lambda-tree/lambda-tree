@@ -8,7 +8,7 @@ import Lambda.Rule exposing (ExprError(..))
 import Maybe.Extra
 import RuleTree.Model exposing (TextKind(..))
 import RuleTree.ViewModel exposing (TreeViewDataResult)
-import View.Lambda.ExpressionInput exposing (lambdaExprInput)
+import View.ExpressionInput exposing (lambdaExprInput)
 import View.Lambda.ExpressionText exposing (lambdaExprText)
 
 
@@ -48,9 +48,9 @@ proofCell showPlaceholders checkErrors content msgCreator =
             ]
             (getTitle content.ctx.error)
             [ lambdaExprInput <|
-                [ View.Lambda.ExpressionInput.Value content.ctx.text
-                , View.Lambda.ExpressionInput.OnInput (msgCreator CtxKind)
-                , View.Lambda.ExpressionInput.Error <|
+                [ View.ExpressionInput.Value content.ctx.text
+                , View.ExpressionInput.OnInput (msgCreator CtxKind)
+                , View.ExpressionInput.Error <|
                     if checkErrors then
                         content.ctx.error
 
@@ -58,7 +58,7 @@ proofCell showPlaceholders checkErrors content msgCreator =
                         Nothing
                 ]
                     ++ (if showPlaceholders then
-                            [ View.Lambda.ExpressionInput.Placeholder "e.g.   y: A, z: Bool→Bool"
+                            [ View.ExpressionInput.Placeholder "e.g.   y: A, z: Bool→Bool"
                             ]
 
                         else
@@ -71,9 +71,9 @@ proofCell showPlaceholders checkErrors content msgCreator =
             ]
             (getTitle content.term.error)
             [ lambdaExprInput <|
-                [ View.Lambda.ExpressionInput.Value content.term.text
-                , View.Lambda.ExpressionInput.OnInput (msgCreator TermKind)
-                , View.Lambda.ExpressionInput.Error <|
+                [ View.ExpressionInput.Value content.term.text
+                , View.ExpressionInput.OnInput (msgCreator TermKind)
+                , View.ExpressionInput.Error <|
                     if checkErrors then
                         content.term.error
 
@@ -81,7 +81,7 @@ proofCell showPlaceholders checkErrors content msgCreator =
                         Nothing
                 ]
                     ++ (if showPlaceholders then
-                            [ View.Lambda.ExpressionInput.Placeholder "e.g.   (λx: A. x) y"
+                            [ View.ExpressionInput.Placeholder "e.g.   (λx: A. x) y"
                             ]
 
                         else
@@ -94,9 +94,9 @@ proofCell showPlaceholders checkErrors content msgCreator =
             ]
             (getTitle content.ty.error)
             [ lambdaExprInput <|
-                [ View.Lambda.ExpressionInput.Value content.ty.text
-                , View.Lambda.ExpressionInput.OnInput (msgCreator TyKind)
-                , View.Lambda.ExpressionInput.Error <|
+                [ View.ExpressionInput.Value content.ty.text
+                , View.ExpressionInput.OnInput (msgCreator TyKind)
+                , View.ExpressionInput.Error <|
                     if checkErrors then
                         content.ty.error
 
@@ -104,7 +104,7 @@ proofCell showPlaceholders checkErrors content msgCreator =
                         Nothing
                 ]
                     ++ (if showPlaceholders then
-                            [ View.Lambda.ExpressionInput.Placeholder "e.g.   Z"
+                            [ View.ExpressionInput.Placeholder "e.g.   Z"
                             ]
 
                         else

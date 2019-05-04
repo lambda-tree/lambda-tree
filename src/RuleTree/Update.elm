@@ -6,7 +6,7 @@ import Lambda.ExpressionUtils exposing (substFtvCtx, substFtvTerm, substFtvTy)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Rule exposing (Rule(..))
-import Lambda.Show exposing (showCtx, showTerm, showType)
+import Lambda.Show.Base exposing (showCtx, showTerm, showType)
 import List.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (..)
@@ -134,7 +134,7 @@ doSubstitution sm tree =
                                             else
                                                 Just substituted
                                         )
-                                    |> Maybe.map Lambda.Show.showCtx
+                                    |> Maybe.map Lambda.Show.Base.showCtx
                                     |> Maybe.withDefault ctx
                             , term =
                                 maybeCtx
@@ -155,7 +155,7 @@ doSubstitution sm tree =
                                                         else
                                                             Just substituted
                                                     )
-                                                |> Maybe.map (Lambda.Show.showTerm justCtx)
+                                                |> Maybe.map (Lambda.Show.Base.showTerm justCtx)
                                         )
                                     |> Maybe.withDefault term
                             , ty =
@@ -177,7 +177,7 @@ doSubstitution sm tree =
                                                         else
                                                             Just substituted
                                                     )
-                                                |> Maybe.map (Lambda.Show.showType justCtx)
+                                                |> Maybe.map (Lambda.Show.Base.showType justCtx)
                                         )
                                     |> Maybe.withDefault ty
                         }

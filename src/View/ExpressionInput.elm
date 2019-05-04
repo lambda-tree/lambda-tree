@@ -1,4 +1,4 @@
-module View.Lambda.ExpressionInput exposing (..)
+module View.ExpressionInput exposing (..)
 
 import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)

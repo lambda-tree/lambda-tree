@@ -11,7 +11,7 @@ import Substitutor.Message
 import Substitutor.Model
 import Substitutor.Utils exposing (isValid, parsedType, parsedVar)
 import Utils.Utils exposing (extractError)
-import View.Lambda.ExpressionInput exposing (lambdaExprInput)
+import View.ExpressionInput exposing (lambdaExprInput)
 import View.Theme exposing (theme)
 
 
@@ -38,11 +38,11 @@ view substitution =
             ]
         , spacer 15
         , lambdaExprInput
-            [ View.Lambda.ExpressionInput.Value substitution.ty
-            , View.Lambda.ExpressionInput.Placeholder "e.g.   X2 → Bool"
-            , View.Lambda.ExpressionInput.Error (parsedType substitution |> extractError |> Maybe.map ParseError)
-            , View.Lambda.ExpressionInput.OnInput (SubstitutionMsg << Substitutor.Message.TyChangedMsg)
-            , View.Lambda.ExpressionInput.Size 14
+            [ View.ExpressionInput.Value substitution.ty
+            , View.ExpressionInput.Placeholder "e.g.   X2 → Bool"
+            , View.ExpressionInput.Error (parsedType substitution |> extractError |> Maybe.map ParseError)
+            , View.ExpressionInput.OnInput (SubstitutionMsg << Substitutor.Message.TyChangedMsg)
+            , View.ExpressionInput.Size 14
             ]
         , spacer 20
         , S.span []
@@ -52,14 +52,14 @@ view substitution =
             ]
         , spacer 15
         , lambdaExprInput
-            ([ View.Lambda.ExpressionInput.Value substitution.var
-             , View.Lambda.ExpressionInput.Placeholder "e.g.   X1"
-             , View.Lambda.ExpressionInput.Error (parsedVar substitution |> extractError |> Maybe.map ParseError)
-             , View.Lambda.ExpressionInput.OnInput (SubstitutionMsg << Substitutor.Message.VarChangedMsg)
-             , View.Lambda.ExpressionInput.Size 6
+            ([ View.ExpressionInput.Value substitution.var
+             , View.ExpressionInput.Placeholder "e.g.   X1"
+             , View.ExpressionInput.Error (parsedVar substitution |> extractError |> Maybe.map ParseError)
+             , View.ExpressionInput.OnInput (SubstitutionMsg << Substitutor.Message.VarChangedMsg)
+             , View.ExpressionInput.Size 6
              ]
                 ++ (if isValid substitution then
-                        [ View.Lambda.ExpressionInput.OnEnter (\_ -> DoSubstitutionMsg) ]
+                        [ View.ExpressionInput.OnEnter (\_ -> DoSubstitutionMsg) ]
 
                     else
                         []

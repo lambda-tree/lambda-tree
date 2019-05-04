@@ -1,4 +1,4 @@
-module Lambda.Show exposing (..)
+module Lambda.Show.Base exposing (..)
 
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (addbinding, emptycontext, index2name)

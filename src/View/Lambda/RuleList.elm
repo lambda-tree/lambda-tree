@@ -5,7 +5,7 @@ import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Lambda.Rule exposing (Rule(..))
-import Lambda.Show exposing (showRule)
+import Lambda.Show.Base exposing (showRule)
 import View.Theme exposing (theme)
 
 

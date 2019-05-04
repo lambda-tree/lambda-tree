@@ -12,7 +12,7 @@ import Substitutor.Message
 import Substitutor.Model
 import Substitutor.Utils exposing (parsedType, parsedVar)
 import Utils.Utils exposing (extractError)
-import View.Lambda.ExpressionInput exposing (lambdaExprInput)
+import View.ExpressionInput exposing (lambdaExprInput)
 
 
 substitutor : Substitutor.Model.Model -> S.Html Message.Msg
@@ -22,18 +22,18 @@ substitutor substitution =
         []
         [ styled S.div [ marginBottom <| rem 0.5 ] [] [ S.text "Type" ]
         , lambdaExprInput
-            [ View.Lambda.ExpressionInput.Value substitution.ty
-            , View.Lambda.ExpressionInput.Placeholder "E.g. 'X2 → Bool'"
-            , View.Lambda.ExpressionInput.Error (parsedType substitution |> extractError |> Maybe.map ParseError)
-            , View.Lambda.ExpressionInput.OnInput (Substitutor.Message.TyChangedMsg >> SubstitutionMsg)
+            [ View.ExpressionInput.Value substitution.ty
+            , View.ExpressionInput.Placeholder "E.g. 'X2 → Bool'"
+            , View.ExpressionInput.Error (parsedType substitution |> extractError |> Maybe.map ParseError)
+            , View.ExpressionInput.OnInput (Substitutor.Message.TyChangedMsg >> SubstitutionMsg)
             ]
         , styled S.div [ margin2 (rem 0.5) (px 0) ] [] [ S.text "For Type Variable" ]
         , lambdaExprInput
-            [ View.Lambda.ExpressionInput.Value substitution.var
-            , View.Lambda.ExpressionInput.Placeholder "E.g. 'X1'"
-            , View.Lambda.ExpressionInput.Error (parsedVar substitution |> extractError |> Maybe.map ParseError)
-            , View.Lambda.ExpressionInput.OnInput (Substitutor.Message.VarChangedMsg >> SubstitutionMsg)
-            , View.Lambda.ExpressionInput.OnEnter (\_ -> DoSubstitutionMsg)
+            [ View.ExpressionInput.Value substitution.var
+            , View.ExpressionInput.Placeholder "E.g. 'X1'"
+            , View.ExpressionInput.Error (parsedVar substitution |> extractError |> Maybe.map ParseError)
+            , View.ExpressionInput.OnInput (Substitutor.Message.VarChangedMsg >> SubstitutionMsg)
+            , View.ExpressionInput.OnEnter (\_ -> DoSubstitutionMsg)
             ]
         ]
 

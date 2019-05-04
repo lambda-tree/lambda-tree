@@ -61,8 +61,7 @@ leftColumn model =
             , position relative
             ]
             []
-            [ toolbar model
-            , styled S.div
+            [ styled S.div
                 [ displayFlex
                 , flex auto
                 , flexDirection column
@@ -75,6 +74,7 @@ leftColumn model =
                 [ treeContainer model
                 , substitutionModal model.substitutionModal model.substitution |> S.fromUnstyled
                 ]
+            , toolbar model
             ]
         ]
 
@@ -258,8 +258,8 @@ treeContainer model =
         , flexDirection column
         , justifyContent flexStart
         , alignItems center
-        , padding <| px 20
-        , paddingTop <| px 80
+        , padding <| px 80
+        , paddingTop <| px 40
         , marginLeft auto
         , marginRight auto
         ]

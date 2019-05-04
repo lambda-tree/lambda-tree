@@ -1,8 +1,8 @@
-module Lambda.ShowTests exposing (..)
+module Lambda.Show.BaseTests exposing (..)
 
 import Expect exposing (Expectation)
 import Lambda.Expression exposing (..)
-import Lambda.Show exposing (..)
+import Lambda.Show.Base exposing (..)
 import Test exposing (..)
 
 

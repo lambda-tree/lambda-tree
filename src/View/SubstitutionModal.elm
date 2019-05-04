@@ -4,11 +4,8 @@ import Bootstrap.Button as Button
 import Bootstrap.Modal as Modal
 import Css exposing (..)
 import Html
-import Html.Attributes as HtmlA
 import Html.Events as HtmlE
 import Html.Styled as S exposing (Html, styled)
-import Html.Styled.Attributes as A
-import Html.Styled.Events as E
 import Lambda.Rule exposing (ExprError(..))
 import Message exposing (Msg(..))
 import Substitutor.Message
@@ -16,8 +13,6 @@ import Substitutor.Model
 import Substitutor.Utils exposing (parsedType, parsedVar)
 import Utils.Utils exposing (extractError)
 import View.Lambda.ExpressionInput exposing (lambdaExprInput)
-import View.Lambda.ExpressionText exposing (lambdaExprText)
-import View.Theme exposing (theme)
 
 
 substitutor : Substitutor.Model.Model -> S.Html Message.Msg

@@ -128,7 +128,7 @@ lambdaExprInput options =
                 ]
     in
     styled S.div
-        [ displayFlex, flexDirection column ]
+        [ displayFlex, flexDirection column, flexShrink <| int 1, flexGrow <| int 0 ]
         []
         [ styled S.input
             [ commonStyles
@@ -158,6 +158,11 @@ lambdaExprInput options =
             , height <| px 0
             , padding2 (px 0) paddingHorizontal
             , marginRight <| px 3
+            , whiteSpace noWrap
+            , flexBasis <| auto
+            , flexGrow <| int 0
+            , flexShrink <| int 1
+            , overflow hidden
             ]
             []
             [ S.text <|

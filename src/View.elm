@@ -15,6 +15,7 @@ import RuleTree.View.Tree exposing (treeView)
 import Settings.Message exposing (Msg(..))
 import Settings.Model exposing (TypeSystem(..))
 import Settings.Utils exposing (getTypeSystem)
+import Substitutor.View
 import View.Lambda.RuleList exposing (ruleList)
 import View.SegmentedControl exposing (segmentedControl)
 import View.SubstitutionModal exposing (substitutionModal)
@@ -53,15 +54,56 @@ leftColumn model =
         [ topBar model
         , styled S.div
             [ displayFlex
-            , flex <| auto
-            , flexDirection column
-            , alignItems flexStart
-            , justifyContent flexStart
-            , overflow auto
-            , whiteSpace noWrap
+            , flex auto
+            , alignItems stretch
+            , justifyContent stretch
+            , overflow hidden
+            , position relative
             ]
             []
-            [ treeContainer model, substitutionModal model.substitutionModal model.substitution |> S.fromUnstyled ]
+            [ toolbar model
+            , styled S.div
+                [ displayFlex
+                , flex auto
+                , flexDirection column
+                , alignItems flexStart
+                , justifyContent flexStart
+                , overflow auto
+                , whiteSpace noWrap
+                ]
+                []
+                [ treeContainer model
+                , substitutionModal model.substitutionModal model.substitution |> S.fromUnstyled
+                ]
+            ]
+        ]
+
+
+toolbar model =
+    styled S.div
+        [ position absolute
+        , backgroundColor <| theme.clear
+        , left <| px 20
+        , right <| px 20
+        , bottom <| px 0
+        , displayFlex
+        , justifyContent center
+        ]
+        []
+        [ styled S.div
+            [ displayFlex
+            , justifyContent stretch
+            , borderColor <| theme.darkLine
+            , borderWidth4 (px 1) (px 1) (px 0) (px 1)
+            , borderStyle solid
+            , backgroundColor theme.background
+            , padding2 (px 10) (px 15)
+            , borderRadius4 (rem 0.2) (rem 0.2) (px 0) (px 0)
+            , maxWidth <| pct 100
+            ]
+            []
+            [ Substitutor.View.view model.substitution
+            ]
         ]
 
 
@@ -217,7 +259,7 @@ treeContainer model =
         , justifyContent flexStart
         , alignItems center
         , padding <| px 20
-        , paddingTop <| px 40
+        , paddingTop <| px 80
         , marginLeft auto
         , marginRight auto
         ]

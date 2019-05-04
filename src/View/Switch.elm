@@ -8,7 +8,8 @@ import Html.Styled.Events as E
 import View.Theme as Theme
 
 
-switch isChecked onChange =
+switch : (Bool -> msg) -> Bool -> S.Html msg
+switch onChange isChecked =
     styled S.label
         [ position relative
         , display inlineBlock

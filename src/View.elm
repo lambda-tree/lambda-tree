@@ -131,6 +131,7 @@ topBar model =
         ]
 
 
+ruleBar : Model.Model -> S.Html Message.Msg
 ruleBar model =
     appBar
         [ styled
@@ -160,6 +161,7 @@ ruleBar model =
         ]
 
 
+appBar : List (S.Html msg) -> S.Html msg
 appBar children =
     styled S.div
         [ height <| px 48
@@ -173,6 +175,7 @@ appBar children =
         children
 
 
+rightColumn : Model.Model -> S.Html Message.Msg =
 rightColumn model =
     styled S.div
         [ displayFlex
@@ -192,6 +195,7 @@ rightColumn model =
         ]
 
 
+ruleListContainer : Model.Model -> S.Html msg
 ruleListContainer model =
     styled S.div
         [ displayFlex
@@ -227,7 +231,7 @@ checkSwitch model =
         [ displayFlex, alignItems center ]
         [ A.title "Show errors in derivation tree" ]
         [ styled S.span [ marginRight <| px 10, color theme.secondaryOnDark, theme.font ] [] [ S.text "Check" ]
-        , Switch.switch model.settings.checkErrors (SettingsMsg << Settings.Message.CheckErrorsChangedMsg)
+        , Switch.switch (SettingsMsg << Settings.Message.CheckErrorsChangedMsg) model.settings.checkErrors
         ]
 
 
@@ -236,5 +240,5 @@ combinedRulesSwitch model =
         [ displayFlex, alignItems center ]
         []
         [ styled S.span [ marginRight <| px 10, color theme.secondaryOnDark, theme.font ] [] [ S.text "Combined" ]
-        , Switch.switch model.settings.useCombinedRules (SettingsMsg << Settings.Message.UseCombinedRulesChangedMsg)
+        , Switch.switch (SettingsMsg << Settings.Message.UseCombinedRulesChangedMsg) model.settings.useCombinedRules
         ]

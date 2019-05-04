@@ -295,6 +295,7 @@ getRuleTemplate rule =
             { tops = [], bottom = Var "Not Applicable" }
 
 
+ruleList : List Rule -> S.Html msg
 ruleList rules =
     styled S.div
         [ displayFlex

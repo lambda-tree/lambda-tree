@@ -236,6 +236,37 @@ ftvCtx ctx =
         |> List.foldl Set.union Set.empty
 
 
+ftvTerm : Term -> Set String
+ftvTerm term =
+    case term of
+        TmVar _ _ _ ->
+            Set.empty
+
+        TmAbs _ _ maybeTy t1 ->
+            maybeTy
+                |> Maybe.map ftvTy
+                |> Maybe.withDefault Set.empty
+                |> Set.union (ftvTerm t1)
+
+        TmApp _ t1 t2 ->
+            ftvTerm t1 |> Set.union (ftvTerm t2)
+
+        TmIf _ t1 t2 t3 ->
+            ftvTerm t1 |> Set.union (ftvTerm t2) |> Set.union (ftvTerm t3)
+
+        TmLet _ _ t1 t2 ->
+            ftvTerm t1 |> Set.union (ftvTerm t2)
+
+        TmTAbs _ _ t1 ->
+            ftvTerm t1
+
+        TmTApp _ t1 ty1 ->
+            ftvTerm t1 |> Set.union (ftvTy ty1)
+
+        TmConst _ _ ->
+            Set.empty
+
+
 {-| Substitution of Ty for free type variable
 -}
 type alias SubstitutionFtv =
@@ -244,8 +275,8 @@ type alias SubstitutionFtv =
 
 {-| Applies free variable substitution on type
 -}
-substFtv : SubstitutionFtv -> Ty -> Ty
-substFtv ss tyTop =
+substFtvTy : SubstitutionFtv -> Ty -> Ty
+substFtvTy ss tyTop =
     let
         substOne tyS varName ty =
             case ty of
@@ -277,7 +308,7 @@ substFtvCtx ss ctx =
                 \b ->
                     case b of
                         VarBind t ->
-                            VarBind <| substFtv ss t
+                            VarBind <| substFtvTy ss t
 
                         _ ->
                             b
@@ -286,7 +317,7 @@ substFtvCtx ss ctx =
 
 substFtvTerm : SubstitutionFtv -> Term -> Term
 substFtvTerm ss t =
-    tmmap (\fi _ x n -> TmVar fi x n) (\_ -> substFtv ss) 0 t
+    tmmap (\fi _ x n -> TmVar fi x n) (\_ -> substFtvTy ss) 0 t
 
 
 {-| Substitutes primarily to the vars of first expression
@@ -326,7 +357,7 @@ unifyType ty1 ty2 =
             unifyType ty11 ty21
                 |> Result.andThen
                     (\justS1 ->
-                        unifyType (substFtv justS1 ty12) (substFtv justS1 ty22)
+                        unifyType (substFtvTy justS1 ty12) (substFtvTy justS1 ty22)
                             |> Result.andThen (\justS2 -> Ok <| justS2 ++ justS1)
                     )
 
@@ -572,7 +603,7 @@ w ctx t =
                     addbinding ctx varName (VarBind fromType)
             in
             w ctx1 t1
-                |> Result.map (\( s, toType ) -> ( s, substFtv s (TyArr fromType toType) ))
+                |> Result.map (\( s, toType ) -> ( s, substFtvTy s (TyArr fromType toType) ))
 
         TmApp _ t1 t2 ->
             w ctx t1
@@ -591,9 +622,9 @@ w ctx t =
                                                     )
                                                     "X"
                                     in
-                                    unifyType (substFtv s2 ro) (TyArr tau tauPrime)
+                                    unifyType (substFtvTy s2 ro) (TyArr tau tauPrime)
                                         |> Result.map
-                                            (\s3 -> ( s3 ++ s2 ++ s1, substFtv s3 tauPrime ))
+                                            (\s3 -> ( s3 ++ s2 ++ s1, substFtvTy s3 tauPrime ))
                                 )
                     )
 
@@ -627,8 +658,8 @@ w ctx t =
                 |> w ctx
                 |> Result.andThen
                     (\( s1, ty ) ->
-                        unifyType (substFtv s1 (TyName tyVarName)) (TyName tyVarName)
-                            |> Result.map (\s2 -> ( s2 ++ s1, substFtv s2 ty ))
+                        unifyType (substFtvTy s1 (TyName tyVarName)) (TyName tyVarName)
+                            |> Result.map (\s2 -> ( s2 ++ s1, substFtvTy s2 ty ))
                     )
                 |> Result.map (Tuple.mapSecond <| \gTy -> generalizeTypeTop ctx gTy tyVarName)
 
@@ -714,8 +745,8 @@ areHMTypesEquivalent ctx ty1 ty2 =
                                 typesEquallyGeneralized =
                                     \_ ->
                                         if
-                                            (Set.map (TyName >> substFtv s1 >> getTyName) (topBoundVars renTy1) == topBoundVars renTy2)
-                                                && (Set.map (TyName >> substFtv s2 >> getTyName) (topBoundVars renTy2) == topBoundVars renTy1)
+                                            (Set.map (TyName >> substFtvTy s1 >> getTyName) (topBoundVars renTy1) == topBoundVars renTy2)
+                                                && (Set.map (TyName >> substFtvTy s2 >> getTyName) (topBoundVars renTy2) == topBoundVars renTy1)
                                         then
                                             Ok ()
 

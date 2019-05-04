@@ -2,7 +2,7 @@ module RuleTree.Update exposing (..)
 
 import Inferer.Inferer exposing (inferTree)
 import Lambda.Expression exposing (TypeSystem)
-import Lambda.ExpressionUtils exposing (substFtv, substFtvCtx, substFtvTerm)
+import Lambda.ExpressionUtils exposing (substFtvCtx, substFtvTerm, substFtvTy)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Rule exposing (Rule(..))
@@ -169,7 +169,7 @@ doSubstitution sm tree =
                                                     (\justTy ->
                                                         let
                                                             substituted =
-                                                                substFtv ss justTy
+                                                                substFtvTy ss justTy
                                                         in
                                                         if substituted == justTy then
                                                             Nothing

@@ -27,7 +27,7 @@ applySSTree ((Node { ss } _) as tree) =
                 { c
                     | ctx = substFtvCtx ss ctx
                     , term = substFtvTerm ss term
-                    , ty = substFtv ss ty
+                    , ty = substFtvTy ss ty
                 }
             )
 
@@ -136,7 +136,7 @@ inferTree typeSystem =
                                 Node
                                     { ctx = ctx
                                     , term = t
-                                    , ty = substFtv n1.ss (TyArr fromType n1.ty)
+                                    , ty = substFtvTy n1.ss (TyArr fromType n1.ty)
                                     , rule = TAbs
                                     , ss = n1.ss
                                     }
@@ -160,13 +160,13 @@ inferTree typeSystem =
                                                             )
                                                             "X"
                                             in
-                                            unifyType (substFtv n2.ss n1.ty) (TyArr n2.ty tauPrime)
+                                            unifyType (substFtvTy n2.ss n1.ty) (TyArr n2.ty tauPrime)
                                                 |> Result.map
                                                     (\s3 ->
                                                         Node
                                                             { ctx = ctx
                                                             , term = t
-                                                            , ty = substFtv s3 tauPrime
+                                                            , ty = substFtvTy s3 tauPrime
                                                             , rule = TApp
                                                             , ss = s3 ++ n2.ss ++ n1.ss
                                                             }
@@ -243,13 +243,13 @@ inferTree typeSystem =
                         |> buildTree ctx
                         |> Result.andThen
                             (\((Node n1 _) as bt1) ->
-                                unifyType (substFtv n1.ss (TyName tyVarName)) (TyName tyVarName)
+                                unifyType (substFtvTy n1.ss (TyName tyVarName)) (TyName tyVarName)
                                     |> Result.map
                                         (\s2 ->
                                             Node
                                                 { ctx = ctx
                                                 , term = t
-                                                , ty = substFtv s2 n1.ty
+                                                , ty = substFtvTy s2 n1.ty
                                                 , rule = TTAbs
                                                 , ss = s2 ++ n1.ss
                                                 }

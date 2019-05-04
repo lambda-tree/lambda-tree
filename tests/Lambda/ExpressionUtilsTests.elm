@@ -469,7 +469,7 @@ substTest =
     describe "subst"
         [ test "Should substitute tyS for the free variable in simple case" <|
             \_ ->
-                substFtv
+                substFtvTy
                     [ ( TyArr
                             (TyName "Y")
                             (TyName "Z")
@@ -480,7 +480,7 @@ substTest =
                     |> Expect.equal (TyArr (TyName "Y") (TyName "Z"))
         , test "Should substitute tyS for the free variable in TyArr" <|
             \_ ->
-                substFtv
+                substFtvTy
                     [ ( TyArr (TyName "Y") (TyName "Z"), "X" ) ]
                     (TyArr (TyName "X") (TyName "X"))
                     |> Expect.equal
@@ -496,7 +496,7 @@ substTest =
                         )
         , test "Should substitute tyS for the free variable in TyAll if not bound" <|
             \_ ->
-                substFtv
+                substFtvTy
                     [ ( TyArr (TyName "Y") (TyName "Z"), "X" ) ]
                     (TyAll "Y" <| TyArr (TyName "X") (TyName "X"))
                     |> Expect.equal

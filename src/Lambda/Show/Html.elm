@@ -11,10 +11,13 @@ show print =
         Var s ->
             it s
 
+        TypeVar s ->
+            txt s
+
         Const s ->
             txt s
 
-        TyVar s ->
+        TypeConst s ->
             txt s
 
         SubExpr s ->
@@ -89,6 +92,15 @@ show print =
 
         TypeAbs p1 p2 ->
             g [ txt "Λ", show p1, halfSpaced ". ", show p2 ]
+
+        Bracket p1 ->
+            g [ txt "(", show p1, txt ")" ]
+
+        Sequence ps ->
+            ps
+                |> List.map show
+                |> List.intersperse (txt ", ")
+                |> g
 
         Gamma ->
             txt "Γ"

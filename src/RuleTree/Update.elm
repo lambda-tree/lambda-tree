@@ -6,7 +6,8 @@ import Lambda.Inferer exposing (inferTree)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
 import Lambda.Rule exposing (Rule(..))
-import Lambda.Show.Text exposing (showCtx, showTerm, showType)
+import Lambda.Show.Print
+import Lambda.Show.Text
 import List.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (..)
@@ -89,9 +90,9 @@ doHint typeSystem ((Node ({ ctx, term } as content) _) as t1) =
                     (Utils.Tree.map
                         (\inferredContent ->
                             { emptyTreeContent
-                                | ctx = showCtx inferredContent.ctx
-                                , term = showTerm inferredContent.ctx inferredContent.term
-                                , ty = showType justCtx inferredContent.ty
+                                | ctx = inferredContent.ctx |> Lambda.Show.Print.showCtx |> Lambda.Show.Text.show
+                                , term = inferredContent.term |> Lambda.Show.Print.showTerm justCtx |> Lambda.Show.Text.show
+                                , ty = inferredContent.ty |> Lambda.Show.Print.showType justCtx |> Lambda.Show.Text.show
                                 , rule = inferredContent.rule
                             }
                         )
@@ -134,7 +135,7 @@ doSubstitution sm tree =
                                             else
                                                 Just substituted
                                         )
-                                    |> Maybe.map Lambda.Show.Text.showCtx
+                                    |> Maybe.map (Lambda.Show.Print.showCtx >> Lambda.Show.Text.show)
                                     |> Maybe.withDefault ctx
                             , term =
                                 maybeCtx
@@ -155,7 +156,7 @@ doSubstitution sm tree =
                                                         else
                                                             Just substituted
                                                     )
-                                                |> Maybe.map (Lambda.Show.Text.showTerm justCtx)
+                                                |> Maybe.map (Lambda.Show.Print.showTerm justCtx >> Lambda.Show.Text.show)
                                         )
                                     |> Maybe.withDefault term
                             , ty =
@@ -177,7 +178,7 @@ doSubstitution sm tree =
                                                         else
                                                             Just substituted
                                                     )
-                                                |> Maybe.map (Lambda.Show.Text.showType justCtx)
+                                                |> Maybe.map (Lambda.Show.Print.showType justCtx >> Lambda.Show.Text.show)
                                         )
                                     |> Maybe.withDefault ty
                         }

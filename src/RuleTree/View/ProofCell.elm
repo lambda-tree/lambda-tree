@@ -9,7 +9,7 @@ import Maybe.Extra
 import RuleTree.Model exposing (TextKind(..))
 import RuleTree.ViewModel exposing (TreeViewDataResult)
 import View.ExpressionInput exposing (lambdaExprInput)
-import View.Lambda.ExpressionText exposing (lambdaExprText)
+import View.Theme exposing (theme)
 
 
 showExprError : ExprError -> String
@@ -112,3 +112,16 @@ proofCell showPlaceholders checkErrors content msgCreator =
                        )
             ]
         ]
+
+
+lambdaExprText value =
+    styled S.span
+        [ color theme.text
+        , backgroundColor theme.clear
+        , fontSize <| rem 1
+        , theme.font
+        , fontWeight normal
+        , margin2 (rem 0) (rem 0.3)
+        ]
+        []
+        [ S.text value ]

@@ -14,15 +14,14 @@ import Html.Styled as S exposing (Html, styled)
 errorReportModal : ErrorReport.Model.Model -> S.Html ErrorReport.Message.Msg
 errorReportModal model =
     Modal.config ErrorReportDismissMsg
-        |> Modal.small
+        |> Modal.large
         |> Modal.hideOnBackdropClick True
         |> Modal.h5 [] [ Html.text "Error" ]
         |> Modal.body []
             [ styled S.div
-                [ displayFlex, flex auto, flexDirection column ]
+                [ displayFlex, alignItems stretch, justifyContent stretch ]
                 []
-                [ styled S.div [] [] [ S.text (model.text |> Maybe.withDefault "") ]
-                ]
+                [ S.text (model.text |> Maybe.withDefault "") ]
                 |> S.toUnstyled
             ]
         |> Modal.footer []

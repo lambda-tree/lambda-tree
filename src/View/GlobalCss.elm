@@ -1,13 +1,15 @@
 module View.GlobalCss exposing (..)
 
 import Css exposing (..)
-import Css.Global exposing (body, global, selector)
+import Css.Global exposing (body, global, html, selector)
+import Html.Styled as S
 import View.Theme exposing (theme)
 
 
+style : S.Html msg
 style =
     global
-        [ Css.Global.html [ fontSize <| px 16 ]
+        [ html [ fontSize <| px 16 ]
         , body [ backgroundColor theme.background, margin <| px 0, lineHeight <| num 1, theme.font ]
         , selector "@font-face"
             [ property "src" "url(/fonts/cmunrm.ttf)"

@@ -1,12 +1,15 @@
 module Update exposing (..)
 
 import ErrorReport.Update
+import ErrorReport.Utils exposing (showError)
 import File
 import File.Download
 import File.Select
 import Lambda.Show.LaTex
 import Message exposing (..)
 import Model exposing (..)
+import Result.Extra
+import RuleTree.Decode
 import RuleTree.Encode
 import RuleTree.Update exposing (doSubstitution)
 import RuleTree.ViewModel exposing (getExprTree)
@@ -58,10 +61,12 @@ update msg model =
             )
 
         RuleTreeImportedMsg s ->
-            Debug.log s
-                ( model
-                , Cmd.none
-                )
+            case RuleTree.Decode.fromString s of
+                Ok t ->
+                    ( { model | ruleTree = t }, Cmd.none )
+
+                Err e ->
+                    ( { model | errorReport = showError e }, Cmd.none )
 
         ExportDropdownMsg state ->
             ( { model | exportDropdown = state }, Cmd.none )

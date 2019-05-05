@@ -14,6 +14,6 @@ getModalState { text } =
             Modal.hidden
 
 
-showError : String -> Model -> Model
-showError text model =
-    { model | text = Just text }
+showError : String -> Model
+showError text =
+    { text = Just text }

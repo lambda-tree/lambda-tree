@@ -69,7 +69,6 @@ leftColumn model =
                 , alignItems flexStart
                 , justifyContent flexStart
                 , overflow auto
-                , whiteSpace noWrap
                 ]
                 []
                 [ treeContainer model

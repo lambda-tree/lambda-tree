@@ -12,4 +12,4 @@ update msg model =
             { model | text = Nothing }
 
         ErrorReportShowMsg text ->
-            showError text model
+            showError text

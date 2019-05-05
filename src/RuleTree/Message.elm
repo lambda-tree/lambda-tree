@@ -17,4 +17,3 @@ type Msg
     | RuleClickedMsg Rule
     | RuleDropdownMsg (List Int) Dropdown.State
     | RuleStatusPopoverMsg (List Int) Popover.State
-    | OpenSubstitutionMsg (List Int)

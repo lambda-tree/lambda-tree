@@ -2,10 +2,10 @@ module View exposing (..)
 
 import Bootstrap.Button as Button
 import Css exposing (..)
+import ErrorReport.View exposing (errorReportModal)
 import Html.Attributes
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
-import Html.Styled.Events as E
 import Lambda.Parse exposing (symbols)
 import Lambda.Rule exposing (rulesForTypeSystem)
 import Message exposing (Msg(..))
@@ -18,7 +18,6 @@ import Settings.Utils exposing (getTypeSystem)
 import Substitutor.View
 import View.RuleList exposing (ruleList)
 import View.SegmentedControl exposing (segmentedControl)
-import View.SubstitutionModal exposing (substitutionModal)
 import View.Switch as Switch
 import View.Theme exposing (theme)
 
@@ -72,7 +71,8 @@ leftColumn model =
                 ]
                 []
                 [ treeContainer model
-                , substitutionModal model.substitutionModal model.substitution |> S.fromUnstyled
+                , errorReportModal model.errorReport
+                    |> S.map ErrorReportMsg
                 ]
             , toolbar model
             ]

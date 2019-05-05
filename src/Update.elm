@@ -1,6 +1,6 @@
 module Update exposing (..)
 
-import Bootstrap.Modal as Modal
+import ErrorReport.Update
 import File
 import File.Download
 import File.Select
@@ -26,40 +26,24 @@ update msg model =
             , Cmd.none
             )
 
-        RuleTreeMsg m ->
-            case m of
-                RuleTree.Message.OpenSubstitutionMsg path ->
-                    ( { model
-                        | substitutionPath = Just path
-                        , substitutionModal = Modal.shown
-                      }
-                    , Cmd.none
-                    )
+        ErrorReportMsg m ->
+            ( { model | errorReport = ErrorReport.Update.update m model.errorReport }
+            , Cmd.none
+            )
 
-                _ ->
-                    ( { model | ruleTree = RuleTree.Update.update m model.settings model.ruleTree }
-                    , Cmd.none
-                    )
+        RuleTreeMsg m ->
+            ( { model | ruleTree = RuleTree.Update.update m model.settings model.ruleTree }
+            , Cmd.none
+            )
 
         SettingsMsg m ->
             ( { model | settings = Settings.Update.update m model.settings }
             , Cmd.none
             )
 
-        HideSubstitutionModalMsg ->
-            ( { model | substitutionModal = Modal.hidden }
-            , Cmd.none
-            )
-
-        ShowSubstitutionModalMsg ->
-            ( { model | substitutionModal = Modal.shown }
-            , Cmd.none
-            )
-
         DoSubstitutionMsg ->
             ( { model
                 | ruleTree = doSubstitution model.substitution model.ruleTree
-                , substitutionModal = Modal.hidden
                 , substitution = Substitutor.Init.init
               }
             , Cmd.none

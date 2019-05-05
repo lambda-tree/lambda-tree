@@ -43,5 +43,5 @@ showTest =
                             ]
                         ]
                     )
-                    |> Expect.equal "\\mathit{x} : \\textrm{A} \\vdash \\mathit{x} : \\textrm{A} \\rightarrow \\textrm{B} "
+                    |> Expect.equal "\\AxiomC{$\\mathit{left}: \\textrm{A}, \\mathit{y}: \\textrm{Y}\\vdash \\mathit{y}: \\textrm{Y}\\textrm{~\\textsc{\\textbf{(T–Var)}}}$}\n\\AxiomC{$\\mathit{topRight}: \\textrm{A}, \\mathit{y}: \\textrm{Y}\\vdash \\mathit{y}: \\textrm{Y}\\textrm{~\\textsc{\\textbf{(T–Var)}}}$}\\UnaryInfC{$\\mathit{right}: \\textrm{A}, \\mathit{y}: \\textrm{Y}\\vdash \\mathit{y}: \\textrm{Y}\\textrm{~\\textsc{\\textbf{(T–Var)}}}$}\\RightLabel{\\textsc{\\textbf{(T–Abs)}}}\n\\BinaryInfC{$\\mathit{bottom}: \\textrm{A}\\vdash \\lambda \\mathit{y}: \\textrm{Y}. \\mathit{y}: \\textrm{A}\\rightarrow \\textrm{B}$}"
         ]

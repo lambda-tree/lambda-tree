@@ -45,9 +45,6 @@ update msg settings tree =
         RuleStatusPopoverMsg path state ->
             mapContentAtPath path (\c -> { c | statusPopover = state }) tree
 
-        OpenSubstitutionMsg _ ->
-            tree
-
         HintTree path ->
             doHint (getTypeSystem settings) tree
 

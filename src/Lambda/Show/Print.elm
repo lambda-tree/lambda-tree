@@ -3,8 +3,6 @@ module Lambda.Show.Print exposing (..)
 import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (addbinding, emptycontext, index2name)
 import Lambda.Expression exposing (..)
-import Lambda.Parse exposing (symbols)
-import Lambda.Rule exposing (Rule(..))
 import List.Extra
 
 

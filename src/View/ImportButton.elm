@@ -1,4 +1,4 @@
-module RuleTree.View.ImportButton exposing (..)
+module View.ImportButton exposing (..)
 
 import Bootstrap.Button as Button
 import Html

@@ -11,12 +11,12 @@ import Lambda.Parse exposing (symbols)
 import Lambda.Rule exposing (rulesForTypeSystem)
 import Message exposing (Msg(..))
 import Model
-import RuleTree.View.ImportButton exposing (importButton)
 import RuleTree.View.Tree exposing (treeView)
 import Settings.Message exposing (Msg(..))
 import Settings.Utils exposing (getTypeSystem)
 import Substitutor.View
 import View.ExportDropdown exposing (exportDropdown)
+import View.ImportButton exposing (importButton)
 import View.RuleList exposing (ruleList)
 import View.SegmentedControl exposing (segmentedControl)
 import View.Switch as Switch

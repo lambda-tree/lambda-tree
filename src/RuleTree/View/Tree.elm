@@ -2,8 +2,6 @@ module RuleTree.View.Tree exposing (..)
 
 import Css exposing (..)
 import Html.Styled as S exposing (styled)
-import Html.Styled.Attributes as A
-import Html.Styled.Events as E
 import Lambda.Rule exposing (Rule(..), isTerminalRule, rulesForTypeSystem)
 import List.Extra
 import RuleTree.Message exposing (..)

@@ -10,9 +10,6 @@ update msg model =
         CheckErrorsChangedMsg value ->
             { model | checkErrors = value }
 
-        UseCombinedRulesChangedMsg value ->
-            { model | useCombinedRules = value }
-
         TypeSystemChangedMsg value ->
             { model | typeSystem = value }
 

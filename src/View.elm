@@ -6,6 +6,7 @@ import ErrorReport.View exposing (errorReportModal)
 import Html.Attributes
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
+import Lambda.Expression exposing (HMFlavor(..), TypeSystem(..))
 import Lambda.Parse exposing (symbols)
 import Lambda.Rule exposing (rulesForTypeSystem)
 import Message exposing (Msg(..))
@@ -13,7 +14,6 @@ import Model
 import RuleTree.View.ImportButton exposing (importButton)
 import RuleTree.View.Tree exposing (treeView)
 import Settings.Message exposing (Msg(..))
-import Settings.Model exposing (TypeSystem(..))
 import Settings.Utils exposing (getTypeSystem)
 import Substitutor.View
 import View.ExportDropdown exposing (exportDropdown)
@@ -135,7 +135,7 @@ topBar model =
                     , info = Just "Simpy Typed Lambda Calculus"
                     }
                 , View.SegmentedControl.SegmentedControlItem
-                    HM
+                    (HM NonDeterministic)
                     (SettingsMsg << TypeSystemChangedMsg)
                     { text = Just "H–M"
                     , image = Nothing
@@ -143,7 +143,7 @@ topBar model =
                     , info = Just "Hindley Milner (Original)"
                     }
                 , View.SegmentedControl.SegmentedControlItem
-                    HM
+                    (HM SyntaxDirected)
                     (SettingsMsg << TypeSystemChangedMsg)
                     { text = Just "H–M'"
                     , image = Nothing
@@ -159,11 +159,11 @@ topBar model =
                     , info = Just "System F"
                     }
                 ]
-            , styled S.div [ width <| px 20 ] [] []
+            , styled S.div [ maxWidth <| px 50, minWidth <| px 10, flex auto ] [] []
             , exportDropdown model.exportDropdown
-            , styled S.div [ width <| px 10 ] [] []
+            , styled S.div [ width <| px 5 ] [] []
             , importButton
-            , styled S.div [ width <| px 20 ] [] []
+            , styled S.div [ maxWidth <| px 50, minWidth <| px 10, flex auto ] [] []
             , checkSwitch model
             , styled S.div [ width <| px 10 ] [] []
             , styled S.div [ flex <| int 1 ] [] []
@@ -178,7 +178,7 @@ topBar model =
                         ">"
 
                      else
-                        "<"
+                        "< Rules"
                     )
                     |> S.toUnstyled
                 ]
@@ -187,8 +187,8 @@ topBar model =
         ]
 
 
-ruleBar : Model.Model -> S.Html Message.Msg
-ruleBar model =
+ruleBar : S.Html msg
+ruleBar =
     appBar
         [ styled
             S.div
@@ -199,21 +199,14 @@ ruleBar model =
             , padding2 (px 10) <| px 15
             ]
             []
-            ([ styled S.span
+            [ styled S.span
                 [ theme.font, color theme.textOnDark, fontSize <| rem 1.3 ]
                 []
                 [ S.text
                     "Rules"
                 ]
-             , styled S.div [ flex <| int 1 ] [] []
-             ]
-                ++ (if model.settings.typeSystem == HM then
-                        [ combinedRulesSwitch model ]
-
-                    else
-                        []
-                   )
-            )
+            , styled S.div [ flex <| int 1 ] [] []
+            ]
         ]
 
 
@@ -245,7 +238,7 @@ rightColumn model =
         , backgroundColor theme.inputBackground
         ]
         []
-        [ ruleBar model
+        [ ruleBar
         , ruleListContainer model
         ]
 
@@ -287,13 +280,4 @@ checkSwitch model =
         [ A.title "Show errors in derivation tree" ]
         [ styled S.span [ marginRight <| px 10, color theme.secondaryOnDark, theme.font ] [] [ S.text "Check" ]
         , Switch.switch (SettingsMsg << Settings.Message.CheckErrorsChangedMsg) model.settings.checkErrors
-        ]
-
-
-combinedRulesSwitch model =
-    styled S.div
-        [ displayFlex, alignItems center ]
-        []
-        [ styled S.span [ marginRight <| px 10, color theme.secondaryOnDark, theme.font ] [] [ S.text "Combined" ]
-        , Switch.switch (SettingsMsg << Settings.Message.UseCombinedRulesChangedMsg) model.settings.useCombinedRules
         ]

@@ -91,8 +91,8 @@ doHint typeSystem ((Node ({ ctx, term } as content) _) as t1) =
                         (\inferredContent ->
                             { emptyTreeContent
                                 | ctx = inferredContent.ctx |> Lambda.Show.Print.showCtx |> Lambda.Show.Text.show
-                                , term = inferredContent.term |> Lambda.Show.Print.showTerm justCtx |> Lambda.Show.Text.show
-                                , ty = inferredContent.ty |> Lambda.Show.Print.showType justCtx |> Lambda.Show.Text.show
+                                , term = inferredContent.term |> Lambda.Show.Print.showTerm inferredContent.ctx |> Lambda.Show.Text.show
+                                , ty = inferredContent.ty |> Lambda.Show.Print.showType inferredContent.ctx |> Lambda.Show.Text.show
                                 , rule = inferredContent.rule
                             }
                         )
@@ -156,6 +156,7 @@ doSubstitution sm tree =
                                                         else
                                                             Just substituted
                                                     )
+                                                -- Shouldn't use the substituted CTX??
                                                 |> Maybe.map (Lambda.Show.Print.showTerm justCtx >> Lambda.Show.Text.show)
                                         )
                                     |> Maybe.withDefault term

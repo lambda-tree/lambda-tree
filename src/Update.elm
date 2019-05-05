@@ -4,12 +4,15 @@ import Bootstrap.Modal as Modal
 import File
 import File.Download
 import File.Select
+import Lambda.Show.LaTex
 import Message exposing (..)
 import Model exposing (..)
 import RuleTree.Encode
 import RuleTree.Message
 import RuleTree.Update exposing (doSubstitution)
+import RuleTree.ViewModel exposing (getExprTree)
 import Settings.Update
+import Settings.Utils exposing (getTypeSystem)
 import Substitutor.Init
 import Substitutor.Update
 import Task
@@ -77,7 +80,16 @@ update msg model =
                 , Cmd.none
                 )
 
+        --        ExportMsg ->
+        --            ( model
+        --            , File.Download.string "tree.json" "application/json" (RuleTree.Encode.toString model.ruleTree)
+        --            )
         ExportMsg ->
             ( model
-            , File.Download.string "tree.json" "application/json" (RuleTree.Encode.toString model.ruleTree)
+            , File.Download.string "tree.tex"
+                "application/x-tex"
+                (getExprTree (getTypeSystem model.settings) model.ruleTree
+                    |> Lambda.Show.LaTex.showExprTree
+                    |> Lambda.Show.LaTex.wrapProofTreeForExport
+                )
             )

@@ -1,4 +1,4 @@
-module Lambda.ShowTextTests exposing (..)
+module Lambda.Show.TextTests exposing (..)
 
 import Expect exposing (Expectation)
 import Lambda.Expression exposing (..)

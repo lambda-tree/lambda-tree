@@ -1,7 +1,8 @@
 module Lambda.Show.LaTex exposing (..)
 
-import Lambda.Rule exposing (Rule(..))
+import Lambda.Rule exposing (ExprTree, Rule(..), isTerminalRule)
 import Lambda.Show.Print exposing (..)
+import Utils.Tree
 
 
 show : Print -> String
@@ -106,8 +107,25 @@ g =
 
 
 cmd : String -> List String -> String
-cmd name args =
-    "\\" ++ name ++ (args |> List.map (\x -> "{" ++ x ++ "}") |> String.concat) ++ " "
+cmd name contents =
+    cmdWithArgs name [] contents
+
+
+cmdWithArgs : String -> List String -> List String -> String
+cmdWithArgs name args contents =
+    "\\"
+        ++ name
+        ++ (case args of
+                [] ->
+                    ""
+
+                _ ->
+                    "[" ++ String.join ", " args ++ "]"
+           )
+        ++ (contents
+                |> List.map (\x -> "{" ++ x ++ "}")
+                |> String.concat
+           )
 
 
 const : String -> String
@@ -129,51 +147,142 @@ regular text =
 
 
 italic : String -> String
-italic =
-    identity
+italic text =
+    cmd "mathit" [ text ]
+
+
+math : String -> String
+math text =
+    "$" ++ text ++ "$"
+
+
+error : String -> String
+error text =
+    cmd "textcolor" [ "red", cmd "textbf" [ text ] ]
 
 
 showRule : Rule -> String
 showRule rule =
-    case rule of
-        TTrue ->
-            "T–True"
+    let
+        text =
+            case rule of
+                TTrue ->
+                    "T–True"
 
-        TFalse ->
-            "T–False"
+                TFalse ->
+                    "T–False"
 
-        TVar ->
-            "T–Var"
+                TVar ->
+                    "T–Var"
 
-        TVarInst ->
-            "T–Var'"
+                TVarInst ->
+                    "T–Var'"
 
-        TAbs ->
-            "T–Abs"
+                TAbs ->
+                    "T–Abs"
 
-        TApp ->
-            "T–App"
+                TApp ->
+                    "T–App"
 
-        TIf ->
-            "T–If"
+                TIf ->
+                    "T–If"
 
-        TTAbs ->
-            "T–TAbs"
+                TTAbs ->
+                    "T–TAbs"
 
-        TTApp ->
-            "T–TApp"
+                TTApp ->
+                    "T–TApp"
 
-        TLet ->
-            "T–Let"
+                TLet ->
+                    "T–Let"
 
-        TLetGen ->
-            "T–Let'"
+                TLetGen ->
+                    "T–Let'"
 
-        TGen ->
-            "T–Gen"
+                TGen ->
+                    "T–Gen"
 
-        TInst ->
-            "T–Inst"
+                TInst ->
+                    "T–Inst"
 
-        NoRule ->
-            "-"
+                NoRule ->
+                    "-"
+    in
+    cmd "textsc" [ cmd "textbf" [ g [ "(", text, ")" ] ] ]
+
+
+showExprTree : ExprTree -> String
+showExprTree tree =
+    tree
+        |> Utils.Tree.foldTree
+            (\content subPrints ->
+                case ( content.ctx, content.term, content.ty ) of
+                    ( Ok ctx, Ok term, Ok ty ) ->
+                        Imply (showCtx ctx) (OfType (showTerm ctx term) (showType ctx ty))
+                            |> show
+                            |> (\x ->
+                                    if isTerminalRule content.rule then
+                                        x ++ (regular <| "~" ++ showRule content.rule)
+
+                                    else
+                                        x
+                               )
+                            |> cmdForSubTreeCount (List.length subPrints)
+                            |> (\x ->
+                                    if isTerminalRule content.rule then
+                                        x
+
+                                    else
+                                        cmd "RightLabel" [ showRule content.rule ]
+                                            ++ "\n"
+                                            ++ x
+                               )
+                            |> (\x -> String.join "\n" subPrints ++ x)
+
+                    _ ->
+                        error "Error parsing context, term or type"
+            )
+
+
+cmdForSubTreeCount : Int -> String -> String
+cmdForSubTreeCount subTreeCount text =
+    case subTreeCount of
+        0 ->
+            cmd "AxiomC" [ math text ]
+
+        1 ->
+            cmd "UnaryInfC" [ math text ]
+
+        2 ->
+            cmd "BinaryInfC" [ math text ]
+
+        3 ->
+            cmd "TrinaryInf" [ math text ]
+
+        4 ->
+            cmd "QuaternaryInf" [ math text ]
+
+        5 ->
+            cmd "QuinaryInf" [ math text ]
+
+        _ ->
+            error "Too many proof children. Max supported count is 5"
+
+
+wrapProofTreeForExport : String -> String
+wrapProofTreeForExport proofTree =
+    [ cmdWithArgs "documentclass" [ "border=20pt" ] [ "standalone" ]
+    , cmdWithArgs "usepackage" [ "utf8" ] [ "inputenc" ]
+    , cmd "usepackage" [ "amsmath" ]
+    , cmd "usepackage" [ "bussproofs" ]
+    , cmd "usepackage" [ "xcolor" ]
+    , ""
+    , cmd "begin" [ "document" ]
+    , ""
+    , proofTree
+    , ""
+    , cmd "DisplayProof" []
+    , ""
+    , cmd "end" [ "document" ]
+    ]
+        |> String.join "\n"

@@ -42,6 +42,7 @@ view model =
         ]
 
 
+leftColumn : Model.Model -> S.Html Message.Msg
 leftColumn model =
     styled S.div
         [ displayFlex
@@ -80,6 +81,7 @@ leftColumn model =
         ]
 
 
+toolbar : Model.Model -> S.Html Message.Msg
 toolbar model =
     styled S.div
         [ position absolute
@@ -108,6 +110,7 @@ toolbar model =
         ]
 
 
+topBar : Model.Model -> S.Html Message.Msg
 topBar model =
     appBar
         [ styled
@@ -257,6 +260,7 @@ ruleListContainer model =
         ]
 
 
+treeContainer : Model.Model -> S.Html Message.Msg
 treeContainer model =
     styled S.div
         [ displayFlex
@@ -274,6 +278,7 @@ treeContainer model =
         ]
 
 
+checkSwitch : Model.Model -> S.Html Message.Msg
 checkSwitch model =
     styled S.div
         [ displayFlex, alignItems center ]

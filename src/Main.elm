@@ -3,6 +3,7 @@ module Main exposing (..)
 import Browser
 import Html.Styled exposing (toUnstyled)
 import Init
+import Json.Decode as D
 import Message exposing (Msg(..))
 import Model exposing (Model)
 import Subscriptions
@@ -11,10 +12,10 @@ import View
 import View.GlobalCss
 
 
-main : Program () Model Msg
+main : Program D.Value Model Msg
 main =
     Browser.document
-        { init = \_ -> ( Init.init, Cmd.none )
+        { init = \flags -> Init.init flags
         , update = \msg model -> Update.update msg model
         , view =
             \model ->

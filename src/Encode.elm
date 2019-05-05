@@ -4,12 +4,6 @@ import Json.Encode as E exposing (..)
 import Lambda.Expression exposing (HMFlavor(..), TypeSystem(..))
 import Model
 import RuleTree.Encode exposing (ruleTreeEncoder)
-import RuleTree.Model exposing (RuleTree)
-import Settings.Model
-
-
-type alias Encode =
-    { ruleTree : RuleTree, settings : Settings.Model.Model }
 
 
 typeSystemEncoder : TypeSystem -> E.Value

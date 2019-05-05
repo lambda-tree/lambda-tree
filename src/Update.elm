@@ -1,7 +1,7 @@
 module Update exposing (..)
 
-import Decode
-import Encode
+import Decode exposing (DecodeModel)
+import Encode exposing (modelEncoder)
 import ErrorReport.Update
 import ErrorReport.Utils exposing (showError)
 import File
@@ -10,6 +10,7 @@ import File.Select
 import Lambda.Show.LaTex
 import Message exposing (..)
 import Model exposing (..)
+import Ports exposing (cache)
 import RuleTree.Update exposing (doSubstitution)
 import RuleTree.ViewModel exposing (getExprTree)
 import Settings.Update
@@ -33,13 +34,19 @@ update msg model =
             )
 
         RuleTreeMsg m ->
-            ( { model | ruleTree = RuleTree.Update.update m model.settings model.ruleTree }
-            , Cmd.none
-            )
+            let
+                updatedModel =
+                    { model | ruleTree = RuleTree.Update.update m model.settings model.ruleTree }
+            in
+            ( updatedModel, cache (modelEncoder updatedModel) )
 
         SettingsMsg m ->
-            ( { model | settings = Settings.Update.update m model.settings }
-            , Cmd.none
+            let
+                updatedModel =
+                    { model | settings = Settings.Update.update m model.settings }
+            in
+            ( updatedModel
+            , cache (modelEncoder updatedModel)
             )
 
         DoSubstitutionMsg ->
@@ -61,11 +68,8 @@ update msg model =
 
         ModelImportedMsg str ->
             case Decode.fromString str of
-                Ok d ->
-                    ( { model
-                        | ruleTree = d.ruleTree
-                        , settings = setTypeSystem d.typeSystem model.settings
-                      }
+                Ok decodeModel ->
+                    ( updateWithDecodeModel decodeModel model
                     , Cmd.none
                     )
 
@@ -89,3 +93,11 @@ update msg model =
                     |> Lambda.Show.LaTex.wrapProofTreeForExport
                 )
             )
+
+
+updateWithDecodeModel : DecodeModel -> Model -> Model
+updateWithDecodeModel decodeModel model =
+    { model
+        | ruleTree = decodeModel.ruleTree
+        , settings = setTypeSystem decodeModel.typeSystem model.settings
+    }

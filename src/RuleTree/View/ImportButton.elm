@@ -1,18 +1,16 @@
-module RuleTree.View.ExportButton exposing (..)
+module RuleTree.View.ImportButton exposing (..)
 
 import Bootstrap.Button as Button
 import Html
-import Html.Attributes
 import Html.Styled as S
 import Message exposing (Msg(..))
-import RuleTree.Encode
 
 
-exportButton =
+importButton =
     Button.button
         [ Button.small
         , Button.dark
-        , Button.onClick ExportMsg
+        , Button.onClick ImportJsonMsg
         ]
-        [ Html.text "Export" ]
+        [ Html.text "Import" ]
         |> S.fromUnstyled

@@ -1,5 +1,6 @@
 module Init exposing (..)
 
+import Bootstrap.Dropdown as Dropdown
 import ErrorReport.Init
 import Model exposing (Model)
 import RuleTree.Init
@@ -13,4 +14,5 @@ init =
     , substitution = Substitutor.Init.init
     , settings = Settings.Init.init
     , errorReport = ErrorReport.Init.init
+    , exportDropdown = Dropdown.initialState
     }

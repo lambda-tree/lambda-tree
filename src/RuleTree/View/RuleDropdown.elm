@@ -2,15 +2,12 @@ module RuleTree.View.RuleDropdown exposing (..)
 
 import Bootstrap.Button as Button
 import Bootstrap.Dropdown as Dropdown
-import Css exposing (..)
 import Html
 import Html.Attributes as HtmlA
 import Html.Events as HtmlE
-import Html.Styled as S exposing (Html, styled)
-import Html.Styled.Events as E
+import Html.Styled as S
 import Lambda.Rule exposing (Rule(..))
 import Lambda.Show.Text exposing (showRule)
-import Message exposing (Msg(..))
 import RuleTree.Message exposing (Msg(..))
 
 

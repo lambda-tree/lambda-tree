@@ -10,12 +10,13 @@ import Lambda.Parse exposing (symbols)
 import Lambda.Rule exposing (rulesForTypeSystem)
 import Message exposing (Msg(..))
 import Model
-import RuleTree.View.ExportButton exposing (exportButton)
+import RuleTree.View.ImportButton exposing (importButton)
 import RuleTree.View.Tree exposing (treeView)
 import Settings.Message exposing (Msg(..))
 import Settings.Model exposing (TypeSystem(..))
 import Settings.Utils exposing (getTypeSystem)
 import Substitutor.View
+import View.ExportDropdown exposing (exportDropdown)
 import View.RuleList exposing (ruleList)
 import View.SegmentedControl exposing (segmentedControl)
 import View.Switch as Switch
@@ -128,31 +129,44 @@ topBar model =
                 [ View.SegmentedControl.SegmentedControlItem
                     SimplyTyped
                     (SettingsMsg << TypeSystemChangedMsg)
-                    { text = Just symbols.lambda, sup = Just symbols.arrow, image = Nothing }
+                    { text = Just symbols.lambda
+                    , sup = Just symbols.arrow
+                    , image = Nothing
+                    , info = Just "Simpy Typed Lambda Calculus"
+                    }
                 , View.SegmentedControl.SegmentedControlItem
                     HM
                     (SettingsMsg << TypeSystemChangedMsg)
-                    { text = Just "H–M", image = Nothing, sup = Nothing }
+                    { text = Just "H–M"
+                    , image = Nothing
+                    , sup = Nothing
+                    , info = Just "Hindley Milner (Original)"
+                    }
+                , View.SegmentedControl.SegmentedControlItem
+                    HM
+                    (SettingsMsg << TypeSystemChangedMsg)
+                    { text = Just "H–M'"
+                    , image = Nothing
+                    , sup = Nothing
+                    , info = Just "Hindley Milner (Syntax directed with combined rules)"
+                    }
                 , View.SegmentedControl.SegmentedControlItem
                     SystemF
                     (SettingsMsg << TypeSystemChangedMsg)
-                    { text = Just "System F", image = Nothing, sup = Nothing }
+                    { text = Just "System F"
+                    , image = Nothing
+                    , sup = Nothing
+                    , info = Just "System F"
+                    }
                 ]
             , styled S.div [ width <| px 20 ] [] []
-            , styled S.div [ flex <| int 1 ] [] []
-            , checkSwitch model
-            , styled S.div [ width <| px 20 ] [] []
-            , exportButton
+            , exportDropdown model.exportDropdown
             , styled S.div [ width <| px 10 ] [] []
-            , Button.button
-                [ Button.small
-                , Button.outlineLight
-                , Button.onClick ImportFileMsg
-                , Button.attrs []
-                ]
-                [ S.text "Import" |> S.toUnstyled
-                ]
-                |> S.fromUnstyled
+            , importButton
+            , styled S.div [ width <| px 20 ] [] []
+            , checkSwitch model
+            , styled S.div [ width <| px 10 ] [] []
+            , styled S.div [ flex <| int 1 ] [] []
             , Button.button
                 [ Button.small
                 , Button.outlineLight
@@ -211,7 +225,6 @@ appBar children =
         , backgroundColor <| theme.backgroundDark
         , displayFlex
         , justifyContent stretch
-        , overflow auto
         ]
         []
         children

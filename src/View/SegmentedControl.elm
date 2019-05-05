@@ -9,10 +9,15 @@ import View.Theme exposing (theme)
 
 
 segmentedControlButton : List (SegmentedControlOption id) -> SegmentedControlItem id msg -> Html msg
-segmentedControlButton options (SegmentedControlItem id msg { text, sup, image }) =
+segmentedControlButton options (SegmentedControlItem id msg { text, sup, image, info }) =
     let
         checked =
             List.member (SelectedIdx id) options
+
+        titleAttr =
+            info
+                |> Maybe.map (A.title >> List.singleton)
+                |> Maybe.withDefault []
     in
     styled S.button
         [ displayFlex
@@ -66,7 +71,7 @@ segmentedControlButton options (SegmentedControlItem id msg { text, sup, image }
         , focus <| [ outline none ]
         , textShadow4 (px 0) (px 0) (px 7) (rgba 0 0 0 0.2)
         ]
-        [ E.onClick (msg id) ]
+        ([ E.onClick (msg id) ] ++ titleAttr)
         ([ Maybe.map
             (\src ->
                 styled S.img
@@ -86,7 +91,14 @@ segmentedControlButton options (SegmentedControlItem id msg { text, sup, image }
 
 
 type SegmentedControlItem id msg
-    = SegmentedControlItem id (id -> msg) { text : Maybe String, image : Maybe String, sup : Maybe String }
+    = SegmentedControlItem
+        id
+        (id -> msg)
+        { text : Maybe String
+        , image : Maybe String
+        , sup : Maybe String
+        , info : Maybe String
+        }
 
 
 type SegmentedControlOption id

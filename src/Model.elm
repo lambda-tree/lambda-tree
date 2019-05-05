@@ -1,5 +1,6 @@
 module Model exposing (..)
 
+import Bootstrap.Dropdown as Dropdown
 import ErrorReport.Model
 import RuleTree.Model
 import Settings.Model
@@ -11,4 +12,5 @@ type alias Model =
     , substitution : Substitutor.Model.Model
     , settings : Settings.Model.Model
     , errorReport : ErrorReport.Model.Model
+    , exportDropdown : Dropdown.State
     }

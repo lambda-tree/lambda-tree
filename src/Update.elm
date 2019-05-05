@@ -8,7 +8,6 @@ import Lambda.Show.LaTex
 import Message exposing (..)
 import Model exposing (..)
 import RuleTree.Encode
-import RuleTree.Message
 import RuleTree.Update exposing (doSubstitution)
 import RuleTree.ViewModel exposing (getExprTree)
 import Settings.Update
@@ -49,10 +48,10 @@ update msg model =
             , Cmd.none
             )
 
-        ImportFileMsg ->
-            ( model, File.Select.file [ "application/json" ] FileImportedMsg )
+        ImportJsonMsg ->
+            ( model, File.Select.file [ "application/json" ] JsonImportedMsg )
 
-        FileImportedMsg f ->
+        JsonImportedMsg f ->
             ( model
             , File.toString f
                 |> Task.perform RuleTreeImportedMsg
@@ -64,11 +63,15 @@ update msg model =
                 , Cmd.none
                 )
 
-        --        ExportMsg ->
-        --            ( model
-        --            , File.Download.string "tree.json" "application/json" (RuleTree.Encode.toString model.ruleTree)
-        --            )
-        ExportMsg ->
+        ExportDropdownMsg state ->
+            ( { model | exportDropdown = state }, Cmd.none )
+
+        ExportJsonMsg ->
+            ( model
+            , File.Download.string "tree.json" "application/json" (RuleTree.Encode.toString model.ruleTree)
+            )
+
+        ExportLaTexMsg ->
             ( model
             , File.Download.string "tree.tex"
                 "application/x-tex"

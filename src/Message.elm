@@ -16,7 +16,7 @@ type Msg
     | ErrorReportMsg ErrorReport.Message.Msg
     | ImportJsonMsg
     | JsonImportedMsg File
-    | RuleTreeImportedMsg String
+    | ModelImportedMsg String
     | ExportDropdownMsg Dropdown.State
     | ExportLaTexMsg
     | ExportJsonMsg

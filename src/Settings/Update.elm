@@ -2,6 +2,7 @@ module Settings.Update exposing (..)
 
 import Settings.Message exposing (Msg(..))
 import Settings.Model exposing (Model)
+import Settings.Utils exposing (setTypeSystem)
 
 
 update : Msg -> Model -> Model
@@ -11,7 +12,7 @@ update msg model =
             { model | checkErrors = value }
 
         TypeSystemChangedMsg value ->
-            { model | typeSystem = value }
+            setTypeSystem value model
 
         SidebarVisibilityChangedMsg value ->
             { model | showSidebar = value }

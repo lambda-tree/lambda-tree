@@ -1,5 +1,7 @@
 module Update exposing (..)
 
+import Decode
+import Encode
 import ErrorReport.Update
 import ErrorReport.Utils exposing (showError)
 import File
@@ -8,13 +10,10 @@ import File.Select
 import Lambda.Show.LaTex
 import Message exposing (..)
 import Model exposing (..)
-import Result.Extra
-import RuleTree.Decode
-import RuleTree.Encode
 import RuleTree.Update exposing (doSubstitution)
 import RuleTree.ViewModel exposing (getExprTree)
 import Settings.Update
-import Settings.Utils exposing (getTypeSystem)
+import Settings.Utils exposing (getTypeSystem, setTypeSystem)
 import Substitutor.Init
 import Substitutor.Update
 import Task
@@ -54,26 +53,31 @@ update msg model =
         ImportJsonMsg ->
             ( model, File.Select.file [ "application/json" ] JsonImportedMsg )
 
-        JsonImportedMsg f ->
+        JsonImportedMsg file ->
             ( model
-            , File.toString f
-                |> Task.perform RuleTreeImportedMsg
+            , File.toString file
+                |> Task.perform ModelImportedMsg
             )
 
-        RuleTreeImportedMsg s ->
-            case RuleTree.Decode.fromString s of
-                Ok t ->
-                    ( { model | ruleTree = t }, Cmd.none )
+        ModelImportedMsg str ->
+            case Decode.fromString str of
+                Ok d ->
+                    ( { model
+                        | ruleTree = d.ruleTree
+                        , settings = setTypeSystem d.typeSystem model.settings
+                      }
+                    , Cmd.none
+                    )
 
                 Err e ->
                     ( { model | errorReport = showError e }, Cmd.none )
 
-        ExportDropdownMsg state ->
-            ( { model | exportDropdown = state }, Cmd.none )
+        ExportDropdownMsg dropdownState ->
+            ( { model | exportDropdown = dropdownState }, Cmd.none )
 
         ExportJsonMsg ->
             ( model
-            , File.Download.string "tree.json" "application/json" (RuleTree.Encode.toString model.ruleTree)
+            , File.Download.string "tree.json" "application/json" (Encode.toString model)
             )
 
         ExportLaTexMsg ->

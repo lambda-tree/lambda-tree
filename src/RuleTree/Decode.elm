@@ -71,9 +71,3 @@ ruleTreeContentDecoder =
 ruleTreeDecoder : D.Decoder RuleTree
 ruleTreeDecoder =
     treeDecoder ruleTreeContentDecoder
-
-
-fromString : String -> Result String RuleTree
-fromString =
-    D.decodeString ruleTreeDecoder
-        >> Result.mapError D.errorToString

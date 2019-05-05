@@ -267,8 +267,7 @@ treeContainer model =
         , flexDirection column
         , justifyContent flexStart
         , alignItems center
-        , padding <| px 80
-        , paddingTop <| px 40
+        , padding4 (px 50) (px 20) (px 80) (px 20)
         , marginLeft auto
         , marginRight auto
         ]

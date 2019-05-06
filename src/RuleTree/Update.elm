@@ -45,10 +45,10 @@ update msg settings tree =
         RuleStatusPopoverMsg path state ->
             mapContentAtPath path (\c -> { c | statusPopover = state }) tree
 
-        HintTree path ->
+        HintTreeMsg path ->
             doHint (getTypeSystem settings) tree
 
-        HintRuleSelection path ->
+        HintRuleSelectionMsg path ->
             hintRuleSelection (getTypeSystem settings) path tree
 
 

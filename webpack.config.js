@@ -27,39 +27,6 @@ var common = {
         filename: MODE == "production" ? "[name]-[hash].js" : "index.js"
     },
     plugins: [
-        new FaviconsWebpackPlugin({
-            // Your source logo
-            logo: './assets/faviconMaster.svg',
-            // The prefix for all image files (might be a folder or a name)
-            prefix: 'icons-[hash]/',
-            // Emit all stats of the generated icons
-            emitStats: false,
-            // The name of the json containing all favicon information
-            statsFilename: 'iconstats-[hash].json',
-            // Generate a cache file with control hashes and
-            // don't rebuild the favicons until those hashes change
-            persistentCache: true,
-            // Inject the html into the html-webpack-plugin
-            inject: true,
-            // favicon background color (see https://github.com/haydenbleasel/favicons#usage)
-            background: '#263238',
-            // favicon app title (see https://github.com/haydenbleasel/favicons#usage)
-            title: 'λree',
-
-            // which icons should be generated (see https://github.com/haydenbleasel/favicons#usage)
-            icons: {
-                android: true,
-                appleIcon: true,
-                appleStartup: true,
-                coast: true,
-                favicons: true,
-                firefox: true,
-                opengraph: true,
-                twitter: true,
-                yandex: true,
-                windows: true
-            }
-        }),
         new HTMLWebpackPlugin({
             // Use this template to get basic responsive meta tags
             template: "src/index.html",
@@ -160,6 +127,40 @@ if (MODE === "development") {
 if (MODE === "production") {
     module.exports = merge(common, {
         plugins: [
+            // Generate favicons
+            new FaviconsWebpackPlugin({
+                // Your source logo
+                logo: './assets/faviconMaster.svg',
+                // The prefix for all image files (might be a folder or a name)
+                prefix: 'icons-[hash]/',
+                // Emit all stats of the generated icons
+                emitStats: false,
+                // The name of the json containing all favicon information
+                statsFilename: 'iconstats-[hash].json',
+                // Generate a cache file with control hashes and
+                // don't rebuild the favicons until those hashes change
+                persistentCache: true,
+                // Inject the html into the html-webpack-plugin
+                inject: true,
+                // favicon background color (see https://github.com/haydenbleasel/favicons#usage)
+                background: '#263238',
+                // favicon app title (see https://github.com/haydenbleasel/favicons#usage)
+                title: 'λree',
+
+                // which icons should be generated (see https://github.com/haydenbleasel/favicons#usage)
+                icons: {
+                    android: true,
+                    appleIcon: true,
+                    appleStartup: true,
+                    coast: true,
+                    favicons: true,
+                    firefox: true,
+                    opengraph: true,
+                    twitter: true,
+                    yandex: true,
+                    windows: true
+                }
+            }),
             // Minify elm code
             new elmMinify.WebpackPlugin(),
             // Delete everything from output-path (/dist) and report to user

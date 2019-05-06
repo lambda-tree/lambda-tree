@@ -322,10 +322,6 @@ check condition previous =
             (\_ ->
                 case condition of
                     ( error, conditionResult ) ->
-                        let
-                            _ =
-                                Debug.log ("CHECK: " ++ error) conditionResult
-                        in
                         if conditionResult then
                             Ok ()
 
@@ -341,10 +337,6 @@ checkWithDetails condition previous =
             (\_ ->
                 case condition of
                     ( error, conditionResult ) ->
-                        let
-                            _ =
-                                Debug.log ("CHECK: " ++ error) conditionResult
-                        in
                         case conditionResult of
                             Ok True ->
                                 Ok ()

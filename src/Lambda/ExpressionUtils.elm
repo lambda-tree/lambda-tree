@@ -548,12 +548,6 @@ Useful for e.g. comparing type of variable in ctx with type of whole expression
 equalTypes : Context -> Ty -> Context -> Ty -> Bool
 equalTypes ctx1 ty1 ctx2 ty2 =
     let
-        _ =
-            Debug.log "equalTypes (ctx1, ty1)" ( ctx1, ty1 )
-
-        _ =
-            Debug.log "equalTypes (ctx2, ty2)" ( ctx2, ty2 )
-
         ctxlengthDiff =
             ctxlength ctx1 - ctxlength ctx2
     in

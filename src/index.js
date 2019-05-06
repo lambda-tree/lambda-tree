@@ -2,7 +2,7 @@
 
 import "./styles.scss"
 import { Elm } from "./Main"
-
+import "dragscroll"
 
 // Get flags for Elm App from cache
 const cacheKey = "cache"

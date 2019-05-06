@@ -69,8 +69,9 @@ leftColumn model =
                 , alignItems flexStart
                 , justifyContent flexStart
                 , overflow auto
+                , cursor grab
                 ]
-                []
+                [ A.class "dragscroll" ]
                 [ treeContainer model
                 , errorReportModal model.errorReport
                     |> S.map ErrorReportMsg

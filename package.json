@@ -43,6 +43,7 @@
         "webpack-merge": "^4.2.1"
     },
     "dependencies": {
+        "dragscroll": "ethaizone/dragscroll#patch-2",
         "purecss": "^1.0.0"
     },
     "prettier": {

@@ -10,7 +10,7 @@ import Utils.Tree exposing (Tree(..))
 
 
 type alias InferredTreeContent =
-    { ctx : Context, term : Term, ty : Ty, rule : Rule, ss : SubstitutionFtv }
+    { ctx : Context, term : Term, ty : Ty, rule : Rule, ss : SubstitutionFtv, ftvs : Set String }
 
 
 type alias InferredTree =
@@ -54,6 +54,7 @@ applySSTree ((Node { ss } _) as tree) =
 inferTree : TypeSystem -> Context -> Term -> Result String InferredTree
 inferTree typeSystem =
     let
+        buildTree : Set String -> Context -> Term -> Result String InferredTree
         buildTree ftvs ctx t =
             case t of
                 TmConst _ c ->
@@ -66,6 +67,7 @@ inferTree typeSystem =
                                     , ty = TyConst TyBool
                                     , ss = []
                                     , rule = TTrue
+                                    , ftvs = Set.empty
                                     }
                                     []
 
@@ -77,6 +79,7 @@ inferTree typeSystem =
                                     , ty = TyConst TyBool
                                     , ss = []
                                     , rule = TFalse
+                                    , ftvs = Set.empty
                                     }
                                     []
 
@@ -86,24 +89,34 @@ inferTree typeSystem =
                             case typeSystem of
                                 HM SyntaxDirected ->
                                     Ok <|
+                                        let
+                                            instTy =
+                                                inst ftvs ctx ty
+                                        in
                                         Node
                                             { ctx = ctx
                                             , term = t
-                                            , ty = inst ctx ty
+                                            , ty = instTy
                                             , ss = []
                                             , rule = TVarInst
+                                            , ftvs = ftvTy instTy
                                             }
                                             []
 
                                 HM NonDeterministic ->
                                     if Set.size (topBoundVars ty) > 0 then
                                         Ok <|
+                                            let
+                                                instTy =
+                                                    inst ftvs ctx ty
+                                            in
                                             Node
                                                 { ctx = ctx
                                                 , term = t
-                                                , ty = inst ctx ty
+                                                , ty = instTy
                                                 , ss = []
                                                 , rule = TInst
+                                                , ftvs = ftvTy instTy
                                                 }
                                                 [ Node
                                                     { ctx = ctx
@@ -111,6 +124,7 @@ inferTree typeSystem =
                                                     , ty = ty
                                                     , ss = []
                                                     , rule = TVar
+                                                    , ftvs = Set.empty
                                                     }
                                                     []
                                                 ]
@@ -123,6 +137,7 @@ inferTree typeSystem =
                                                 , ty = ty
                                                 , ss = []
                                                 , rule = TVar
+                                                , ftvs = Set.empty
                                                 }
                                                 []
 
@@ -134,6 +149,7 @@ inferTree typeSystem =
                                             , ty = ty
                                             , ss = []
                                             , rule = TVar
+                                            , ftvs = Set.empty
                                             }
                                             []
 
@@ -149,7 +165,8 @@ inferTree typeSystem =
                         ctx1 =
                             addbinding ctx varName (VarBind fromType)
                     in
-                    buildTree ftvs ctx1 t1
+                    -- FTV Keep
+                    buildTree (ftvs |> Set.union (ftvTy fromType)) ctx1 t1
                         |> Result.map
                             (\((Node n1 _) as bt1) ->
                                 Node
@@ -158,6 +175,18 @@ inferTree typeSystem =
                                     , ty = substFtvTy n1.ss (TyArr fromType n1.ty)
                                     , rule = TAbs
                                     , ss = n1.ss
+
+                                    -- FTV Keep
+                                    , ftvs =
+                                        n1.ftvs
+                                            |> Set.union
+                                                (case maybeType of
+                                                    Just _ ->
+                                                        Set.empty
+
+                                                    Nothing ->
+                                                        ftvTy fromType
+                                                )
                                     }
                                     [ bt1 ]
                             )
@@ -166,7 +195,8 @@ inferTree typeSystem =
                     buildTree ftvs ctx t1
                         |> Result.andThen
                             (\((Node n1 _) as bt1) ->
-                                buildTree (ftvs |> Set.union (ftvTree bt1)) (substFtvCtx n1.ss ctx) t2
+                                -- !!! Shouldn't also `substFtvTerm` in t2 -> to substitute for the resolved  annotations
+                                buildTree (ftvs |> Set.union n1.ftvs) (substFtvCtx n1.ss ctx) t2
                                     |> Result.andThen
                                         (\((Node n2 _) as bt2) ->
                                             let
@@ -191,6 +221,9 @@ inferTree typeSystem =
                                                             , ty = substFtvTy s3 tauPrime
                                                             , rule = TApp
                                                             , ss = s3 ++ n2.ss ++ n1.ss
+
+                                                            -- FTV Keep
+                                                            , ftvs = n1.ftvs |> Set.union n2.ftvs |> Set.union (ftvTy tauPrime)
                                                             }
                                                             [ bt1, bt2 ]
                                                     )
@@ -208,9 +241,9 @@ inferTree typeSystem =
                                                 substFtvCtx n1.ss ctx
 
                                             genTy =
-                                                gen ctx1 n1.ty
+                                                gen (ftvs |> Set.union n1.ftvs) ctx1 n1.ty
                                         in
-                                        buildTree ftvs (addbinding ctx varName (VarBind genTy)) t2
+                                        buildTree (ftvs |> Set.union n1.ftvs) (addbinding ctx varName (VarBind genTy)) t2
                                             |> Result.map
                                                 (\((Node n2 _) as bt2) ->
                                                     case hmType of
@@ -221,6 +254,7 @@ inferTree typeSystem =
                                                                 , ty = n2.ty
                                                                 , rule = TLetGen
                                                                 , ss = n2.ss ++ n1.ss
+                                                                , ftvs = n1.ftvs |> Set.union n2.ftvs
                                                                 }
                                                                 [ bt1, bt2 ]
 
@@ -231,6 +265,7 @@ inferTree typeSystem =
                                                                 , ty = n2.ty
                                                                 , rule = TLet
                                                                 , ss = n2.ss ++ n1.ss
+                                                                , ftvs = n1.ftvs |> Set.union n2.ftvs
                                                                 }
                                                                 [ Node
                                                                     { ctx = n1.ctx
@@ -238,6 +273,7 @@ inferTree typeSystem =
                                                                     , ty = genTy
                                                                     , rule = TGen
                                                                     , ss = n1.ss
+                                                                    , ftvs = n1.ftvs
                                                                     }
                                                                     [ bt1 ]
                                                                 , bt2
@@ -254,6 +290,7 @@ inferTree typeSystem =
                                                         , ty = n2.ty
                                                         , rule = TLet
                                                         , ss = n2.ss ++ n1.ss
+                                                        , ftvs = n1.ftvs |> Set.union n2.ftvs
                                                         }
                                                         [ bt1, bt2 ]
                                                 )
@@ -262,20 +299,30 @@ inferTree typeSystem =
                 -- Extension of W to work with System F terms
                 TmTAbs _ tyVarName _ ->
                     degeneralizeTermTop ctx t
-                        |> buildTree ftvs ctx
+                        |> buildTree (ftvs |> Set.insert tyVarName) ctx
                         |> Result.andThen
                             (\((Node n1 _) as bt1) ->
+                                -- If var is supposed to be some more special type, then fail
+                                -- Move this to unify type case of TyAll
+                                -- what if there is some constraint on the type variable?? -> should have been explicitly specified in types of expressions!!!!
                                 unifyType (substFtvTy n1.ss (TyName tyVarName)) (TyName tyVarName)
-                                    |> Result.map
+                                    |> Result.andThen
                                         (\s2 ->
-                                            Node
-                                                { ctx = ctx
-                                                , term = t
-                                                , ty = substFtvTy s2 n1.ty
-                                                , rule = TTAbs
-                                                , ss = s2 ++ n1.ss
-                                                }
-                                                [ bt1 ]
+                                            case s2 of
+                                                [ ( TyName _, _ ) ] ->
+                                                    Ok <|
+                                                        Node
+                                                            { ctx = ctx
+                                                            , term = t
+                                                            , ty = substFtvTy s2 n1.ty
+                                                            , rule = TTAbs
+                                                            , ss = s2 ++ n1.ss
+                                                            , ftvs = n1.ftvs |> Set.insert tyVarName
+                                                            }
+                                                            [ bt1 ]
+
+                                                _ ->
+                                                    Err <| "Type variable '" ++ tyVarName ++ "' is used in a more constrained way"
                                         )
                             )
                         |> Result.map (\(Node n1 c1) -> Node { n1 | ty = generalizeTypeTop ctx n1.ty tyVarName } c1)
@@ -290,9 +337,12 @@ inferTree typeSystem =
                                             Node
                                                 { ctx = ctx
                                                 , term = t
+
+                                                -- Keep it this way, or use substitution of ftv?
                                                 , ty = typeSubstTop tyS ty1
                                                 , rule = TTApp
                                                 , ss = n1.ss
+                                                , ftvs = n1.ftvs
                                                 }
                                                 [ bt1 ]
 
@@ -306,10 +356,26 @@ inferTree typeSystem =
     \x y ->
         let
             builtTree =
-                buildTree Set.empty x y
+                buildTree (ftvCtx x |> Set.union (ftvTerm y)) x y
 
             _ =
                 builtTree |> Result.map (\(Node c _) -> Debug.log "builtTree SS: " c.ss)
+
+            _ =
+                builtTree |> Result.map (\(Node c _) -> Debug.log "builtTree ftvs: " c.ftvs)
         in
         builtTree
             |> Result.map applySSTree
+
+
+w : Context -> Term -> Result String ( SubstitutionFtv, Ty )
+w ctx term =
+    inferTree (HM SyntaxDirected) ctx term
+        |> Result.map (\(Node { ty, ss } _) -> ( ss, ty ))
+
+
+typeOf : TypeSystem -> Context -> Term -> Result String Ty
+typeOf typeSystem ctx term =
+    inferTree typeSystem ctx term
+        |> Result.map (\(Node { ty } _) -> ty)
+        |> Result.map (gen (ftvCtx ctx) ctx)

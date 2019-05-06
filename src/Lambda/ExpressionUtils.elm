@@ -560,124 +560,24 @@ equalTypes ctx1 ty1 ctx2 ty2 =
             && (typeShift -ctxlengthDiff ty1 == ty2)
 
 
-inst : Context -> Ty -> Ty
-inst ctx tyGen =
+inst : Set String -> Context -> Ty -> Ty
+inst freeVars ctx tyGen =
     tyGen
-        |> renameBoundVarsWithFresh (ftvTy tyGen |> Set.union (ftvCtx ctx))
+        |> renameBoundVarsWithFresh
+            (ftvTy tyGen
+                |> Set.union (ftvCtx ctx)
+                |> Set.union freeVars
+            )
         |> degeneralizeType ctx
 
 
-gen : Context -> Ty -> Ty
-gen ctx ty =
+gen : Set String -> Context -> Ty -> Ty
+gen freeVars ctx ty =
     let
         fv =
-            Set.diff (ftvTy ty) (ftvCtx ctx) |> Set.toList
+            Set.diff (ftvTy ty) freeVars |> Set.toList
     in
     fv |> List.foldr (\var accTy -> generalizeTypeTop ctx accTy var) ty
-
-
-w : Context -> Term -> Result String ( SubstitutionFtv, Ty )
-w ctx t =
-    case t of
-        TmVar _ x _ ->
-            case getbinding ctx x of
-                Just (VarBind ty) ->
-                    Ok <| ( [], inst ctx ty )
-
-                _ ->
-                    Err "Var is not bound in the context with type"
-
-        TmAbs _ varName maybeType t1 ->
-            let
-                fromType =
-                    maybeType
-                        |> Maybe.withDefault (TyName <| freshVarName (ftvCtx ctx) "X")
-
-                ctx1 =
-                    addbinding ctx varName (VarBind fromType)
-            in
-            w ctx1 t1
-                |> Result.map (\( s, toType ) -> ( s, substFtvTy s (TyArr fromType toType) ))
-
-        TmApp _ t1 t2 ->
-            w ctx t1
-                |> Result.andThen
-                    (\( s1, ro ) ->
-                        w (substFtvCtx s1 ctx) t2
-                            |> Result.andThen
-                                (\( s2, tau ) ->
-                                    let
-                                        tauPrime =
-                                            TyName <|
-                                                freshVarName
-                                                    (ftvCtx ctx
-                                                        |> Set.union (ftvTy ro)
-                                                        |> Set.union (ftvTy tau)
-                                                    )
-                                                    "X"
-                                    in
-                                    unifyType (substFtvTy s2 ro) (TyArr tau tauPrime)
-                                        |> Result.map
-                                            (\s3 -> ( s3 ++ s2 ++ s1, substFtvTy s3 tauPrime ))
-                                )
-                    )
-
-        TmConst _ c ->
-            case c of
-                TmTrue ->
-                    Ok ( [], TyConst TyBool )
-
-                TmFalse ->
-                    Ok ( [], TyConst TyBool )
-
-        TmLet _ varName t1 t2 ->
-            w ctx t1
-                |> Result.andThen
-                    (\( s1, tau ) ->
-                        let
-                            ctx1 =
-                                substFtvCtx s1 ctx
-
-                            genTy =
-                                gen ctx1 tau
-                        in
-                        w (addbinding ctx varName (VarBind genTy)) t2
-                            |> Result.map
-                                (\( s2, tauPrime ) -> ( s2 ++ s1, tauPrime ))
-                    )
-
-        -- Extension of W to work with System F terms
-        TmTAbs _ tyVarName _ ->
-            degeneralizeTermTop ctx t
-                |> w ctx
-                |> Result.andThen
-                    (\( s1, ty ) ->
-                        unifyType (substFtvTy s1 (TyName tyVarName)) (TyName tyVarName)
-                            |> Result.map (\s2 -> ( s2 ++ s1, substFtvTy s2 ty ))
-                    )
-                |> Result.map (Tuple.mapSecond <| \gTy -> generalizeTypeTop ctx gTy tyVarName)
-
-        TmTApp _ t1 tyS ->
-            w ctx t1
-                |> Result.andThen
-                    (\( s1, tyAbs ) ->
-                        case tyAbs of
-                            TyAll _ ty1 ->
-                                Ok ( s1, typeSubstTop tyS ty1 )
-
-                            _ ->
-                                Err "Type can be applied only on type abstraction term"
-                    )
-
-        _ ->
-            Err "Not implemented"
-
-
-typeOf : Context -> Term -> Result String Ty
-typeOf ctx t =
-    w ctx t
-        |> Result.map Tuple.second
-        |> Result.map (gen ctx)
 
 
 areHMTypesEquivalent : Context -> Ty -> Ty -> Result String ()

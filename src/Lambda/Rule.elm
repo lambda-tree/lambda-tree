@@ -268,7 +268,7 @@ checkRule rule =
                             ( "Variable is not added to ctx with correct type"
                             , let
                                 genTy =
-                                    gen (ftvTy top1.ty |> Set.union (ftvCtx top1.ctx)) top1.ctx top1.ty
+                                    gen (ftvCtx top1.ctx) top1.ctx top1.ty
                               in
                               case List.Extra.uncons top2.ctx of
                                 Just ( ( boundVarName, binding ), rest ) ->

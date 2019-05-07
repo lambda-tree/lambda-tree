@@ -535,6 +535,29 @@ degeneralizeTermTop ctx t =
             t
 
 
+generalizeTypeTop : Context -> Ty -> String -> Ty
+generalizeTypeTop ctx ty varName =
+    let
+        onvar _ x n =
+            TyVar x n
+
+        onname c name =
+            if name == varName then
+                -- Also shift the replacing context length
+                TyVar (c - ctxlength ctx) (c + 1)
+
+            else
+                TyName name
+
+        ty1 =
+            ty
+                -- shift other vars first
+                |> typeShift 1
+                |> tymap onvar onname (ctxlength ctx)
+    in
+    TyAll varName ty1
+
+
 generalizeTermTop : Context -> Term -> String -> Term
 generalizeTermTop ctx term varName =
     let
@@ -645,29 +668,6 @@ isSpecializedType ctx tyGen tySpec =
             )
 
 
-generalizeTypeTop : Context -> Ty -> String -> Ty
-generalizeTypeTop ctx ty varName =
-    let
-        onvar _ x n =
-            TyVar x n
-
-        onname c name =
-            if name == varName then
-                -- Also shift the replacing context length
-                TyVar (c - ctxlength ctx) (c + 1)
-
-            else
-                TyName name
-
-        ty1 =
-            ty
-                -- shift other vars first
-                |> typeShift 1
-                |> tymap onvar onname (ctxlength ctx)
-    in
-    TyAll varName ty1
-
-
 {-| Type equivalency of 2 types. Might be in different contexts.
 Useful for e.g. comparing type of variable in ctx with type of whole expression
 -}
@@ -686,6 +686,8 @@ equalTypes ctx1 ty1 ctx2 ty2 =
             && (typeShift -ctxlengthDiff ty1 == ty2)
 
 
+{-| Algorithm W instantiation
+-}
 inst : Set String -> Context -> Ty -> Ty
 inst freeVars ctx tyGen =
     tyGen
@@ -697,6 +699,8 @@ inst freeVars ctx tyGen =
         |> degeneralizeType ctx
 
 
+{-| Algorithm W generation
+-}
 gen : Set String -> Context -> Ty -> Ty
 gen freeVars ctx ty =
     let

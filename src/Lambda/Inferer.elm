@@ -1,7 +1,7 @@
 module Lambda.Inferer exposing (..)
 
 import Lambda.Context exposing (..)
-import Lambda.ContextUtils exposing (addbinding, getbinding)
+import Lambda.ContextUtils exposing (addbinding, emptycontext, getbinding)
 import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (..)
 import Lambda.Rule exposing (Rule(..))
@@ -15,6 +15,16 @@ type alias InferredTreeContent =
 
 type alias InferredTree =
     Tree InferredTreeContent
+
+
+expandGen : InferredTree -> InferredTree
+expandGen ((Node content children) as tree) =
+    case content.ty of
+        TyAll _ (TyAll _ _) ->
+            Node { content | rule = TGen } [ expandGen <| Node { content | ty = degeneralizeTypeTop content.ctx content.ty } children ]
+
+        _ ->
+            tree
 
 
 ftvTree : InferredTree -> Set String
@@ -53,21 +63,48 @@ applySSTree ((Node { ss } _) as tree) =
 
 {-| Optimize by running only on the final tree
 -}
-unifyWithRootType : Maybe Ty -> InferredTree -> InferredTree
-unifyWithRootType maybeTy ((Node c children) as tree) =
+unifyWithRootType : TypeSystem -> Set String -> Maybe Ty -> InferredTree -> InferredTree
+unifyWithRootType typeSystem ftvs maybeTy ((Node c children) as tree) =
     maybeTy
-        |> Maybe.andThen (\ty -> unifyType c.ty ty |> Result.toMaybe)
-        |> Maybe.map (\ss -> applySSTree (Node { c | ss = ss ++ c.ss } children))
+        |> Maybe.andThen
+            (\ty ->
+                case ( ty, typeSystem ) of
+                    ( TyAll _ _, HM NonDeterministic ) ->
+                        unifyType (Debug.log "c.ty" c.ty) (Debug.log "degenTy" (degeneralizeType emptycontext (Debug.log "ty" ty)))
+                            |> Result.map
+                                (\ss ->
+                                    let
+                                        ((Node n1 _) as bt1) =
+                                            applySSTree (Node { c | ss = ss ++ c.ss } children)
+                                    in
+                                    expandGen <|
+                                        Node
+                                            { ctx = n1.ctx
+                                            , term = n1.term
+                                            , ty = gen ftvs n1.ctx n1.ty
+                                            , ss = n1.ss
+                                            , rule = TGen
+                                            , ftvs = n1.ftvs
+                                            }
+                                            [ bt1 ]
+                                )
+                            |> Result.toMaybe
+
+                    _ ->
+                        (Debug.log "unif" <| unifyType (Debug.log "c.ty" c.ty) (Debug.log "ty" ty))
+                            |> Result.map (\ss -> applySSTree (Node { c | ss = ss ++ c.ss } children))
+                            |> Result.toMaybe
+            )
         |> Maybe.withDefault tree
 
 
 {-| Optimize by running only on the final tree
 -}
-unifyToOriginals : Context -> Term -> Maybe Ty -> InferredTree -> InferredTree
-unifyToOriginals ctx term ty ((Node c children) as tree) =
+unifyToRootCtxTerm : Context -> Term -> Maybe Ty -> InferredTree -> InferredTree
+unifyToRootCtxTerm ctx term ty ((Node c children) as tree) =
     let
         _ =
-            Debug.log "unifyToOriginals" ( c.ctx, ctx )
+            Debug.log "unifyToRootCtxTerm" ( c.ctx, ctx )
     in
     unifyTypeCtx c.ctx ctx
         |> Result.andThen
@@ -287,7 +324,7 @@ inferTree typeSystem rootType =
                                                 substFtvCtx n1.ss ctx
 
                                             genTy =
-                                                gen (ftvs |> Set.union n1.ftvs) ctx1 n1.ty
+                                                gen ftvs ctx1 n1.ty
                                         in
                                         buildTree (ftvs |> Set.union n1.ftvs) (addbinding ctx varName (VarBind genTy)) t2
                                             |> Result.map
@@ -313,15 +350,16 @@ inferTree typeSystem rootType =
                                                                 , ss = n2.ss ++ n1.ss
                                                                 , ftvs = n1.ftvs |> Set.union n2.ftvs
                                                                 }
-                                                                [ Node
-                                                                    { ctx = n1.ctx
-                                                                    , term = n1.term
-                                                                    , ty = genTy
-                                                                    , rule = TGen
-                                                                    , ss = n1.ss
-                                                                    , ftvs = n1.ftvs
-                                                                    }
-                                                                    [ bt1 ]
+                                                                [ expandGen <|
+                                                                    Node
+                                                                        { ctx = n1.ctx
+                                                                        , term = n1.term
+                                                                        , ty = genTy
+                                                                        , rule = TGen
+                                                                        , ss = n1.ss
+                                                                        , ftvs = n1.ftvs
+                                                                        }
+                                                                        [ bt1 ]
                                                                 , bt2
                                                                 ]
                                                 )
@@ -394,8 +432,20 @@ inferTree typeSystem rootType =
     in
     \rootCtx rootTerm ->
         let
+            ftvs =
+                ftvCtx rootCtx
+                    |> Set.union (ftvTerm rootTerm)
+                    |> Set.union
+                        (rootType
+                            |> Maybe.map ftvTy
+                            |> Maybe.withDefault Set.empty
+                        )
+
             builtTree =
-                buildTree (ftvCtx rootCtx |> Set.union (ftvTerm rootTerm)) rootCtx rootTerm
+                buildTree
+                    ftvs
+                    rootCtx
+                    rootTerm
 
             _ =
                 builtTree |> Result.map (\(Node c _) -> Debug.log "builtTree SS: " c.ss)
@@ -408,12 +458,12 @@ inferTree typeSystem rootType =
             |> Result.map
                 (case typeSystem of
                     HM _ ->
-                        unifyToOriginals rootCtx rootTerm Nothing
+                        unifyToRootCtxTerm rootCtx rootTerm Nothing
 
                     _ ->
                         identity
                 )
-            |> Result.map (unifyWithRootType rootType)
+            |> Result.map (unifyWithRootType typeSystem ftvs rootType)
 
 
 w : Context -> Term -> Result String ( SubstitutionFtv, Ty )

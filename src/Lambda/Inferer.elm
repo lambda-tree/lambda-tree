@@ -51,6 +51,24 @@ applySSTree ((Node { ss } _) as tree) =
             )
 
 
+
+--{-| Optimize by running only on the final tree
+---}
+--unifyToDefaults : InferredTree -> InferredTree
+--unifyToDefaults ((Node { ss, ctx, term } c)) =
+--    let ssCtx =
+--    Node {}
+--    tree
+--        |> Utils.Tree.map
+--            (\({ ctx, term, ty } as c) ->
+--                { c
+--                    | ctx = substFtvCtx ss ctx
+--                    , term = substFtvTerm ss term
+--                    , ty = substFtvTy ss ty
+--                }
+--            )
+
+
 inferTree : TypeSystem -> Context -> Term -> Result String InferredTree
 inferTree typeSystem =
     let
@@ -91,7 +109,7 @@ inferTree typeSystem =
                                     Ok <|
                                         let
                                             instTy =
-                                                inst ftvs ctx ty
+                                                inst (ftvs |> Set.union (topBoundVars ty)) ctx ty
                                         in
                                         Node
                                             { ctx = ctx
@@ -108,7 +126,7 @@ inferTree typeSystem =
                                         Ok <|
                                             let
                                                 instTy =
-                                                    inst ftvs ctx ty
+                                                    inst (ftvs |> Set.union (topBoundVars ty)) ctx ty
                                             in
                                             Node
                                                 { ctx = ctx
@@ -199,34 +217,54 @@ inferTree typeSystem =
                                 buildTree (ftvs |> Set.union n1.ftvs) (substFtvCtx n1.ss ctx) t2
                                     |> Result.andThen
                                         (\((Node n2 _) as bt2) ->
-                                            let
-                                                tauPrime =
-                                                    TyName <|
-                                                        freshVarName
-                                                            (ftvCtx ctx
-                                                                |> Set.union (ftvTy n1.ty)
-                                                                |> Set.union (ftvTy n2.ty)
-                                                                |> Set.union ftvs
-                                                                |> Set.union (ftvTree bt1)
-                                                                |> Set.union (ftvTree bt2)
-                                                            )
-                                                            "X"
-                                            in
-                                            unifyType (substFtvTy n2.ss n1.ty) (TyArr n2.ty tauPrime)
-                                                |> Result.map
-                                                    (\s3 ->
-                                                        Node
-                                                            { ctx = ctx
-                                                            , term = t
-                                                            , ty = substFtvTy s3 tauPrime
-                                                            , rule = TApp
-                                                            , ss = s3 ++ n2.ss ++ n1.ss
+                                            case typeSystem of
+                                                HM _ ->
+                                                    let
+                                                        tauPrime =
+                                                            TyName <|
+                                                                freshVarName
+                                                                    (ftvCtx ctx
+                                                                        |> Set.union (ftvTy n1.ty)
+                                                                        |> Set.union (ftvTy n2.ty)
+                                                                        |> Set.union ftvs
+                                                                        |> Set.union (ftvTree bt1)
+                                                                        |> Set.union (ftvTree bt2)
+                                                                    )
+                                                                    "X"
+                                                    in
+                                                    unifyType (TyArr n2.ty tauPrime) (substFtvTy n2.ss n1.ty)
+                                                        |> Result.map
+                                                            (\s3 ->
+                                                                Node
+                                                                    { ctx = ctx
+                                                                    , term = t
+                                                                    , ty = substFtvTy s3 tauPrime
+                                                                    , rule = TApp
+                                                                    , ss = s3 ++ n2.ss ++ n1.ss
 
-                                                            -- FTV Keep
-                                                            , ftvs = n1.ftvs |> Set.union n2.ftvs |> Set.union (ftvTy tauPrime)
-                                                            }
-                                                            [ bt1, bt2 ]
-                                                    )
+                                                                    -- FTV Keep
+                                                                    , ftvs = n1.ftvs |> Set.union n2.ftvs |> Set.union (ftvTy tauPrime)
+                                                                    }
+                                                                    [ bt1, bt2 ]
+                                                            )
+
+                                                _ ->
+                                                    case n1.ty of
+                                                        TyArr _ tyTo ->
+                                                            Ok <|
+                                                                Node
+                                                                    { ctx = ctx
+                                                                    , term = t
+                                                                    , ty = tyTo
+                                                                    , rule = TApp
+                                                                    , ss = n2.ss ++ n1.ss
+                                                                    , ftvs = n1.ftvs |> Set.union n2.ftvs
+                                                                    }
+                                                                    [ bt1, bt2 ]
+
+                                                        _ ->
+                                                            -- Ty= Nothing
+                                                            Err <| "Applying argument to type that is not an abstraction"
                                         )
                             )
 
@@ -297,35 +335,22 @@ inferTree typeSystem =
                             )
 
                 -- Extension of W to work with System F terms
-                TmTAbs _ tyVarName _ ->
+                TmTAbs i tyVarName _ ->
                     degeneralizeTermTop ctx t
                         |> buildTree (ftvs |> Set.insert tyVarName) ctx
                         |> Result.andThen
                             (\((Node n1 _) as bt1) ->
-                                -- If var is supposed to be some more special type, then fail
-                                -- Move this to unify type case of TyAll
-                                -- what if there is some constraint on the type variable?? -> should have been explicitly specified in types of expressions!!!!
-                                unifyType (substFtvTy n1.ss (TyName tyVarName)) (TyName tyVarName)
-                                    |> Result.andThen
-                                        (\s2 ->
-                                            case s2 of
-                                                [ ( TyName _, _ ) ] ->
-                                                    Ok <|
-                                                        Node
-                                                            { ctx = ctx
-                                                            , term = t
-                                                            , ty = substFtvTy s2 n1.ty
-                                                            , rule = TTAbs
-                                                            , ss = s2 ++ n1.ss
-                                                            , ftvs = n1.ftvs |> Set.insert tyVarName
-                                                            }
-                                                            [ bt1 ]
-
-                                                _ ->
-                                                    Err <| "Type variable '" ++ tyVarName ++ "' is used in a more constrained way"
-                                        )
+                                Ok <|
+                                    Node
+                                        { ctx = ctx
+                                        , term = generalizeTermTop ctx n1.term tyVarName
+                                        , ty = generalizeTypeTop ctx n1.ty tyVarName
+                                        , rule = TTAbs
+                                        , ss = n1.ss
+                                        , ftvs = n1.ftvs |> Set.insert tyVarName
+                                        }
+                                        [ bt1 ]
                             )
-                        |> Result.map (\(Node n1 c1) -> Node { n1 | ty = generalizeTypeTop ctx n1.ty tyVarName } c1)
 
                 TmTApp _ t1 tyS ->
                     buildTree ftvs ctx t1
@@ -337,8 +362,6 @@ inferTree typeSystem =
                                             Node
                                                 { ctx = ctx
                                                 , term = t
-
-                                                -- Keep it this way, or use substitution of ftv?
                                                 , ty = typeSubstTop tyS ty1
                                                 , rule = TTApp
                                                 , ss = n1.ss

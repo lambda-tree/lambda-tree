@@ -432,6 +432,29 @@ degeneralizeTermTop ctx t =
             t
 
 
+generalizeTermTop : Context -> Term -> String -> Term
+generalizeTermTop ctx term varName =
+    let
+        onvar _ x n =
+            TyVar x n
+
+        onname c name =
+            if name == varName then
+                -- Also shift the replacing context length
+                TyVar (c - ctxlength ctx) (c + 1)
+
+            else
+                TyName name
+
+        t1 =
+            term
+                -- shift other vars first
+                |> termShift 1
+                |> tmmap (\fi _ x n -> TmVar fi x n) (tymap onvar onname) (ctxlength ctx)
+    in
+    TmTAbs I varName t1
+
+
 freshVarName : Set String -> String -> String
 freshVarName freeVars varName =
     let

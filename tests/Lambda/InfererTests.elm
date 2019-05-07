@@ -146,7 +146,7 @@ wTest =
                         )
                         |> Result.map Tuple.second
                         -- What is the substitution good for here??
-                        |> Expect.equal (Ok <| TyArr (TyName "X") <| TyArr (TyName "X1") <| TyName "X")
+                        |> Expect.equal (Ok <| TyArr (TyName "X2") <| TyArr (TyName "X11") <| TyName "X2")
             ]
         ]
 
@@ -164,7 +164,7 @@ typeOfTest =
                             (TmAbs I "termVar1" Nothing <| TmAbs I "termVar2" Nothing <| TmVar I 1 2)
                             (TmVar I 0 1)
                         )
-                        |> Expect.equal (Ok <| TyAll "X" <| TyAll "X1" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
+                        |> Expect.equal (Ok <| TyAll "X11" <| TyAll "X2" <| TyArr (TyVar 0 2) <| TyArr (TyVar 1 2) <| TyVar 0 2)
             ]
         , describe "System F"
             [ test "Lambda A . lambda f: A -> A . lambda x: A. f (f x): Forall A. (A -> A) -> A -> A" <|

@@ -334,10 +334,18 @@ inferTree typeSystem =
                                                 )
                             )
 
-                -- Extension of W to work with System F terms
                 TmTAbs i tyVarName _ ->
-                    degeneralizeTermTop ctx t
-                        |> buildTree (ftvs |> Set.insert tyVarName) ctx
+                    (if Set.member tyVarName ftvs then
+                        Err <| "Type abstraction variable '" ++ tyVarName ++ "' is free"
+
+                     else
+                        Ok ()
+                    )
+                        |> Result.andThen
+                            (\_ ->
+                                degeneralizeTermTop ctx t
+                                    |> buildTree (ftvs |> Set.insert tyVarName) ctx
+                            )
                         |> Result.andThen
                             (\((Node n1 _) as bt1) ->
                                 Ok <|

@@ -320,6 +320,87 @@ substFtvTerm ss t =
     tmmap (\fi _ x n -> TmVar fi x n) (\_ -> substFtvTy ss) 0 t
 
 
+unifyTypeTerm : Term -> Term -> Result String SubstitutionFtv
+unifyTypeTerm term1 term2 =
+    case ( term1, term2 ) of
+        ( TmVar _ x1 n1, TmVar _ x2 n2 ) ->
+            if n1 - x1 == n2 - x2 then
+                Ok []
+
+            else
+                Err <| "Bound term variables are not referring to the same bound variable"
+
+        ( TmAbs _ _ maybeTy1 t11, TmAbs _ _ maybeTy2 t21 ) ->
+            let
+                typeUnif =
+                    case ( maybeTy1, maybeTy2 ) of
+                        ( Just ty1, Just ty2 ) ->
+                            unifyType ty1 ty2
+
+                        _ ->
+                            Ok []
+            in
+            typeUnif
+                |> Result.andThen
+                    (\s1 ->
+                        unifyTypeTerm (substFtvTerm s1 t11) (substFtvTerm s1 t21)
+                            |> Result.map (\s2 -> s2 ++ s1)
+                    )
+
+        ( TmApp _ t11 t12, TmApp _ t21 t22 ) ->
+            unifyTypeTerm t11 t21
+                |> Result.andThen
+                    (\s1 ->
+                        unifyTypeTerm (substFtvTerm s1 t12) (substFtvTerm s1 t22)
+                            |> Result.map (\s2 -> s2 ++ s1)
+                    )
+
+        ( TmIf _ t11 t12 t13, TmIf _ t21 t22 t23 ) ->
+            unifyTypeTerm t11 t21
+                |> Result.andThen
+                    (\s1 ->
+                        unifyTypeTerm (substFtvTerm s1 t12) (substFtvTerm s1 t22)
+                            |> Result.andThen
+                                (\s2 ->
+                                    unifyTypeTerm (substFtvTerm (s2 ++ s1) t13) (substFtvTerm (s2 ++ s1) t23)
+                                        |> Result.map (\s3 -> s3 ++ s2 ++ s1)
+                                )
+                    )
+
+        ( TmLet _ _ t11 t12, TmLet _ _ t21 t22 ) ->
+            unifyTypeTerm t11 t21
+                |> Result.andThen
+                    (\s1 ->
+                        unifyTypeTerm (substFtvTerm s1 t12) (substFtvTerm s1 t22)
+                            |> Result.map (\s2 -> s2 ++ s1)
+                    )
+
+        ( TmTAbs _ varName1 t11, TmTAbs _ varName2 t21 ) ->
+            if varName1 == varName2 then
+                unifyTypeTerm t11 t21
+
+            else
+                Err <| "Type variables in type abstractions are different"
+
+        ( TmTApp _ t11 ty1, TmTApp _ t21 ty2 ) ->
+            unifyType ty1 ty2
+                |> Result.andThen
+                    (\s1 ->
+                        unifyTypeTerm (substFtvTerm s1 t11) (substFtvTerm s1 t21)
+                            |> Result.map (\s2 -> s2 ++ s1)
+                    )
+
+        ( TmConst _ c1, TmConst _ c2 ) ->
+            if c1 == c2 then
+                Ok []
+
+            else
+                Err <| "Term constants '" ++ Debug.toString c1 ++ "' & '" ++ Debug.toString c2 ++ "' are not compatible"
+
+        ( _, _ ) ->
+            Err <| "Terms are not compatible " ++ Debug.toString ( term1, term2 )
+
+
 {-| Substitutes primarily to the vars of first expression
 -}
 unifyType : Ty -> Ty -> Result String SubstitutionFtv

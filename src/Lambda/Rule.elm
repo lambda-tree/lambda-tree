@@ -247,7 +247,7 @@ checkRule rule =
                         |> check ( "Contexts of binding part are not same", bottom.ctx == top1.ctx )
                         |> check ( "Variable is not added to ctx with correct type", top2.ctx == addbinding bottom.ctx varName (VarBind top1.ty) )
                         |> check ( "Terms of 'in' expression are not same", t2 == top2.term )
-                        |> check ( "Types of 'in' expression are not same", bottom.ty == top2.ty )
+                        |> check ( "Types of 'in' expression are not same", equalTypes bottom.ctx bottom.ty top2.ctx top2.ty )
                         |> check ( "Terms of the binding part are not same", t1 == top1.term )
 
                 _ ->
@@ -285,7 +285,7 @@ checkRule rule =
                                     Err "Context is empty"
                             )
                         |> check ( "Terms of 'in' expression are not same", t2 == top2.term )
-                        |> check ( "Types of 'in' expression are not same", bottom.ty == top2.ty )
+                        |> check ( "Types of 'in' expression are not same", equalTypes bottom.ctx bottom.ty top2.ctx top2.ty )
                         |> check ( "Terms of the binding part are not same", t1 == top1.term )
 
                 _ ->

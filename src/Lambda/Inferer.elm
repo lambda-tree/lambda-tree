@@ -53,6 +53,16 @@ applySSTree ((Node { ss } _) as tree) =
 
 {-| Optimize by running only on the final tree
 -}
+unifyWithRootType : Maybe Ty -> InferredTree -> InferredTree
+unifyWithRootType maybeTy ((Node c children) as tree) =
+    maybeTy
+        |> Maybe.andThen (\ty -> unifyType c.ty ty |> Result.toMaybe)
+        |> Maybe.map (\ss -> applySSTree (Node { c | ss = ss ++ c.ss } children))
+        |> Maybe.withDefault tree
+
+
+{-| Optimize by running only on the final tree
+-}
 unifyToOriginals : Context -> Term -> Maybe Ty -> InferredTree -> InferredTree
 unifyToOriginals ctx term ty ((Node c children) as tree) =
     let
@@ -73,8 +83,8 @@ unifyToOriginals ctx term ty ((Node c children) as tree) =
         |> Result.withDefault tree
 
 
-inferTree : TypeSystem -> Context -> Term -> Result String InferredTree
-inferTree typeSystem =
+inferTree : TypeSystem -> Maybe Ty -> Context -> Term -> Result String InferredTree
+inferTree typeSystem rootType =
     let
         buildTree : Set String -> Context -> Term -> Result String InferredTree
         buildTree ftvs ctx t =
@@ -382,10 +392,10 @@ inferTree typeSystem =
                 _ ->
                     Err "Not implemented"
     in
-    \rootCtx rootTy ->
+    \rootCtx rootTerm ->
         let
             builtTree =
-                buildTree (ftvCtx rootCtx |> Set.union (ftvTerm rootTy)) rootCtx rootTy
+                buildTree (ftvCtx rootCtx |> Set.union (ftvTerm rootTerm)) rootCtx rootTerm
 
             _ =
                 builtTree |> Result.map (\(Node c _) -> Debug.log "builtTree SS: " c.ss)
@@ -398,21 +408,22 @@ inferTree typeSystem =
             |> Result.map
                 (case typeSystem of
                     HM _ ->
-                        unifyToOriginals rootCtx rootTy Nothing
+                        unifyToOriginals rootCtx rootTerm Nothing
 
                     _ ->
                         identity
                 )
+            |> Result.map (unifyWithRootType rootType)
 
 
 w : Context -> Term -> Result String ( SubstitutionFtv, Ty )
 w ctx term =
-    inferTree (HM SyntaxDirected) ctx term
+    inferTree (HM SyntaxDirected) Nothing ctx term
         |> Result.map (\(Node { ty, ss } _) -> ( ss, ty ))
 
 
 typeOf : TypeSystem -> Context -> Term -> Result String Ty
 typeOf typeSystem ctx term =
-    inferTree typeSystem ctx term
+    inferTree typeSystem Nothing ctx term
         |> Result.map (\(Node { ty } _) -> ty)
         |> Result.map (gen (ftvCtx ctx) ctx)

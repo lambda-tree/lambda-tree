@@ -62,7 +62,7 @@ hintRuleSelection typeSystem path tree =
 
 
 doHint : TypeSystem -> RuleTree -> RuleTree
-doHint typeSystem ((Node ({ ctx, term } as content) _) as t1) =
+doHint typeSystem ((Node ({ ctx, term, ty } as content) _) as t1) =
     let
         maybeCtx =
             parseCtx ctx
@@ -77,10 +77,19 @@ doHint typeSystem ((Node ({ ctx, term } as content) _) as t1) =
                             |> Result.toMaybe
                             |> Maybe.andThen (fromParseTerm justCtx >> Result.toMaybe)
                     )
+
+        maybeTy =
+            maybeCtx
+                |> Maybe.andThen
+                    (\justCtx ->
+                        parseType ty
+                            |> Result.toMaybe
+                            |> Maybe.map (fromParseType justCtx)
+                    )
     in
     case ( maybeCtx, maybeTerm ) of
         ( Just justCtx, Just justTerm ) ->
-            inferTree typeSystem justCtx justTerm
+            inferTree typeSystem maybeTy justCtx justTerm
                 |> Result.mapError (Debug.log "doHint: buildTree error:")
                 |> Result.toMaybe
                 |> Maybe.map

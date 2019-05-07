@@ -216,7 +216,7 @@ checkRule rule =
                                     , not <| Set.member tyVarName1 (Set.union (ftvTy bottom.ty) (ftvCtx bottom.ctx))
                                     )
                                 |> check ( "Type abstraction body part of term is not same", degeneralizeTermTop bottom.ctx bottom.term == top.term )
-                                |> check ( "The quantified part of type is not same", degeneralizeTypeTop bottom.ctx bottom.ty == top.ty )
+                                |> check ( "The quantified part of type is not same", equalTypes bottom.ctx (degeneralizeTypeTop bottom.ctx bottom.ty) top.ctx top.ty )
 
                         _ ->
                             Err "Type of type abstraction is not in form ∀.ɑ σ"
@@ -232,7 +232,10 @@ checkRule rule =
                             Ok ()
                                 |> check ( Lambda.RuleError.ctxSame, bottom.ctx == top.ctx )
                                 |> check ( "The abstraction part of the term is not the same", top.term == t )
-                                |> check ( "Type is not substituted correctly for the type variable", bottom.ty == typeSubstTop ty2 ty1 )
+                                |> check
+                                    ( "Type is not substituted correctly for the type variable"
+                                    , equalTypes bottom.ctx bottom.ty bottom.ctx (typeSubstTop ty2 ty1)
+                                    )
 
                         _ ->
                             Err "Type of abstraction part is not universally quantified with type variable"
@@ -245,7 +248,10 @@ checkRule rule =
                 TmLet _ varName t1 t2 ->
                     Ok ()
                         |> check ( "Contexts of binding part are not same", bottom.ctx == top1.ctx )
-                        |> check ( "Variable is not added to ctx with correct type", top2.ctx == addbinding bottom.ctx varName (VarBind top1.ty) )
+                        |> check
+                            ( "Variable is not added to ctx with correct type"
+                            , top2.ctx == addbinding bottom.ctx varName (VarBind top1.ty)
+                            )
                         |> check ( "Terms of 'in' expression are not same", t2 == top2.term )
                         |> check ( "Types of 'in' expression are not same", equalTypes bottom.ctx bottom.ty top2.ctx top2.ty )
                         |> check ( "Terms of the binding part are not same", t1 == top1.term )
@@ -302,8 +308,17 @@ checkRule rule =
                             , not <|
                                 Set.member varName (Set.union (ftvTy bottom.ty) (ftvCtx bottom.ctx))
                             )
-                        |> check ( "Type is incorrectly generalized", degeneralizeTypeTop bottom.ctx bottom.ty == top.ty )
-                        |> check ( "Type is incorrectly generalized", generalizeTypeTop top.ctx top.ty varName == bottom.ty )
+                        |> check
+                            ( "Type is incorrectly generalized"
+                            , equalTypes bottom.ctx (degeneralizeTypeTop bottom.ctx bottom.ty) top.ctx top.ty
+                            )
+                        |> check
+                            ( "Type is incorrectly generalized"
+                            , equalTypes top.ctx
+                                (generalizeTypeTop top.ctx top.ty varName)
+                                bottom.ctx
+                                bottom.ty
+                            )
 
                 _ ->
                     Err Lambda.RuleError.wrongRuleType

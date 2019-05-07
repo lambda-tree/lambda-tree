@@ -689,15 +689,15 @@ genTest =
     describe "gen"
         [ test "should gen free vars" <|
             \_ ->
-                gen [] (TyArr (TyName "A") <| TyArr (TyName "B") <| TyName "A")
+                gen Set.empty [] (TyArr (TyName "A") <| TyArr (TyName "B") <| TyName "A")
                     |> Expect.equal (TyAll "A" <| TyAll "B" <| TyArr (TyVar 1 2) <| TyArr (TyVar 0 2) <| TyVar 1 2)
         , test "should gen vars with non empty ctx if they're not free in ctx" <|
             \_ ->
-                gen [ ( "x", VarBind <| TyName "C" ) ] (TyArr (TyName "A") <| TyArr (TyName "B") <| TyName "A")
+                gen Set.empty [ ( "x", VarBind <| TyName "C" ) ] (TyArr (TyName "A") <| TyArr (TyName "B") <| TyName "A")
                     |> Expect.equal (TyAll "A" <| TyAll "B" <| TyArr (TyVar 1 3) <| TyArr (TyVar 0 3) <| TyVar 1 3)
         , test "should not gen free vars in ctx" <|
             \_ ->
-                gen [ ( "x", VarBind <| TyName "A" ) ] (TyArr (TyName "A") <| TyArr (TyName "B") <| TyName "A")
+                gen Set.empty [ ( "x", VarBind <| TyName "A" ) ] (TyArr (TyName "A") <| TyArr (TyName "B") <| TyName "A")
                     |> Expect.equal (TyAll "B" <| TyArr (TyName "A") <| TyArr (TyVar 0 2) <| TyName "A")
         ]
 

@@ -4,6 +4,7 @@ import Expect exposing (Expectation)
 import Lambda.Expression exposing (..)
 import Lambda.Inferer exposing (inferTree, typeOf, w)
 import Lambda.Rule exposing (Rule(..))
+import Set
 import Test exposing (..)
 import Utils.Tree exposing (Tree(..))
 
@@ -14,7 +15,18 @@ buildTreeTest =
         [ test "should build tree" <|
             \_ ->
                 inferTree (HM SyntaxDirected) [] (TmConst I TmTrue)
-                    |> Expect.equal (Ok <| Node { ctx = [], term = TmConst I TmTrue, ty = TyConst TyBool, rule = TTrue, ss = [] } [])
+                    |> Expect.equal
+                        (Ok <|
+                            Node
+                                { ctx = []
+                                , term = TmConst I TmTrue
+                                , ty = TyConst TyBool
+                                , rule = TTrue
+                                , ss = []
+                                , ftvs = Set.empty
+                                }
+                                []
+                        )
         ]
 
 
@@ -27,7 +39,7 @@ wTest =
                     w
                         [ ( "id", VarBind <| (TyAll "A" <| TyArr (TyVar 0 1) <| TyVar 0 1) ) ]
                         (TmVar I 0 1)
-                        |> Expect.equal (Ok <| ( [], TyArr (TyName "A") <| TyName "A" ))
+                        |> Expect.equal (Ok <| ( [], TyArr (TyName "A1") <| TyName "A1" ))
             , test "generic variable should be instantiated with fresh type variables 2" <|
                 \_ ->
                     w

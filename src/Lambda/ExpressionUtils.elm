@@ -679,7 +679,7 @@ gen : Set String -> Context -> Ty -> Ty
 gen freeVars ctx ty =
     let
         fv =
-            Set.diff (ftvTy ty) freeVars |> Set.toList
+            Set.diff (ftvTy ty) (freeVars |> Set.union (ftvCtx ctx)) |> Set.toList
     in
     fv |> List.foldr (\var accTy -> generalizeTypeTop ctx accTy var) ty
 

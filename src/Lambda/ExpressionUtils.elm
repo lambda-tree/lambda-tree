@@ -4,6 +4,7 @@ import Lambda.Context exposing (..)
 import Lambda.ContextUtils exposing (addbinding, ctxlength, getbinding)
 import Lambda.Expression exposing (..)
 import Set exposing (Set)
+import Utils.Tree
 
 
 {-| Shift indices by `d` if idx is greater than `c` in term `t`
@@ -401,6 +402,25 @@ unifyTypeTerm term1 term2 =
             Err <| "Terms are not compatible " ++ Debug.toString ( term1, term2 )
 
 
+unifyTypeCtx : Context -> Context -> Result String SubstitutionFtv
+unifyTypeCtx ctx1 ctx2 =
+    Utils.Tree.listZipWith Tuple.pair ctx1 ctx2
+        |> List.foldl
+            (\( ( _, b1 ), ( _, b2 ) ) ss ->
+                case ( b1, b2 ) of
+                    ( VarBind ty1, VarBind ty2 ) ->
+                        let
+                            _ =
+                                Debug.log "unifyTypeCtx" ( ty1, ty2 )
+                        in
+                        ss |> Result.andThen (\s1 -> unifyType (substFtvTy s1 ty1) (substFtvTy s1 ty2) |> Result.map (\s2 -> s2 ++ s1))
+
+                    _ ->
+                        ss
+            )
+            (Ok [])
+
+
 {-| Substitutes primarily to the vars of first expression
 -}
 unifyType : Ty -> Ty -> Result String SubstitutionFtv
@@ -442,13 +462,15 @@ unifyType ty1 ty2 =
                             |> Result.andThen (\justS2 -> Ok <| justS2 ++ justS1)
                     )
 
-        ( TyAll name1 _, _ ) ->
-            Err <| "Types should be degeneralized. TyAll '" ++ name1 ++ "' found"
+        -- Types should be degeneralized, just for unification with original context in inferTree
+        ( TyAll _ ty11, _ ) ->
+            unifyType ty11 ty2
 
-        ( _, TyAll name2 _ ) ->
-            Err <| "Types should be degeneralized. TyAll '" ++ name2 ++ "' found"
+        ( _, TyAll _ ty21 ) ->
+            unifyType ty1 ty21
 
-        -- Not necessary for System H-M (types should not reference variable => should be degeneralized) => for System F
+        -- Not necessary for System H-M (types should not reference variable => should be degeneralized)
+        -- Only used for unification with original context in inferTree
         ( TyVar x1 n1, TyVar x2 n2 ) ->
             if n1 - x1 == n2 - x2 then
                 Ok []

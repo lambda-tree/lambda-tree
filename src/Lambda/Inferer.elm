@@ -6,6 +6,7 @@ import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (..)
 import Lambda.Rule exposing (Rule(..))
 import Set exposing (Set)
+import Utils.Outcome as Outcome exposing (Outcome)
 import Utils.Tree exposing (Tree(..))
 
 
@@ -120,16 +121,16 @@ unifyToRootCtxTerm ctx term ty ((Node c children) as tree) =
         |> Result.withDefault tree
 
 
-inferTree : TypeSystem -> Set String -> Maybe Ty -> Context -> Term -> Result String InferredTree
+inferTree : TypeSystem -> Set String -> Maybe Ty -> Context -> Term -> Outcome String InferredTree
 inferTree typeSystem rootFtvs rootType =
     let
-        buildTree : Set String -> Context -> Term -> Result String InferredTree
+        buildTree : Set String -> Context -> Term -> Outcome String InferredTree
         buildTree ftvs ctx t =
             case t of
                 TmConst _ c ->
                     case c of
                         TmTrue ->
-                            Ok <|
+                            Outcome.fine <|
                                 Node
                                     { ctx = ctx
                                     , term = t
@@ -141,7 +142,7 @@ inferTree typeSystem rootFtvs rootType =
                                     []
 
                         TmFalse ->
-                            Ok <|
+                            Outcome.fine <|
                                 Node
                                     { ctx = ctx
                                     , term = t
@@ -163,7 +164,7 @@ inferTree typeSystem rootFtvs rootType =
                                     in
                                     case hmFlavor of
                                         SyntaxDirected ->
-                                            Ok <|
+                                            Outcome.fine <|
                                                 Node
                                                     { ctx = ctx
                                                     , term = t
@@ -176,7 +177,7 @@ inferTree typeSystem rootFtvs rootType =
 
                                         NonDeterministic ->
                                             if Set.size (topBoundVars ty) > 0 then
-                                                Ok <|
+                                                Outcome.fine <|
                                                     Node
                                                         { ctx = ctx
                                                         , term = t
@@ -197,7 +198,7 @@ inferTree typeSystem rootFtvs rootType =
                                                         ]
 
                                             else
-                                                Ok <|
+                                                Outcome.fine <|
                                                     Node
                                                         { ctx = ctx
                                                         , term = t
@@ -209,7 +210,7 @@ inferTree typeSystem rootFtvs rootType =
                                                         []
 
                                 _ ->
-                                    Ok <|
+                                    Outcome.fine <|
                                         Node
                                             { ctx = ctx
                                             , term = t
@@ -221,7 +222,20 @@ inferTree typeSystem rootFtvs rootType =
                                             []
 
                         _ ->
-                            Err "Var is not bound in the context with type"
+                            let
+                                freshVar =
+                                    freshVarName ftvs "X"
+                            in
+                            Outcome.problem "Var is not bound in the context with type" <|
+                                Node
+                                    { ctx = ctx
+                                    , term = t
+                                    , ty = TyName freshVar
+                                    , ss = []
+                                    , rule = TVar
+                                    , ftvs = Set.singleton freshVar
+                                    }
+                                    []
 
                 TmAbs _ varName maybeType t1 ->
                     let
@@ -233,7 +247,7 @@ inferTree typeSystem rootFtvs rootType =
                             addbinding ctx varName (VarBind fromType)
                     in
                     buildTree (ftvs |> Set.union (ftvTy fromType)) ctx1 t1
-                        |> Result.map
+                        |> Outcome.map
                             (\((Node n1 _) as bt1) ->
                                 Node
                                     { ctx = ctx
@@ -259,10 +273,10 @@ inferTree typeSystem rootFtvs rootType =
 
                 TmApp _ t1 t2 ->
                     buildTree ftvs ctx t1
-                        |> Result.andThen
+                        |> Outcome.andThen
                             (\((Node n1 _) as bt1) ->
                                 buildTree (ftvs |> Set.union n1.ftvs) (substFtvCtx n1.ss ctx) t2
-                                    |> Result.andThen
+                                    |> Outcome.andThen
                                         (\((Node n2 _) as bt2) ->
                                             case typeSystem of
                                                 HM _ ->
@@ -292,11 +306,24 @@ inferTree typeSystem rootFtvs rootType =
                                                                     }
                                                                     [ bt1, bt2 ]
                                                             )
+                                                        |> Result.map Outcome.fine
+                                                        |> Result.withDefault
+                                                            (Outcome.problem "Cannot unify" <|
+                                                                Node
+                                                                    { ctx = ctx
+                                                                    , term = t
+                                                                    , ty = tauPrime
+                                                                    , rule = TApp
+                                                                    , ss = n2.ss ++ n1.ss
+                                                                    , ftvs = n1.ftvs |> Set.union n2.ftvs |> Set.union (ftvTy tauPrime)
+                                                                    }
+                                                                    [ bt1, bt2 ]
+                                                            )
 
                                                 _ ->
                                                     case n1.ty of
                                                         TyArr _ tyTo ->
-                                                            Ok <|
+                                                            Outcome.fine <|
                                                                 Node
                                                                     { ctx = ctx
                                                                     , term = t
@@ -308,14 +335,29 @@ inferTree typeSystem rootFtvs rootType =
                                                                     [ bt1, bt2 ]
 
                                                         _ ->
-                                                            -- Ty= Nothing
-                                                            Err <| "Applying argument to type that is not an abstraction"
+                                                            let
+                                                                freshVar =
+                                                                    freshVarName ftvs "X"
+                                                            in
+                                                            Outcome.problem "Applying argument to type that is not an abstraction" <|
+                                                                Node
+                                                                    { ctx = ctx
+                                                                    , term = t
+                                                                    , ty = TyName freshVar
+                                                                    , rule = TApp
+                                                                    , ss = n2.ss ++ n1.ss
+                                                                    , ftvs =
+                                                                        Set.singleton freshVar
+                                                                            |> Set.union n1.ftvs
+                                                                            |> Set.union n2.ftvs
+                                                                    }
+                                                                    [ bt1, bt2 ]
                                         )
                             )
 
                 TmLet _ varName t1 t2 ->
                     buildTree ftvs ctx t1
-                        |> Result.andThen
+                        |> Outcome.andThen
                             (\((Node n1 _) as bt1) ->
                                 case typeSystem of
                                     HM hmType ->
@@ -327,7 +369,7 @@ inferTree typeSystem rootFtvs rootType =
                                                 gen ftvs ctx1 n1.ty
                                         in
                                         buildTree (ftvs |> Set.union n1.ftvs) (addbinding ctx varName (VarBind genTy)) t2
-                                            |> Result.map
+                                            |> Outcome.map
                                                 (\((Node n2 _) as bt2) ->
                                                     case hmType of
                                                         SyntaxDirected ->
@@ -366,7 +408,7 @@ inferTree typeSystem rootFtvs rootType =
 
                                     _ ->
                                         buildTree ftvs (addbinding ctx varName (VarBind n1.ty)) t2
-                                            |> Result.map
+                                            |> Outcome.map
                                                 (\((Node n2 _) as bt2) ->
                                                     Node
                                                         { ctx = ctx
@@ -382,19 +424,19 @@ inferTree typeSystem rootFtvs rootType =
 
                 TmTAbs _ tyVarName _ ->
                     (if Set.member tyVarName ftvs then
-                        Err <| "Type abstraction variable '" ++ tyVarName ++ "' is free"
+                        Outcome.problem ("Type abstraction variable '" ++ tyVarName ++ "' is free") ()
 
                      else
-                        Ok ()
+                        Outcome.fine ()
                     )
-                        |> Result.andThen
+                        |> Outcome.andThen
                             (\_ ->
                                 degeneralizeTermTop ctx t
                                     |> buildTree (ftvs |> Set.insert tyVarName) ctx
                             )
-                        |> Result.andThen
+                        |> Outcome.andThen
                             (\((Node n1 _) as bt1) ->
-                                Ok <|
+                                Outcome.fine <|
                                     Node
                                         { ctx = ctx
                                         , term = generalizeTermTop ctx n1.term tyVarName
@@ -408,11 +450,11 @@ inferTree typeSystem rootFtvs rootType =
 
                 TmTApp _ t1 tyS ->
                     buildTree ftvs ctx t1
-                        |> Result.andThen
+                        |> Outcome.andThen
                             (\((Node n1 _) as bt1) ->
                                 case n1.ty of
                                     TyAll _ ty1 ->
-                                        Ok <|
+                                        Outcome.fine <|
                                             Node
                                                 { ctx = ctx
                                                 , term = t
@@ -424,11 +466,60 @@ inferTree typeSystem rootFtvs rootType =
                                                 [ bt1 ]
 
                                     _ ->
-                                        Err "Type can be applied only on type abstraction term"
+                                        let
+                                            freshVar =
+                                                freshVarName ftvs "X"
+                                        in
+                                        Outcome.problem "Type can be applied only on type abstraction term" <|
+                                            Node
+                                                { ctx = ctx
+                                                , term = t
+                                                , ty = TyName freshVar
+                                                , rule = TTApp
+                                                , ss = n1.ss
+                                                , ftvs = Set.singleton freshVar |> Set.union n1.ftvs
+                                                }
+                                                [ bt1 ]
                             )
 
-                _ ->
-                    Err "Not implemented"
+                TmIf _ t1 t2 t3 ->
+                    buildTree ftvs ctx t1
+                        |> Outcome.andThen
+                            (\((Node n1 _) as bt1) ->
+                                buildTree (ftvs |> Set.union n1.ftvs) (substFtvCtx n1.ss ctx) t2
+                                    |> Outcome.andThen
+                                        (\((Node n2 _) as bt2) ->
+                                            buildTree (ftvs |> Set.union n1.ftvs |> Set.union n2.ftvs) (substFtvCtx (n2.ss ++ n1.ss) ctx) t3
+                                                |> Outcome.andThen
+                                                    (\((Node n3 _) as bt3) ->
+                                                        unifyType n2.ty n3.ty
+                                                            |> Result.map
+                                                                (\sThenElse ->
+                                                                    Node
+                                                                        { ctx = ctx
+                                                                        , term = t
+                                                                        , ty = substFtvTy sThenElse n3.ty
+                                                                        , rule = TTApp
+                                                                        , ss = sThenElse ++ n3.ss ++ n2.ss ++ n1.ss
+                                                                        , ftvs = ftvs |> Set.union n1.ftvs |> Set.union n2.ftvs |> Set.union n3.ftvs
+                                                                        }
+                                                                        [ bt1, bt2, bt3 ]
+                                                                )
+                                                            |> Result.mapError (\e -> "Types of 'Then' & 'Else' clauses can not be unified. " ++ e)
+                                                            |> Outcome.fromResult
+                                                                (Node
+                                                                    { ctx = ctx
+                                                                    , term = t
+                                                                    , ty = n2.ty
+                                                                    , rule = TTApp
+                                                                    , ss = n3.ss ++ n2.ss ++ n1.ss
+                                                                    , ftvs = ftvs |> Set.union n1.ftvs |> Set.union n2.ftvs |> Set.union n3.ftvs
+                                                                    }
+                                                                    [ bt1, bt2, bt3 ]
+                                                                )
+                                                    )
+                                        )
+                            )
     in
     \rootCtx rootTerm ->
         let
@@ -449,14 +540,14 @@ inferTree typeSystem rootFtvs rootType =
                     rootTerm
 
             _ =
-                builtTree |> Result.map (\(Node c _) -> Debug.log "builtTree SS: " c.ss)
+                builtTree |> Outcome.map (\(Node c _) -> Debug.log "builtTree SS: " c.ss)
 
             _ =
-                builtTree |> Result.map (\(Node c _) -> Debug.log "builtTree ftvs: " c.ftvs)
+                builtTree |> Outcome.map (\(Node c _) -> Debug.log "builtTree ftvs: " c.ftvs)
         in
         builtTree
-            |> Result.map applySSTree
-            |> Result.map
+            |> Outcome.map applySSTree
+            |> Outcome.map
                 (case typeSystem of
                     HM _ ->
                         unifyToRootCtxTerm rootCtx rootTerm Nothing
@@ -464,17 +555,19 @@ inferTree typeSystem rootFtvs rootType =
                     _ ->
                         identity
                 )
-            |> Result.map (unifyWithRootType typeSystem ftvs rootType)
+            |> Outcome.map (unifyWithRootType typeSystem ftvs rootType)
 
 
 w : Context -> Term -> Result String ( SubstitutionFtv, Ty )
 w ctx term =
     inferTree (HM SyntaxDirected) Set.empty Nothing ctx term
+        |> Outcome.toResult
         |> Result.map (\(Node { ty, ss } _) -> ( ss, ty ))
 
 
 typeOf : TypeSystem -> Context -> Term -> Result String Ty
 typeOf typeSystem ctx term =
     inferTree typeSystem Set.empty Nothing ctx term
+        |> Outcome.toResult
         |> Result.map (\(Node { ty } _) -> ty)
         |> Result.map (gen (ftvCtx ctx) ctx)

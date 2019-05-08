@@ -17,6 +17,7 @@ import Settings.Model
 import Settings.Utils exposing (getTypeSystem)
 import Substitutor.Model
 import Substitutor.Utils exposing (parsedType, parsedVar)
+import Utils.Outcome as Outcome
 import Utils.Tree exposing (Tree(..), mapContentAtPath)
 
 
@@ -131,6 +132,7 @@ hintWithMapperAtPath mapper typeSystem rootPath rootTree =
                     case ( ctx, term ) of
                         ( Ok justCtx, Ok justTerm ) ->
                             inferTree typeSystem ftvs (ty |> Result.toMaybe) justCtx justTerm
+                                |> Outcome.toResult
                                 |> Result.mapError (Debug.log "doHintAtPath: inferTree error:")
 
                         _ ->
@@ -195,6 +197,7 @@ doHint typeSystem ((Node ({ ctx, term, ty } as content) _) as t1) =
     case ( maybeCtx, maybeTerm ) of
         ( Just justCtx, Just justTerm ) ->
             inferTree typeSystem Set.empty maybeTy justCtx justTerm
+                |> Outcome.toResult
                 |> Result.mapError (Debug.log "doHint: buildTree error:")
                 |> Result.toMaybe
                 |> Maybe.map

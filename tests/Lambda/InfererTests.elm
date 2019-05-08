@@ -6,17 +6,18 @@ import Lambda.Inferer exposing (inferTree, typeOf, w)
 import Lambda.Rule exposing (Rule(..))
 import Set
 import Test exposing (..)
+import Utils.Outcome exposing (Outcome(..))
 import Utils.Tree exposing (Tree(..))
 
 
-buildTreeTest : Test
-buildTreeTest =
-    describe "buildTree"
+inferTreeTest : Test
+inferTreeTest =
+    describe "inferTree"
         [ test "should build tree" <|
             \_ ->
                 inferTree (HM SyntaxDirected) Set.empty Nothing [] (TmConst I TmTrue)
                     |> Expect.equal
-                        (Ok <|
+                        (Outcome Nothing <|
                             Node
                                 { ctx = []
                                 , term = TmConst I TmTrue

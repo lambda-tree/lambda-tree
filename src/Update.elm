@@ -20,6 +20,11 @@ import Substitutor.Update
 import Task
 
 
+cacheModel : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+cacheModel ( model, command ) =
+    ( model, Cmd.batch [ command, cache (modelEncoder model) ] )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -34,20 +39,16 @@ update msg model =
             )
 
         RuleTreeMsg m ->
-            let
-                updatedModel =
-                    { model | ruleTree = RuleTree.Update.update m model.settings model.ruleTree }
-            in
-            ( updatedModel, cache (modelEncoder updatedModel) )
+            ( { model | ruleTree = RuleTree.Update.update m model.settings model.ruleTree }
+            , Cmd.none
+            )
+                |> cacheModel
 
         SettingsMsg m ->
-            let
-                updatedModel =
-                    { model | settings = Settings.Update.update m model.settings }
-            in
-            ( updatedModel
-            , cache (modelEncoder updatedModel)
+            ( { model | settings = Settings.Update.update m model.settings }
+            , Cmd.none
             )
+                |> cacheModel
 
         DoSubstitutionMsg ->
             ( { model
@@ -56,6 +57,7 @@ update msg model =
               }
             , Cmd.none
             )
+                |> cacheModel
 
         ImportJsonMsg ->
             ( model, File.Select.file [ "application/json" ] JsonImportedMsg )
@@ -72,6 +74,7 @@ update msg model =
                     ( updateWithDecodeModel decodeModel model
                     , Cmd.none
                     )
+                        |> cacheModel
 
                 Err e ->
                     ( { model | errorReport = showError e }, Cmd.none )

@@ -124,3 +124,10 @@ getTreeViewData typeSystem tree =
             }
     in
     Utils.Tree.zipWithExtra zipper tree (getExprTree typeSystem tree)
+
+
+isTreeEmpty : RuleTree -> Bool
+isTreeEmpty (Node { ctx, term, ty, rule } children) =
+    List.all String.isEmpty [ ctx, term, ty ]
+        && (rule == NoRule)
+        && List.isEmpty children

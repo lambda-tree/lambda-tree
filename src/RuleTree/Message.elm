@@ -14,6 +14,6 @@ type Msg
     | RemoveMsg (List Int)
     | SelectRuleMsg (List Int)
     | RuleSelectedMsg (List Int) Rule
-    | RuleClickedMsg Rule
+    | ClearTreeMsg
     | RuleDropdownMsg (List Int) Dropdown.State
     | RuleStatusPopoverMsg (List Int) Popover.State

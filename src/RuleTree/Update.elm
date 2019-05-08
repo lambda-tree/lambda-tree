@@ -33,8 +33,8 @@ update msg settings tree =
         RuleSelectedMsg path rule ->
             setRule path rule tree
 
-        RuleClickedMsg _ ->
-            Debug.todo "Update: RuleClickedMsg"
+        ClearTreeMsg ->
+            emptyTree
 
         SelectRuleMsg _ ->
             Debug.todo "Update: SelectRuleMsg"

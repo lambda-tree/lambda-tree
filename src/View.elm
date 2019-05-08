@@ -12,6 +12,7 @@ import Lambda.Rule exposing (rulesForTypeSystem)
 import Message exposing (Msg(..))
 import Model
 import RuleTree.View.Tree exposing (treeView)
+import RuleTree.View.TreeToolbar exposing (treeToolbar)
 import Settings.Message exposing (Msg(..))
 import Settings.Utils exposing (getTypeSystem)
 import Substitutor.View
@@ -77,6 +78,7 @@ leftColumn model =
                     |> S.map ErrorReportMsg
                 ]
             , toolbar model
+            , treeToolbarContainer model
             ]
         ]
 
@@ -271,10 +273,24 @@ treeContainer model =
         , padding4 (px 50) (px 20) (px 80) (px 20)
         , marginLeft auto
         , marginRight auto
+        , position relative
         ]
         []
         [ treeView model.settings model.ruleTree |> S.map RuleTreeMsg
         ]
+
+
+treeToolbarContainer : Model.Model -> S.Html Message.Msg
+treeToolbarContainer model =
+    styled S.div
+        [ position absolute
+        , backgroundColor <| theme.clear
+        , right <| px 15
+        , top <| px 15
+        , displayFlex
+        ]
+        []
+        [ treeToolbar model.ruleTree |> S.map RuleTreeMsg ]
 
 
 checkSwitch : Model.Model -> S.Html Message.Msg

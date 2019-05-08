@@ -73,6 +73,16 @@ mapContentAtPath path f (Node content children) =
             Node content (children |> List.Extra.updateAt idx (mapContentAtPath subPath f))
 
 
+mapTreeAtPath : List Int -> (Tree a -> Tree a) -> Tree a -> Tree a
+mapTreeAtPath path f ((Node content children) as tree) =
+    case path of
+        [] ->
+            f tree
+
+        idx :: subPath ->
+            Node content (children |> List.Extra.updateAt idx (mapTreeAtPath subPath f))
+
+
 foldr : (a -> b -> b) -> b -> Tree a -> b
 foldr f acc (Node content children) =
     f content <| List.foldr (\t1 r -> foldr f r t1) acc children

@@ -1,16 +1,18 @@
 module RuleTree.Update exposing (..)
 
 import Lambda.Expression exposing (TypeSystem)
-import Lambda.ExpressionUtils exposing (substFtvCtx, substFtvTerm, substFtvTy)
-import Lambda.Inferer exposing (inferTree)
+import Lambda.ExpressionUtils exposing (SubstitutionFtv, ftvCtx, ftvTerm, ftvTy, substFtvCtx, substFtvTerm, substFtvTy)
+import Lambda.Inferer exposing (InferredTree, inferTree)
 import Lambda.Parse exposing (parseCtx, parseTerm, parseType)
 import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromParseType)
-import Lambda.Rule exposing (Rule(..))
+import Lambda.Rule exposing (ExprTree, ExprTreeContent, Rule(..))
 import Lambda.Show.Print
 import Lambda.Show.Text
 import List.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (..)
+import RuleTree.ViewModel exposing (getExprTree)
+import Set exposing (Set)
 import Settings.Model
 import Settings.Utils exposing (getTypeSystem)
 import Substitutor.Model
@@ -24,8 +26,8 @@ update msg settings tree =
         TextChangedMsg path kind text ->
             updateTextAtPath path kind text tree
 
-        HintMsg ->
-            doHint (getTypeSystem settings) tree
+        HintTreeOneLevel path ->
+            doHintAtPath (getTypeSystem settings) path tree
 
         RemoveMsg path ->
             setRule path NoRule tree
@@ -46,7 +48,7 @@ update msg settings tree =
             mapContentAtPath path (\c -> { c | statusPopover = state }) tree
 
         HintTreeMsg path ->
-            doHint (getTypeSystem settings) tree
+            doHintAtPath (getTypeSystem settings) path tree
 
         HintRuleSelectionMsg path ->
             hintRuleSelection (getTypeSystem settings) path tree
@@ -59,6 +61,92 @@ hintRuleSelection typeSystem path tree =
             Debug.log "hintTree:" <| doHint typeSystem tree
     in
     setRule path rule tree
+
+
+collectFtvsForExprTree : ExprTree -> Set String
+collectFtvsForExprTree =
+    Utils.Tree.foldr (collectFtvsForExprTreeContent >> Set.union) Set.empty
+
+
+collectFtvsForExprTreeContent : ExprTreeContent -> Set String
+collectFtvsForExprTreeContent { ctx, term, ty } =
+    Set.empty
+        |> Set.union
+            (ctx
+                |> Result.map ftvCtx
+                |> Result.withDefault Set.empty
+            )
+        |> Set.union
+            (term
+                |> Result.map ftvTerm
+                |> Result.withDefault Set.empty
+            )
+        |> Set.union
+            (ty
+                |> Result.map ftvTy
+                |> Result.withDefault Set.empty
+            )
+
+
+doHintAtPath : TypeSystem -> List Int -> RuleTree -> RuleTree
+doHintAtPath typeSystem rootPath rootTree =
+    let
+        exprTree =
+            getExprTree typeSystem rootTree
+
+        walkTree : Set String -> List Int -> ExprTree -> Result String InferredTree
+        walkTree ftvs path (Node ({ ctx, term, ty } as content) children) =
+            case path of
+                [] ->
+                    case ( ctx, term ) of
+                        ( Ok justCtx, Ok justTerm ) ->
+                            inferTree typeSystem ftvs (ty |> Result.toMaybe) justCtx justTerm
+                                |> Result.mapError (Debug.log "doHintAtPath: inferTree error:")
+
+                        _ ->
+                            Err <| "There is an error in context or term of the expression to be inferred"
+
+                x :: xs ->
+                    let
+                        otherSubTrees =
+                            List.Extra.removeAt x children
+
+                        subTreesFtvs =
+                            otherSubTrees
+                                |> List.map collectFtvsForExprTree
+                                |> List.foldl Set.union Set.empty
+
+                        subTreesAndMyFtvs =
+                            subTreesFtvs |> Set.union (collectFtvsForExprTreeContent content)
+                    in
+                    List.Extra.getAt x children
+                        |> Result.fromMaybe ("No child at index " ++ String.fromInt x)
+                        |> Result.andThen (walkTree subTreesAndMyFtvs xs)
+
+        maybeInferredTree =
+            walkTree Set.empty rootPath exprTree
+    in
+    maybeInferredTree
+        |> Result.map
+            (\((Node { ss } _) as inferredTree) ->
+                let
+                    inferredRuleTree =
+                        inferredTree
+                            |> Utils.Tree.map
+                                (\inferredContent ->
+                                    { emptyTreeContent
+                                        | ctx = inferredContent.ctx |> Lambda.Show.Print.showCtx |> Lambda.Show.Text.show
+                                        , term = inferredContent.term |> Lambda.Show.Print.showTerm inferredContent.ctx |> Lambda.Show.Text.show
+                                        , ty = inferredContent.ty |> Lambda.Show.Print.showType inferredContent.ctx |> Lambda.Show.Text.show
+                                        , rule = inferredContent.rule
+                                    }
+                                )
+                in
+                rootTree
+                    |> Utils.Tree.mapTreeAtPath rootPath (\_ -> inferredRuleTree)
+                    |> substFtvRuleTree ss
+            )
+        |> Result.withDefault rootTree
 
 
 doHint : TypeSystem -> RuleTree -> RuleTree
@@ -89,7 +177,7 @@ doHint typeSystem ((Node ({ ctx, term, ty } as content) _) as t1) =
     in
     case ( maybeCtx, maybeTerm ) of
         ( Just justCtx, Just justTerm ) ->
-            inferTree typeSystem maybeTy justCtx justTerm
+            inferTree typeSystem Set.empty maybeTy justCtx justTerm
                 |> Result.mapError (Debug.log "doHint: buildTree error:")
                 |> Result.toMaybe
                 |> Maybe.map
@@ -109,6 +197,83 @@ doHint typeSystem ((Node ({ ctx, term, ty } as content) _) as t1) =
             t1
 
 
+substFtvRuleTree : SubstitutionFtv -> RuleTree -> RuleTree
+substFtvRuleTree ss tree =
+    tree
+        |> Utils.Tree.map
+            (\({ ctx, term, ty } as o) ->
+                let
+                    maybeCtx =
+                        parseCtx ctx
+                            |> Result.toMaybe
+                            |> Maybe.andThen (fromParseContext >> Result.toMaybe)
+                in
+                { o
+                    | ctx =
+                        maybeCtx
+                            |> Maybe.andThen
+                                (\c ->
+                                    let
+                                        substituted =
+                                            substFtvCtx ss c
+                                    in
+                                    if substituted == c then
+                                        Nothing
+
+                                    else
+                                        Just substituted
+                                )
+                            |> Maybe.map (Lambda.Show.Print.showCtx >> Lambda.Show.Text.show)
+                            |> Maybe.withDefault ctx
+                    , term =
+                        maybeCtx
+                            |> Maybe.andThen
+                                (\justCtx ->
+                                    parseTerm term
+                                        |> Result.toMaybe
+                                        |> Maybe.andThen (fromParseTerm justCtx >> Result.toMaybe)
+                                        |> Maybe.andThen
+                                            (\justTerm ->
+                                                let
+                                                    substituted =
+                                                        substFtvTerm ss justTerm
+                                                in
+                                                if substituted == justTerm then
+                                                    Nothing
+
+                                                else
+                                                    Just substituted
+                                            )
+                                        -- Shouldn't use the substituted CTX??
+                                        |> Maybe.map (Lambda.Show.Print.showTerm justCtx >> Lambda.Show.Text.show)
+                                )
+                            |> Maybe.withDefault term
+                    , ty =
+                        maybeCtx
+                            |> Maybe.andThen
+                                (\justCtx ->
+                                    parseType ty
+                                        |> Result.toMaybe
+                                        |> Maybe.map (fromParseType justCtx)
+                                        |> Maybe.andThen
+                                            (\justTy ->
+                                                let
+                                                    substituted =
+                                                        substFtvTy ss justTy
+                                                in
+                                                if substituted == justTy then
+                                                    Nothing
+
+                                                else
+                                                    Just substituted
+                                            )
+                                        |> Maybe.map (Lambda.Show.Print.showType justCtx >> Lambda.Show.Text.show)
+                                )
+                            |> Maybe.withDefault ty
+                }
+            )
+
+
 doSubstitution : Substitutor.Model.Model -> RuleTree -> RuleTree
 doSubstitution sm tree =
     case ( parsedType sm, parsedVar sm ) of
@@ -117,79 +282,7 @@ doSubstitution sm tree =
                 ss =
                     [ ( tyS, varS ) ]
             in
-            tree
-                |> Utils.Tree.map
-                    (\({ ctx, term, ty } as o) ->
-                        let
-                            maybeCtx =
-                                parseCtx ctx
-                                    |> Result.toMaybe
-                                    |> Maybe.andThen (fromParseContext >> Result.toMaybe)
-                        in
-                        { o
-                            | ctx =
-                                maybeCtx
-                                    |> Maybe.andThen
-                                        (\c ->
-                                            let
-                                                substituted =
-                                                    substFtvCtx ss c
-                                            in
-                                            if substituted == c then
-                                                Nothing
-
-                                            else
-                                                Just substituted
-                                        )
-                                    |> Maybe.map (Lambda.Show.Print.showCtx >> Lambda.Show.Text.show)
-                                    |> Maybe.withDefault ctx
-                            , term =
-                                maybeCtx
-                                    |> Maybe.andThen
-                                        (\justCtx ->
-                                            parseTerm term
-                                                |> Result.toMaybe
-                                                |> Maybe.andThen (fromParseTerm justCtx >> Result.toMaybe)
-                                                |> Maybe.andThen
-                                                    (\justTerm ->
-                                                        let
-                                                            substituted =
-                                                                substFtvTerm ss justTerm
-                                                        in
-                                                        if substituted == justTerm then
-                                                            Nothing
-
-                                                        else
-                                                            Just substituted
-                                                    )
-                                                -- Shouldn't use the substituted CTX??
-                                                |> Maybe.map (Lambda.Show.Print.showTerm justCtx >> Lambda.Show.Text.show)
-                                        )
-                                    |> Maybe.withDefault term
-                            , ty =
-                                maybeCtx
-                                    |> Maybe.andThen
-                                        (\justCtx ->
-                                            parseType ty
-                                                |> Result.toMaybe
-                                                |> Maybe.map (fromParseType justCtx)
-                                                |> Maybe.andThen
-                                                    (\justTy ->
-                                                        let
-                                                            substituted =
-                                                                substFtvTy ss justTy
-                                                        in
-                                                        if substituted == justTy then
-                                                            Nothing
-
-                                                        else
-                                                            Just substituted
-                                                    )
-                                                |> Maybe.map (Lambda.Show.Print.showType justCtx >> Lambda.Show.Text.show)
-                                        )
-                                    |> Maybe.withDefault ty
-                        }
-                    )
+            substFtvRuleTree ss tree
 
         _ ->
             tree

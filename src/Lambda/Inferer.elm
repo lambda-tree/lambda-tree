@@ -120,8 +120,8 @@ unifyToRootCtxTerm ctx term ty ((Node c children) as tree) =
         |> Result.withDefault tree
 
 
-inferTree : TypeSystem -> Maybe Ty -> Context -> Term -> Result String InferredTree
-inferTree typeSystem rootType =
+inferTree : TypeSystem -> Set String -> Maybe Ty -> Context -> Term -> Result String InferredTree
+inferTree typeSystem rootFtvs rootType =
     let
         buildTree : Set String -> Context -> Term -> Result String InferredTree
         buildTree ftvs ctx t =
@@ -433,7 +433,8 @@ inferTree typeSystem rootType =
     \rootCtx rootTerm ->
         let
             ftvs =
-                ftvCtx rootCtx
+                rootFtvs
+                    |> Set.union (ftvCtx rootCtx)
                     |> Set.union (ftvTerm rootTerm)
                     |> Set.union
                         (rootType
@@ -468,12 +469,12 @@ inferTree typeSystem rootType =
 
 w : Context -> Term -> Result String ( SubstitutionFtv, Ty )
 w ctx term =
-    inferTree (HM SyntaxDirected) Nothing ctx term
+    inferTree (HM SyntaxDirected) Set.empty Nothing ctx term
         |> Result.map (\(Node { ty, ss } _) -> ( ss, ty ))
 
 
 typeOf : TypeSystem -> Context -> Term -> Result String Ty
 typeOf typeSystem ctx term =
-    inferTree typeSystem Nothing ctx term
+    inferTree typeSystem Set.empty Nothing ctx term
         |> Result.map (\(Node { ty } _) -> ty)
         |> Result.map (gen (ftvCtx ctx) ctx)

@@ -8,7 +8,7 @@ import RuleTree.Model exposing (TextKind)
 
 type Msg
     = TextChangedMsg (List Int) TextKind String
-    | HintMsg
+    | HintTreeOneLevel (List Int)
     | HintRuleSelectionMsg (List Int)
     | HintTreeMsg (List Int)
     | RemoveMsg (List Int)

@@ -4,6 +4,7 @@ import Css exposing (..)
 import Html.Styled as S exposing (styled)
 import Lambda.Rule exposing (Rule(..), isTerminalRule, rulesForTypeSystem)
 import List.Extra
+import Maybe.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (RuleTree)
 import RuleTree.View.ProofCell exposing (proofCell)
@@ -35,7 +36,12 @@ treeView settings tree =
                     styled S.div
                         [ displayFlex, flexDirection column, alignItems center, justifyContent center, flex auto ]
                         []
-                        [ ruleDropdown content.dropdown { button = newRuleDDButton, path = path, rules = rules }
+                        [ ruleDropdown content.dropdown
+                            { button = newRuleDDButton
+                            , path = path
+                            , rules = rules
+                            , hintDisabled = Maybe.Extra.isJust content.term.error
+                            }
                         , styled S.div [ width <| px 1, minWidth <| px 1, backgroundColor <| theme.darkLine, height <| px 10 ] [] []
                         ]
 
@@ -84,6 +90,7 @@ treeView settings tree =
                             , dropdown = content.dropdown
                             , statusPopover = content.statusPopover
                             , showStatus = settings.checkErrors
+                            , hintDisabled = Maybe.Extra.isJust content.term.error
                             }
                         , proofCell
                             (List.isEmpty path
@@ -121,7 +128,7 @@ treeView settings tree =
     drawTreeP (getTreeViewData typeSystem tree) [] 1 NoRule
 
 
-ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule, rules, result } =
+ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule, rules, result, hintDisabled } =
     let
         statusContainer =
             styled S.span
@@ -164,7 +171,13 @@ ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule
 
                                   else
                                     Nothing
-                                , Just <| ruleDropdown dropdown { button = selectedRuleDDButton selectedRule, path = path, rules = rules }
+                                , Just <|
+                                    ruleDropdown dropdown
+                                        { button = selectedRuleDDButton selectedRule
+                                        , path = path
+                                        , rules = rules
+                                        , hintDisabled = hintDisabled
+                                        }
                                 ]
                             )
                     ]

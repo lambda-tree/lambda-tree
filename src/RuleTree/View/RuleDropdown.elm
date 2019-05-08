@@ -15,16 +15,16 @@ smallCapsClass =
     HtmlA.class "small-caps"
 
 
-ruleDropdown dropdownState { button, path, rules } =
+ruleDropdown dropdownState { button, path, rules, hintDisabled } =
     Dropdown.dropdown
         dropdownState
         { options = []
         , toggleMsg = RuleDropdownMsg path
         , toggleButton = button
         , items =
-            [ Dropdown.buttonItem [ HtmlE.onClick <| HintRuleSelectionMsg path, HtmlA.disabled False ] [ Html.text "Hint Rule Selection" ]
-            , Dropdown.buttonItem [ HtmlE.onClick <| HintTreeOneLevel path, HtmlA.disabled False ] [ Html.text "Hint Premises" ]
-            , Dropdown.buttonItem [ HtmlE.onClick <| HintTreeMsg path, HtmlA.disabled False ] [ Html.text "Autocomplete Tree" ]
+            [ Dropdown.buttonItem [ HtmlE.onClick <| HintTreeOneLevel path, HtmlA.disabled hintDisabled ] [ Html.text "Autocomplete Premises" ]
+            , Dropdown.buttonItem [ HtmlE.onClick <| HintTreeMsg path, HtmlA.disabled hintDisabled ] [ Html.text "Autocomplete Branch" ]
+            , Dropdown.buttonItem [ HtmlE.onClick <| HintRuleSelectionMsg path, HtmlA.disabled hintDisabled ] [ Html.text "Hint Rule Selection" ]
             , Dropdown.divider
             , Dropdown.buttonItem [ HtmlE.onClick <| RuleSelectedMsg path NoRule, smallCapsClass ] [ Html.text "No Rule" ]
             ]

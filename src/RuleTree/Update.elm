@@ -17,48 +17,56 @@ import Settings.Model
 import Settings.Utils exposing (getTypeSystem)
 import Substitutor.Model
 import Substitutor.Utils exposing (parsedType, parsedVar)
-import Utils.Outcome as Outcome
+import Utils.Outcome as Outcome exposing (Outcome)
 import Utils.Tree exposing (Tree(..), mapContentAtPath)
 
 
-update : Msg -> Settings.Model.Model -> RuleTree -> RuleTree
+update : Msg -> Settings.Model.Model -> RuleTree -> Outcome String RuleTree
 update msg settings tree =
     case msg of
         TextChangedMsg path kind text ->
             updateTextAtPath path kind text tree
+                |> Outcome.fine
 
         HintTreeOneLevel path ->
             doHint1LevelAtPath (getTypeSystem settings) path tree
+                |> Outcome.fine
 
         RemoveMsg path ->
             setRule path NoRule tree
+                |> Outcome.fine
 
         RuleSelectedMsg path rule ->
             setRule path rule tree
+                |> Outcome.fine
 
         ClearTreeMsg ->
             emptyTree
+                |> Outcome.fine
 
         SelectRuleMsg _ ->
             Debug.todo "Update: SelectRuleMsg"
 
         RuleDropdownMsg path state ->
             mapContentAtPath path (\c -> { c | dropdown = state }) tree
+                |> Outcome.fine
 
         RuleStatusPopoverMsg path state ->
             mapContentAtPath path (\c -> { c | statusPopover = state }) tree
+                |> Outcome.fine
 
         HintTreeMsg path ->
             doHintAtPath (getTypeSystem settings) path tree
 
         HintRuleSelectionMsg path ->
             hintRuleSelection (getTypeSystem settings) path tree
+                |> Outcome.fine
 
 
 hintRuleSelection : TypeSystem -> List Int -> RuleTree -> RuleTree
-hintRuleSelection =
-    hintWithMapperAtPath
-        (\ruleTree (Node { rule } _) -> setRule [] rule ruleTree)
+hintRuleSelection typeSystem path tree =
+    hintWithMapperAtPath (\ruleTree (Node { rule } _) -> setRule [] rule ruleTree) typeSystem path tree
+        |> Outcome.value
 
 
 collectFtvsForExprTree : ExprTree -> Set String
@@ -99,13 +107,13 @@ inferredTreeToRuleTree =
         )
 
 
-doHintAtPath : TypeSystem -> List Int -> RuleTree -> RuleTree
+doHintAtPath : TypeSystem -> List Int -> RuleTree -> Outcome String RuleTree
 doHintAtPath =
     hintWithMapperAtPath (\_ -> inferredTreeToRuleTree)
 
 
 doHint1LevelAtPath : TypeSystem -> List Int -> RuleTree -> RuleTree
-doHint1LevelAtPath =
+doHint1LevelAtPath typeSystem path tree =
     hintWithMapperAtPath
         (\_ inferredTree ->
             let
@@ -117,23 +125,25 @@ doHint1LevelAtPath =
                 -- Remove the rules of the children
                 |> (\(Node c children) -> Node c (List.map (setRule [] NoRule) children))
         )
+        typeSystem
+        path
+        tree
+        |> Outcome.value
 
 
-hintWithMapperAtPath : (RuleTree -> InferredTree -> RuleTree) -> TypeSystem -> List Int -> RuleTree -> RuleTree
+hintWithMapperAtPath : (RuleTree -> InferredTree -> RuleTree) -> TypeSystem -> List Int -> RuleTree -> Outcome String RuleTree
 hintWithMapperAtPath mapper typeSystem rootPath rootTree =
     let
         exprTree =
             getExprTree typeSystem rootTree
 
-        walkTree : Set String -> List Int -> ExprTree -> Result String InferredTree
+        walkTree : Set String -> List Int -> ExprTree -> Result String (Outcome String InferredTree)
         walkTree ftvs path (Node ({ ctx, term, ty } as content) children) =
             case path of
                 [] ->
                     case ( ctx, term ) of
                         ( Ok justCtx, Ok justTerm ) ->
-                            inferTree typeSystem ftvs (ty |> Result.toMaybe) justCtx justTerm
-                                |> Outcome.toResult
-                                |> Result.mapError (Debug.log "doHintAtPath: inferTree error:")
+                            Ok <| inferTree typeSystem ftvs (ty |> Result.toMaybe) justCtx justTerm
 
                         _ ->
                             Err <| "There is an error in context or term of the expression to be inferred"
@@ -159,13 +169,16 @@ hintWithMapperAtPath mapper typeSystem rootPath rootTree =
             walkTree Set.empty rootPath exprTree
     in
     maybeInferredTree
-        |> Result.map
-            (\((Node { ss } _) as inferredTree) ->
-                rootTree
-                    |> Utils.Tree.mapTreeAtPath rootPath (\ruleTreeAtPath -> mapper ruleTreeAtPath inferredTree)
-                    |> substFtvRuleTree ss
-            )
-        |> Result.withDefault rootTree
+        |> (Result.map <|
+                Outcome.map
+                    (\((Node { ss } _) as inferredTree) ->
+                        rootTree
+                            |> Utils.Tree.mapTreeAtPath rootPath (\ruleTreeAtPath -> mapper ruleTreeAtPath inferredTree)
+                            |> substFtvRuleTree ss
+                    )
+           )
+        |> Outcome.fromResult (Outcome.fine rootTree)
+        |> Outcome.join
 
 
 doHint : TypeSystem -> RuleTree -> RuleTree

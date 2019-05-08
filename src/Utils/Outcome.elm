@@ -23,6 +23,11 @@ fromResult val =
     Result.mapError (\e -> Outcome (Just e) val) >> Result.map fine >> Result.Extra.merge
 
 
+join : Outcome e (Outcome e v) -> Outcome e v
+join (Outcome e1 (Outcome e2 v)) =
+    Outcome (Maybe.Extra.or e1 e2) v
+
+
 toResult : Outcome e v -> Result e v
 toResult (Outcome err val) =
     case err of

@@ -18,6 +18,7 @@ import Settings.Utils exposing (getTypeSystem, setTypeSystem)
 import Substitutor.Init
 import Substitutor.Update
 import Task
+import Utils.Outcome as Outcome
 
 
 cacheModel : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
@@ -39,7 +40,20 @@ update msg model =
             )
 
         RuleTreeMsg m ->
-            ( { model | ruleTree = RuleTree.Update.update m model.settings model.ruleTree }
+            let
+                updatedRuleTree =
+                    RuleTree.Update.update m model.settings model.ruleTree
+
+                errorReport =
+                    updatedRuleTree
+                        |> Outcome.error
+                        |> Maybe.map showError
+                        |> Maybe.withDefault model.errorReport
+            in
+            ( { model
+                | ruleTree = updatedRuleTree |> Outcome.value
+                , errorReport = errorReport
+              }
             , Cmd.none
             )
                 |> cacheModel

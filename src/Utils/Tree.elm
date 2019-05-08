@@ -98,6 +98,15 @@ toList =
     foldr (::) []
 
 
+take : Int -> Tree a -> Maybe (Tree a)
+take i (Node content children) =
+    if i <= 0 then
+        Nothing
+
+    else
+        Just <| Node content <| List.filterMap (take (i - 1)) children
+
+
 treeEncoder : (a -> E.Value) -> Tree a -> E.Value
 treeEncoder encodeContent =
     foldTree

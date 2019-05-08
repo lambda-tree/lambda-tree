@@ -23,7 +23,7 @@ ruleDropdown dropdownState { button, path, rules } =
         , toggleButton = button
         , items =
             [ Dropdown.buttonItem [ HtmlE.onClick <| HintRuleSelectionMsg path, HtmlA.disabled False ] [ Html.text "Hint Rule Selection" ]
-            , Dropdown.buttonItem [ HtmlE.onClick <| RuleSelectedMsg path NoRule, HtmlA.disabled True ] [ Html.text "Hint Rule Premises" ]
+            , Dropdown.buttonItem [ HtmlE.onClick <| HintTreeOneLevel path, HtmlA.disabled False ] [ Html.text "Hint Premises" ]
             , Dropdown.buttonItem [ HtmlE.onClick <| HintTreeMsg path, HtmlA.disabled False ] [ Html.text "Autocomplete Tree" ]
             , Dropdown.divider
             , Dropdown.buttonItem [ HtmlE.onClick <| RuleSelectedMsg path NoRule, smallCapsClass ] [ Html.text "No Rule" ]

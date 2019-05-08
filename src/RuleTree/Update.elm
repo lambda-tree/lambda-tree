@@ -27,7 +27,7 @@ update msg settings tree =
             updateTextAtPath path kind text tree
 
         HintTreeOneLevel path ->
-            doHintAtPath (getTypeSystem settings) path tree
+            doHint1LevelAtPath (getTypeSystem settings) path tree
 
         RemoveMsg path ->
             setRule path NoRule tree
@@ -55,12 +55,9 @@ update msg settings tree =
 
 
 hintRuleSelection : TypeSystem -> List Int -> RuleTree -> RuleTree
-hintRuleSelection typeSystem path tree =
-    let
-        (Node { rule } _) =
-            Debug.log "hintTree:" <| doHint typeSystem tree
-    in
-    setRule path rule tree
+hintRuleSelection =
+    hintWithMapperAtPath
+        (\ruleTree (Node { rule } _) -> setRule [] rule ruleTree)
 
 
 collectFtvsForExprTree : ExprTree -> Set String
@@ -88,8 +85,41 @@ collectFtvsForExprTreeContent { ctx, term, ty } =
             )
 
 
+inferredTreeToRuleTree : InferredTree -> RuleTree
+inferredTreeToRuleTree =
+    Utils.Tree.map
+        (\inferredContent ->
+            { emptyTreeContent
+                | ctx = inferredContent.ctx |> Lambda.Show.Print.showCtx |> Lambda.Show.Text.show
+                , term = inferredContent.term |> Lambda.Show.Print.showTerm inferredContent.ctx |> Lambda.Show.Text.show
+                , ty = inferredContent.ty |> Lambda.Show.Print.showType inferredContent.ctx |> Lambda.Show.Text.show
+                , rule = inferredContent.rule
+            }
+        )
+
+
 doHintAtPath : TypeSystem -> List Int -> RuleTree -> RuleTree
-doHintAtPath typeSystem rootPath rootTree =
+doHintAtPath =
+    hintWithMapperAtPath (\_ -> inferredTreeToRuleTree)
+
+
+doHint1LevelAtPath : TypeSystem -> List Int -> RuleTree -> RuleTree
+doHint1LevelAtPath =
+    hintWithMapperAtPath
+        (\_ inferredTree ->
+            let
+                cutTree =
+                    Utils.Tree.take 2 inferredTree
+                        |> Maybe.withDefault inferredTree
+            in
+            inferredTreeToRuleTree cutTree
+                -- Remove the rules of the children
+                |> (\(Node c children) -> Node c (List.map (setRule [] NoRule) children))
+        )
+
+
+hintWithMapperAtPath : (RuleTree -> InferredTree -> RuleTree) -> TypeSystem -> List Int -> RuleTree -> RuleTree
+hintWithMapperAtPath mapper typeSystem rootPath rootTree =
     let
         exprTree =
             getExprTree typeSystem rootTree
@@ -129,21 +159,8 @@ doHintAtPath typeSystem rootPath rootTree =
     maybeInferredTree
         |> Result.map
             (\((Node { ss } _) as inferredTree) ->
-                let
-                    inferredRuleTree =
-                        inferredTree
-                            |> Utils.Tree.map
-                                (\inferredContent ->
-                                    { emptyTreeContent
-                                        | ctx = inferredContent.ctx |> Lambda.Show.Print.showCtx |> Lambda.Show.Text.show
-                                        , term = inferredContent.term |> Lambda.Show.Print.showTerm inferredContent.ctx |> Lambda.Show.Text.show
-                                        , ty = inferredContent.ty |> Lambda.Show.Print.showType inferredContent.ctx |> Lambda.Show.Text.show
-                                        , rule = inferredContent.rule
-                                    }
-                                )
-                in
                 rootTree
-                    |> Utils.Tree.mapTreeAtPath rootPath (\_ -> inferredRuleTree)
+                    |> Utils.Tree.mapTreeAtPath rootPath (\ruleTreeAtPath -> mapper ruleTreeAtPath inferredTree)
                     |> substFtvRuleTree ss
             )
         |> Result.withDefault rootTree

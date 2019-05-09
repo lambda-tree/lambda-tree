@@ -4,8 +4,21 @@ import Maybe.Extra
 import Result.Extra
 
 
+{-| Represents some Outcome of computation that can carry some error information along the result.
+Once this error is recorded, it's not replaced when multiple outcomes are sequenced (see `andThen`, `join` functions)
+-}
 type Outcome e v
     = Outcome (Maybe e) v
+
+
+value : Outcome e v -> v
+value (Outcome _ v) =
+    v
+
+
+error : Outcome e v -> Maybe e
+error (Outcome e _) =
+    e
 
 
 fine : v -> Outcome e v
@@ -20,7 +33,9 @@ problem err val =
 
 fromResult : v -> Result e v -> Outcome e v
 fromResult val =
-    Result.mapError (\e -> Outcome (Just e) val) >> Result.map fine >> Result.Extra.merge
+    Result.mapError (\e -> problem e val)
+        >> Result.map fine
+        >> Result.Extra.merge
 
 
 join : Outcome e (Outcome e v) -> Outcome e v
@@ -54,13 +69,3 @@ andThen f (Outcome err val) =
             f val
     in
     Outcome (Maybe.Extra.or err err1) val2
-
-
-value : Outcome e v -> v
-value (Outcome _ v) =
-    v
-
-
-error : Outcome e v -> Maybe e
-error (Outcome e _) =
-    e

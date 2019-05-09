@@ -5,6 +5,7 @@ import Lambda.ContextUtils exposing (addbinding, emptycontext, getbinding)
 import Lambda.Expression exposing (..)
 import Lambda.ExpressionUtils exposing (..)
 import Lambda.Rule exposing (Rule(..))
+import Lambda.Show.Text exposing (showType)
 import Set exposing (Set)
 import Utils.Outcome as Outcome exposing (Outcome)
 import Utils.Tree exposing (Tree(..))
@@ -292,8 +293,14 @@ inferTree typeSystem rootFtvs rootType =
                                                                         |> Set.union (ftvTree bt2)
                                                                     )
                                                                     "X"
+
+                                                        unifTy1 =
+                                                            TyArr n2.ty tauPrime
+
+                                                        unifTy2 =
+                                                            substFtvTy n2.ss n1.ty
                                                     in
-                                                    unifyType (TyArr n2.ty tauPrime) (substFtvTy n2.ss n1.ty)
+                                                    unifyType unifTy1 unifTy2
                                                         |> Result.map
                                                             (\s3 ->
                                                                 Node
@@ -306,18 +313,17 @@ inferTree typeSystem rootFtvs rootType =
                                                                     }
                                                                     [ bt1, bt2 ]
                                                             )
-                                                        |> Result.map Outcome.fine
-                                                        |> Result.withDefault
-                                                            (Outcome.problem "Cannot unify" <|
-                                                                Node
-                                                                    { ctx = ctx
-                                                                    , term = t
-                                                                    , ty = tauPrime
-                                                                    , rule = TApp
-                                                                    , ss = n2.ss ++ n1.ss
-                                                                    , ftvs = n1.ftvs |> Set.union n2.ftvs |> Set.union (ftvTy tauPrime)
-                                                                    }
-                                                                    [ bt1, bt2 ]
+                                                        |> Result.mapError (\e -> "Cannot unify types ( " ++ showType [] unifTy1 ++ ", " ++ showType [] unifTy2 ++ " ). " ++ e)
+                                                        |> Outcome.fromResult
+                                                            (Node
+                                                                { ctx = ctx
+                                                                , term = t
+                                                                , ty = tauPrime
+                                                                , rule = TApp
+                                                                , ss = n2.ss ++ n1.ss
+                                                                , ftvs = n1.ftvs |> Set.union n2.ftvs |> Set.union (ftvTy tauPrime)
+                                                                }
+                                                                [ bt1, bt2 ]
                                                             )
 
                                                 _ ->

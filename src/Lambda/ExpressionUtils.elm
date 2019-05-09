@@ -1,8 +1,9 @@
 module Lambda.ExpressionUtils exposing (..)
 
 import Lambda.Context exposing (..)
-import Lambda.ContextUtils exposing (addbinding, ctxlength, getbinding)
+import Lambda.ContextUtils exposing (ctxlength)
 import Lambda.Expression exposing (..)
+import Lambda.Show.Text exposing (showTerm, showType)
 import Set exposing (Set)
 import Utils.Tree
 
@@ -396,10 +397,10 @@ unifyTypeTerm term1 term2 =
                 Ok []
 
             else
-                Err <| "Term constants '" ++ Debug.toString c1 ++ "' & '" ++ Debug.toString c2 ++ "' are not compatible"
+                Err <| "Term constants '" ++ showTerm [] term1 ++ "' & '" ++ showTerm [] term2 ++ "' are not compatible"
 
         ( _, _ ) ->
-            Err <| "Terms are not compatible " ++ Debug.toString ( term1, term2 )
+            Err <| "Terms are not compatible " ++ "( " ++ showTerm [] term1 ++ ", " ++ showTerm [] term2 ++ " )"
 
 
 unifyTypeCtx : Context -> Context -> Result String SubstitutionFtv
@@ -479,7 +480,7 @@ unifyType ty1 ty2 =
                 Err <| "Bound variables are not referring to the same bound variable"
 
         ( _, _ ) ->
-            Err <| "Types are not compatible " ++ Debug.toString ( ty1, ty2 )
+            Err <| "Types are not compatible (" ++ showType [] ty1 ++ ", " ++ showType [] ty2 ++ ")"
 
 
 degeneralizeTypeTop : Context -> Ty -> Ty

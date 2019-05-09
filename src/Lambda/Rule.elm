@@ -864,3 +864,49 @@ canApplyRuleToExpr { rule, term, ty, ctx } =
 
         NoRule ->
             Ok ()
+
+
+showRule : Rule -> String
+showRule rule =
+    case rule of
+        TTrue ->
+            "T–True"
+
+        TFalse ->
+            "T–False"
+
+        TVar ->
+            "T–Var"
+
+        TVarInst ->
+            "T–Var'"
+
+        TAbs ->
+            "T–Abs"
+
+        TApp ->
+            "T–App"
+
+        TIf ->
+            "T–If"
+
+        TTAbs ->
+            "T–TAbs"
+
+        TTApp ->
+            "T–TApp"
+
+        TLet ->
+            "T–Let"
+
+        TLetGen ->
+            "T–Let'"
+
+        TGen ->
+            "T–Gen"
+
+        TInst ->
+            "T–Inst"
+
+        NoRule ->
+            "-"

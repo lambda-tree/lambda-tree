@@ -3,10 +3,9 @@ module View.RuleList exposing (..)
 import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
-import Lambda.Rule exposing (Rule(..))
+import Lambda.Rule exposing (Rule(..), showRule)
 import Lambda.Show.Html exposing (show)
 import Lambda.Show.RuleTemplate exposing (ruleTemplateForRule)
-import Lambda.Show.Text exposing (showRule)
 import View.Theme exposing (theme)
 
 

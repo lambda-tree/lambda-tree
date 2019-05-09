@@ -1,6 +1,7 @@
 module Lambda.Show.Text exposing (..)
 
-import Lambda.Rule exposing (Rule(..))
+import Lambda.Context exposing (Context)
+import Lambda.Expression exposing (Term, Ty)
 import Lambda.Show.Print exposing (..)
 
 
@@ -110,47 +111,13 @@ g =
     String.concat
 
 
-showRule : Rule -> String
-showRule rule =
-    case rule of
-        TTrue ->
-            "T–True"
+showType : Context -> Ty -> String
+showType ctx ty =
+    Lambda.Show.Print.showType ctx ty
+        |> show
 
-        TFalse ->
-            "T–False"
 
-        TVar ->
-            "T–Var"
-
-        TVarInst ->
-            "T–Var'"
-
-        TAbs ->
-            "T–Abs"
-
-        TApp ->
-            "T–App"
-
-        TIf ->
-            "T–If"
-
-        TTAbs ->
-            "T–TAbs"
-
-        TTApp ->
-            "T–TApp"
-
-        TLet ->
-            "T–Let"
-
-        TLetGen ->
-            "T–Let'"
-
-        TGen ->
-            "T–Gen"
-
-        TInst ->
-            "T–Inst"
-
-        NoRule ->
-            "-"
+showTerm : Context -> Term -> String
+showTerm ctx ty =
+    Lambda.Show.Print.showTerm ctx ty
+        |> show

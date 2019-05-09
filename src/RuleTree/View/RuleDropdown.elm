@@ -6,8 +6,7 @@ import Html
 import Html.Attributes as HtmlA
 import Html.Events as HtmlE
 import Html.Styled as S
-import Lambda.Rule exposing (Rule(..))
-import Lambda.Show.Text exposing (showRule)
+import Lambda.Rule exposing (Rule(..), showRule)
 import RuleTree.Message exposing (Msg(..))
 
 

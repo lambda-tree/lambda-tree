@@ -255,7 +255,7 @@ showType ctx ty =
 
         TyVar x _ ->
             index2name I ctx x
-                |> Maybe.withDefault "IndexNotFoundInContext"
+                |> Maybe.withDefault ("IndexNotInContext" ++ String.fromInt x)
                 |> TypeVar
 
 
@@ -264,7 +264,7 @@ showTerm ctx t =
     case t of
         TmVar fi x _ ->
             index2name fi ctx x
-                |> Maybe.withDefault "indexNotFoundInContext"
+                |> Maybe.withDefault ("indexNotInContext" ++ String.fromInt x)
                 |> Var
 
         TmAbs _ varName maybeTy t1 ->

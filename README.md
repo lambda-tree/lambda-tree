@@ -1,52 +1,20 @@
 # Type proof checker for lambda calculus
-
-## Implementation Progress
-
-Model:
-- [ ] Lambda calculus core
-    - [x] Term expressions
-    - [x] Type expressions
-    - [x] Context expressions
-    - [x] Beta reduction on types (System F)
-    - [ ] Type inference (H-M)
-- [x] Parsing
-    - [x] Types
-    - [x] Terms
-    - [x] Context
-- [ ] Rule Checking
-    - [x] T-True
-    - [x] T-False
-    - [x] T-Var
-    - [x] T-Abs
-    - [x] T-App
-    - [x] T-If
-    - [x] T-Let
-    - [x] T-Inst
-    - [x] T-Gen
-    - [ ] T-Var' (T-Var + T-Inst Combined rule for H-M)
-    - [ ] T-Let' (T-Let + T-Gen Combined rule for H-M)
-    - [x] T-TAbs
-    - [x] T-TApp
-- [ ] Whole tree checking
-- [ ] Export to LaTex
-
-UI:
-- [x] Building tree from rules
-- [x] Simple manual mode (type-in everything)
-- [ ] Interactive mode
-
+Web application for construction of type derivation trees of expressions in lambda calculus. Supports simply typed lambda calculus, Hindley Milner, and System F type systems.
 
 ## Installation
 - Install elm 0.19.0 from https://guide.elm-lang.org/install.html
-- Run: `elm make src/Main.elm`
-- Open `index.html` in browser
+- Install yarn from https://yarnpkg.com/en/docs/install
+- Run: `yarn install`
+
+## Development
+- Run: `yarn start`
+- Open listed server URL in browser
+- When you save a source file, the page is hot-reloaded
 
 ## Tests
 - Tests are in `tests/` directory
-- Run: `elm-test`
+- Run: `yarn test`
 
-## Development
-- Run: `elm reactor`
-- Open listed server URL in browser
-- Navigate to Main.elm
-
+## Deployment
+- Build: `yarn prod`
+- Deploy: `yarn deploy`

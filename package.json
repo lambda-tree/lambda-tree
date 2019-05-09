@@ -24,7 +24,7 @@
         "elm-analyse": "^0.16.3",
         "elm-hot-webpack-loader": "^1.0.2",
         "elm-minify": "^2.0.4",
-        "elm-test": "^0.19.0-rev5",
+        "elm-test": "^0.19.0-rev6",
         "elm-verify-examples": "^3.0.1",
         "elm-webpack-loader": "^5.0.0",
         "favicons-webpack-plugin": "^0.0.9",

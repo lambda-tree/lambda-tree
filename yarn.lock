@@ -2357,7 +2357,7 @@ elm-minify@^2.0.4:
     terser "3.11.0"
     webpack-sources "1.3.0"
 
-elm-test@0.19.0-rev6, elm-test@^0.19.0-rev5:
+elm-test@0.19.0-rev6, elm-test@^0.19.0-rev6:
   version "0.19.0-rev6"
   resolved "https://registry.yarnpkg.com/elm-test/-/elm-test-0.19.0-rev6.tgz#75ce658936b43c5b033bc2db490445c6f96f021e"
   integrity sha512-Qdy9QusZF+eT0203XBiT1Y/UhFeUjcSuyyzf3iyp32dsYpAfcoDTWHjlBVjia1CyvFauESQ4pc81nKaq6snClg==

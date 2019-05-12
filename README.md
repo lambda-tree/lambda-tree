@@ -1,8 +1,9 @@
 # Type proof checker for lambda calculus
 Web application for construction of type derivation trees of expressions in lambda calculus. Supports simply typed lambda calculus, Hindley Milner, and System F type systems.
 
+The app is implemented in Elm.
+
 ## Installation
-- Install elm 0.19.0 from https://guide.elm-lang.org/install.html
 - Install yarn from https://yarnpkg.com/en/docs/install
 - Run: `yarn install`
 

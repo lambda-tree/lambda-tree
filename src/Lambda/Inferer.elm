@@ -22,11 +22,16 @@ type alias InferredTree =
 expandGen : InferredTree -> InferredTree
 expandGen ((Node content children) as tree) =
     case content.ty of
-        TyAll _ (TyAll _ _) ->
+        TyAll _ _ ->
             Node { content | rule = TGen } [ expandGen <| Node { content | ty = degeneralizeTypeTop content.ctx content.ty } children ]
 
         _ ->
-            tree
+            case children of
+                [ child ] ->
+                    child
+
+                _ ->
+                    tree
 
 
 ftvTree : InferredTree -> Set String

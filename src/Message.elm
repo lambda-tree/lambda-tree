@@ -11,9 +11,9 @@ import Substitutor.Message
 type Msg
     = RuleTreeMsg RuleTree.Message.Msg
     | SubstitutionMsg Substitutor.Message.Msg
-    | DoSubstitutionMsg
     | SettingsMsg Settings.Message.Msg
     | ErrorReportMsg ErrorReport.Message.Msg
+    | DoSubstitutionMsg
     | ImportJsonMsg
     | JsonImportedMsg File
     | ModelImportedMsg String

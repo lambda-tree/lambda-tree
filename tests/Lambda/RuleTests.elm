@@ -2,7 +2,7 @@ module Lambda.RuleTests exposing (..)
 
 import Expect exposing (Expectation)
 import Lambda.Expression exposing (..)
-import Lambda.Rule exposing (TyRule(..), checkRule)
+import Lambda.Rule exposing (TyRule(..), checkTyRule)
 import Test exposing (..)
 
 
@@ -21,7 +21,7 @@ compilationTest =
     describe "compilationTest"
         [ test "test if it compiles" <|
             \_ ->
-                checkRule
+                checkTyRule
                     |> (\_ -> Expect.pass)
         ]
 
@@ -31,7 +31,7 @@ checkRuleTest =
     describe "checkRule"
         [ test "TVar simple" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTVar
                         { bottom =
                             { ctx = [ ( "x", VarBind <| TyConst TyBool ) ]
@@ -43,7 +43,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TVar with TyVar reference to context in binding" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTVar
                         { bottom =
                             { ctx =
@@ -60,7 +60,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TIf" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTIf
                         { bottom =
                             { ctx = [ ( "X", TyVarBind ), ( "y", VarBind <| TyConst TyBool ), ( "x", VarBind <| TyVar 1 2 ) ]
@@ -87,7 +87,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TTrue" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTTrue
                         { bottom =
                             { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
@@ -99,7 +99,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TFalse" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTFalse
                         { bottom =
                             { ctx = [ ( "X", TyVarBind ), ( "x", VarBind <| TyVar 0 1 ) ]
@@ -111,7 +111,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TAbs" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTAbs
                         { bottom =
                             { ctx = []
@@ -128,7 +128,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TAbs 2" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTAbs
                         { bottom =
                             { ctx = [ ( "A", TyVarBind ) ]
@@ -145,7 +145,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TApp" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTApp
                         { bottom =
                             { ctx = []
@@ -167,7 +167,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TTAbs {TypeVar1, TypeVar2} |- ΛTypeVar3. λtermVar3: TypeVar3. termVar3" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTTAbs
                         { bottom =
                             { ctx =
@@ -193,7 +193,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TTApp {TypeVar1, TypeVar2} |- (ΛTypeVar3. λtermVar3: TypeVar3. termVar3) [TypeVar1->TypeVar2]" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTTApp
                         { bottom =
                             { ctx =
@@ -225,7 +225,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TGen {} |- (λtermVar1. termVar1) : Forall TypeVar1. TypeVar1 -> TypeVar1" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTGen
                         { bottom =
                             { ctx = []
@@ -242,7 +242,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TInst {} |- (λtermVar1. termVar1) : Bool -> Bool" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTInst
                         { bottom =
                             { ctx = []
@@ -259,7 +259,7 @@ checkRuleTest =
                     |> Expect.equal (Ok ())
         , test "TInst {} |- (λtermVar1. termVar1) : A -> A" <|
             \_ ->
-                checkRule
+                checkTyRule
                     (TyRuleTInst
                         { bottom =
                             { ctx = []

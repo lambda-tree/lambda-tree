@@ -50,10 +50,6 @@ type alias TypeStatement =
     { ctx : Context, term : Term, ty : Ty }
 
 
-type alias ContainmentStatement =
-    { ctx : Context, variable : Term }
-
-
 type ExprError
     = ParseError { row : Int, col : Int }
     | ParseTransformError ParseTransformError
@@ -74,8 +70,8 @@ type alias ExprTree =
     Tree ExprTreeContent
 
 
-checkRule : TyRule -> Result String ()
-checkRule rule =
+checkTyRule : TyRule -> Result String ()
+checkTyRule rule =
     case rule of
         TyRuleTVar { bottom } ->
             case bottom.term of
@@ -406,7 +402,7 @@ tryRule typeSystem tree =
                             TVar ->
                                 case children of
                                     [] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTVar
                                                 { bottom =
                                                     { ctx = r.ctx
@@ -422,7 +418,7 @@ tryRule typeSystem tree =
                             TVarInst ->
                                 case children of
                                     [] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTVarInst
                                                 { bottom =
                                                     { ctx = r.ctx
@@ -438,7 +434,7 @@ tryRule typeSystem tree =
                             TIf ->
                                 case children of
                                     [ Node (Result.Ok c1) _, Node (Result.Ok c2) _, Node (Result.Ok c3) _ ] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTIf
                                                 { bottom =
                                                     { ctx = r.ctx
@@ -469,7 +465,7 @@ tryRule typeSystem tree =
                             TTrue ->
                                 case children of
                                     [] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTTrue
                                                 { bottom =
                                                     { ctx = r.ctx
@@ -485,7 +481,7 @@ tryRule typeSystem tree =
                             TFalse ->
                                 case children of
                                     [] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTFalse
                                                 { bottom =
                                                     { ctx = r.ctx
@@ -501,7 +497,7 @@ tryRule typeSystem tree =
                             TAbs ->
                                 case children of
                                     [ Node (Result.Ok c1) _ ] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTAbs
                                                 { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                                 , top =
@@ -518,7 +514,7 @@ tryRule typeSystem tree =
                             TApp ->
                                 case children of
                                     [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTApp
                                                 { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                                 , top1 =
@@ -540,7 +536,7 @@ tryRule typeSystem tree =
                             TTAbs ->
                                 case children of
                                     [ Node (Result.Ok c1) _ ] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTTAbs
                                                 { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                                 , top =
@@ -557,7 +553,7 @@ tryRule typeSystem tree =
                             TTApp ->
                                 case children of
                                     [ Node (Result.Ok c1) _ ] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTTApp
                                                 { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                                 , top =
@@ -574,7 +570,7 @@ tryRule typeSystem tree =
                             TLet ->
                                 case children of
                                     [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTLet
                                                 { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                                 , top1 =
@@ -596,7 +592,7 @@ tryRule typeSystem tree =
                             TLetGen ->
                                 case children of
                                     [ Node (Result.Ok c1) _, Node (Result.Ok c2) _ ] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTLetGen
                                                 { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                                 , top1 =
@@ -618,7 +614,7 @@ tryRule typeSystem tree =
                             TGen ->
                                 case children of
                                     [ Node (Result.Ok c1) _ ] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTGen
                                                 { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                                 , top =
@@ -635,7 +631,7 @@ tryRule typeSystem tree =
                             TInst ->
                                 case children of
                                     [ Node (Result.Ok c1) _ ] ->
-                                        checkRule
+                                        checkTyRule
                                             (TyRuleTInst
                                                 { bottom = { ctx = r.ctx, term = r.term, ty = r.ty }
                                                 , top =

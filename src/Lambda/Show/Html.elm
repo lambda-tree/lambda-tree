@@ -127,9 +127,5 @@ txt text =
     S.text text
 
 
-halfSpace =
-    styled S.span [ marginRight <| em 0.1 ] [] []
-
-
 halfSpaced text =
     styled S.span [ property "word-spacing" "-0.15em" ] [] [ S.text text ]

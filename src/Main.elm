@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
 import Html.Styled exposing (toUnstyled)
@@ -15,8 +15,8 @@ import View.GlobalCss
 main : Program D.Value Model Msg
 main =
     Browser.document
-        { init = \flags -> Init.init flags
-        , update = \msg model -> Update.update msg model
+        { init = Init.init
+        , update = Update.update
         , view =
             \model ->
                 { title = "Lambda Tree"

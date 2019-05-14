@@ -31,7 +31,7 @@ treeView settings tree =
             styled S.div
                 [ displayFlex, flexDirection column, alignItems stretch ]
                 []
-                [ -- Draw rule adding button
+                [ -- Draw "Add" button
                   if List.length children == 0 && (not << isTerminalRule) content.rule && (not << isTerminalRule) rule then
                     styled S.div
                         [ displayFlex, flexDirection column, alignItems center, justifyContent center, flex auto ]
@@ -47,7 +47,7 @@ treeView settings tree =
 
                   else
                     S.div [] []
-                , -- Draw children in div
+                , -- Draw children (premises)
                   styled S.div
                     [ displayFlex
                     , alignItems flexEnd
@@ -121,8 +121,6 @@ treeView settings tree =
                         _ ->
                             ruleFiller
                     ]
-
-                -- Cells and hairline
                 ]
     in
     drawTreeP (getTreeViewData typeSystem tree) [] 1 NoRule

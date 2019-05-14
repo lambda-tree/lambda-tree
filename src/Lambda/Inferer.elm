@@ -55,8 +55,8 @@ ftvTree =
 
 {-| Optimize by running only on the final tree
 -}
-applySSTree : InferredTree -> InferredTree
-applySSTree ((Node { ss } _) as tree) =
+substFtvTree : InferredTree -> InferredTree
+substFtvTree ((Node { ss } _) as tree) =
     tree
         |> Utils.Tree.map
             (\({ ctx, term, ty } as c) ->
@@ -82,7 +82,7 @@ unifyWithRootType typeSystem ftvs maybeTy ((Node c children) as tree) =
                                 (\ss ->
                                     let
                                         ((Node n1 _) as bt1) =
-                                            applySSTree (Node { c | ss = ss ++ c.ss } children)
+                                            substFtvTree (Node { c | ss = ss ++ c.ss } children)
                                     in
                                     expandGen <|
                                         Node
@@ -98,8 +98,8 @@ unifyWithRootType typeSystem ftvs maybeTy ((Node c children) as tree) =
                             |> Result.toMaybe
 
                     _ ->
-                        (Debug.log "unif" <| unifyType (Debug.log "c.ty" c.ty) (Debug.log "ty" ty))
-                            |> Result.map (\ss -> applySSTree (Node { c | ss = ss ++ c.ss } children))
+                        (Debug.log "unif" <| unifyType (Debug.log "c.ty" c.ty) (degeneralizeType emptycontext <| Debug.log "ty" ty))
+                            |> Result.map (\ss -> substFtvTree (Node { c | ss = ss ++ c.ss } children))
                             |> Result.toMaybe
             )
         |> Maybe.withDefault tree
@@ -107,8 +107,8 @@ unifyWithRootType typeSystem ftvs maybeTy ((Node c children) as tree) =
 
 {-| Optimize by running only on the final tree
 -}
-unifyToRootCtxTerm : Context -> Term -> Maybe Ty -> InferredTree -> InferredTree
-unifyToRootCtxTerm ctx term ty ((Node c children) as tree) =
+unifyToRootCtxTerm : Context -> Term -> InferredTree -> InferredTree
+unifyToRootCtxTerm ctx term ((Node c children) as tree) =
     let
         _ =
             Debug.log "unifyToRootCtxTerm" ( c.ctx, ctx )
@@ -123,7 +123,7 @@ unifyToRootCtxTerm ctx term ty ((Node c children) as tree) =
                 unifyTypeTerm (substFtvTerm s1 c.term) (substFtvTerm s1 term)
                     |> Result.map (\s2 -> s2 ++ s1)
             )
-        |> Result.map (\ss -> applySSTree (Node { c | ss = ss ++ c.ss } children))
+        |> Result.map (\ss -> substFtvTree (Node { c | ss = ss ++ c.ss } children))
         |> Result.withDefault tree
 
 
@@ -557,11 +557,11 @@ inferTree typeSystem rootFtvs rootType =
                 builtTree |> Outcome.map (\(Node c _) -> Debug.log "builtTree ftvs: " c.ftvs)
         in
         builtTree
-            |> Outcome.map applySSTree
+            |> Outcome.map substFtvTree
             |> Outcome.map
                 (case typeSystem of
                     HM _ ->
-                        unifyToRootCtxTerm rootCtx rootTerm Nothing
+                        unifyToRootCtxTerm rootCtx rootTerm
 
                     _ ->
                         identity

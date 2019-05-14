@@ -1,6 +1,7 @@
 {
     "author": "Martin Škrovina",
     "name": "lambda-tree",
+    "license": "MIT",
     "version": "0.0.1",
     "description": "Lambda Derivation Tree Tool",
     "main": "index.js",

@@ -134,36 +134,24 @@ hintWithMapperAtPath mapper typeSystem rootPath rootTree =
         exprTree =
             getExprTree typeSystem rootTree
 
-        walkTree : Set String -> List Int -> ExprTree -> Result String (Outcome String InferredTree)
-        walkTree ftvs path (Node ({ ctx, term, ty } as content) children) =
-            case path of
-                [] ->
-                    case ( ctx, term ) of
-                        ( Ok justCtx, Ok justTerm ) ->
-                            Ok <| inferTree typeSystem ftvs (ty |> Result.toMaybe) justCtx justTerm
-
-                        _ ->
-                            Err <| "There is an error in context or term of the expression to be inferred"
-
-                x :: xs ->
-                    let
-                        otherSubTrees =
-                            List.Extra.removeAt x children
-
-                        subTreesFtvs =
-                            otherSubTrees
-                                |> List.map collectFtvsForExprTree
-                                |> List.foldl Set.union Set.empty
-
-                        subTreesAndMyFtvs =
-                            subTreesFtvs |> Set.union (collectFtvsForExprTreeContent content)
-                    in
-                    List.Extra.getAt x children
-                        |> Result.fromMaybe ("No child at index " ++ String.fromInt x)
-                        |> Result.andThen (walkTree subTreesAndMyFtvs xs)
+        ftvs =
+            exprTree
+                |> Utils.Tree.mapTreeAtPath rootPath (\(Node c _) -> Node c [])
+                |> collectFtvsForExprTree
 
         maybeInferredTree =
-            walkTree Set.empty rootPath exprTree
+            exprTree
+                |> Utils.Tree.treeAtPath rootPath
+                |> Result.fromMaybe "Inconsistent state, no tree at path"
+                |> Result.andThen
+                    (\(Node { ctx, term, ty } _) ->
+                        case ( ctx, term ) of
+                            ( Ok justCtx, Ok justTerm ) ->
+                                Ok <| inferTree typeSystem ftvs (ty |> Result.toMaybe) justCtx justTerm
+
+                            _ ->
+                                Err "There is an error in context or term of the expression to be inferred"
+                    )
     in
     maybeInferredTree
         |> (Result.map <|

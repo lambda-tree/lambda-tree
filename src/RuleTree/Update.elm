@@ -28,8 +28,8 @@ update msg settings tree =
             updateTextAtPath path kind text tree
                 |> Outcome.fine
 
-        HintTreeOneLevel path ->
-            doHint1LevelAtPath (getTypeSystem settings) path tree
+        HintPremisesMsg path ->
+            hintPremises (getTypeSystem settings) path tree
                 |> Outcome.fine
 
         RemoveMsg path ->
@@ -52,8 +52,8 @@ update msg settings tree =
             mapContentAtPath path (\c -> { c | statusPopover = state }) tree
                 |> Outcome.fine
 
-        HintTreeMsg path ->
-            doHintAtPath (getTypeSystem settings) path tree
+        HintBranchMsg path ->
+            hintBranch (getTypeSystem settings) path tree
 
         HintRuleSelectionMsg path ->
             hintRuleSelection (getTypeSystem settings) path tree
@@ -104,13 +104,13 @@ inferredTreeToRuleTree =
         )
 
 
-doHintAtPath : TypeSystem -> List Int -> RuleTree -> Outcome String RuleTree
-doHintAtPath =
+hintBranch : TypeSystem -> List Int -> RuleTree -> Outcome String RuleTree
+hintBranch =
     hintWithMapperAtPath (\_ -> inferredTreeToRuleTree)
 
 
-doHint1LevelAtPath : TypeSystem -> List Int -> RuleTree -> RuleTree
-doHint1LevelAtPath typeSystem path tree =
+hintPremises : TypeSystem -> List Int -> RuleTree -> RuleTree
+hintPremises typeSystem path tree =
     hintWithMapperAtPath
         (\_ inferredTree ->
             let

@@ -21,9 +21,39 @@ ruleDropdown dropdownState { button, path, rules, hintDisabled } =
         , toggleMsg = RuleDropdownMsg path
         , toggleButton = button
         , items =
-            [ Dropdown.buttonItem [ HtmlE.onClick <| HintTreeOneLevel path, HtmlA.disabled hintDisabled ] [ Html.text "Autocomplete Premises" ]
-            , Dropdown.buttonItem [ HtmlE.onClick <| HintTreeMsg path, HtmlA.disabled hintDisabled ] [ Html.text "Autocomplete Branch" ]
-            , Dropdown.buttonItem [ HtmlE.onClick <| HintRuleSelectionMsg path, HtmlA.disabled hintDisabled ] [ Html.text "Hint Rule Selection" ]
+            [ Dropdown.buttonItem
+                [ HtmlE.onClick <| HintPremisesMsg path
+                , HtmlA.disabled hintDisabled
+                , HtmlA.title <|
+                    if hintDisabled then
+                        "Error in term"
+
+                    else
+                        "Automatically fill in all the premises"
+                ]
+                [ Html.text "Autocomplete Premises" ]
+            , Dropdown.buttonItem
+                [ HtmlE.onClick <| HintBranchMsg path
+                , HtmlA.disabled hintDisabled
+                , HtmlA.title <|
+                    if hintDisabled then
+                        "Error in term"
+
+                    else
+                        "Automatically complete the whole branch of the derivation tree"
+                ]
+                [ Html.text "Autocomplete Branch" ]
+            , Dropdown.buttonItem
+                [ HtmlE.onClick <| HintRuleSelectionMsg path
+                , HtmlA.disabled hintDisabled
+                , HtmlA.title <|
+                    if hintDisabled then
+                        "Error in term"
+
+                    else
+                        "Automatically select the correct rule"
+                ]
+                [ Html.text "Hint Rule Selection" ]
             , Dropdown.divider
             , Dropdown.buttonItem [ HtmlE.onClick <| RuleSelectedMsg path NoRule, smallCapsClass ] [ Html.text "No Rule" ]
             ]

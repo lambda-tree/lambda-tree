@@ -270,89 +270,69 @@ doSubstitution sm tree =
 
 
 setRule : List Int -> Rule -> RuleTree -> RuleTree
-setRule path rule tree =
-    case tree of
-        Node content children ->
-            case path of
-                [] ->
-                    case rule of
-                        TTrue ->
-                            Node { content | rule = rule } []
+setRule path rule =
+    Utils.Tree.mapTreeAtPath path
+        (\(Node content _) ->
+            case rule of
+                TTrue ->
+                    Node { content | rule = rule } []
 
-                        TFalse ->
-                            Node { content | rule = rule } []
+                TFalse ->
+                    Node { content | rule = rule } []
 
-                        TVar ->
-                            Node { content | rule = rule } []
+                TVar ->
+                    Node { content | rule = rule } []
 
-                        TVarInst ->
-                            Node { content | rule = rule } []
+                TVarInst ->
+                    Node { content | rule = rule } []
 
-                        TAbs ->
-                            Node { content | rule = rule } [ emptyTree ]
+                TAbs ->
+                    Node { content | rule = rule } [ emptyTree ]
 
-                        TApp ->
-                            Node { content | rule = rule } [ emptyTree, emptyTree ]
+                TApp ->
+                    Node { content | rule = rule } [ emptyTree, emptyTree ]
 
-                        TIf ->
-                            Node { content | rule = rule } [ emptyTree, emptyTree, emptyTree ]
+                TIf ->
+                    Node { content | rule = rule } [ emptyTree, emptyTree, emptyTree ]
 
-                        TTApp ->
-                            Node { content | rule = rule } [ emptyTree ]
+                TTApp ->
+                    Node { content | rule = rule } [ emptyTree ]
 
-                        TTAbs ->
-                            Node { content | rule = rule } [ emptyTree ]
+                TTAbs ->
+                    Node { content | rule = rule } [ emptyTree ]
 
-                        TLet ->
-                            Node { content | rule = rule } [ emptyTree, emptyTree ]
+                TLet ->
+                    Node { content | rule = rule } [ emptyTree, emptyTree ]
 
-                        TLetGen ->
-                            Node { content | rule = rule } [ emptyTree, emptyTree ]
+                TLetGen ->
+                    Node { content | rule = rule } [ emptyTree, emptyTree ]
 
-                        TGen ->
-                            Node { content | rule = rule } [ emptyTree ]
+                TGen ->
+                    Node { content | rule = rule } [ emptyTree ]
 
-                        TInst ->
-                            Node { content | rule = rule } [ emptyTree ]
+                TInst ->
+                    Node { content | rule = rule } [ emptyTree ]
 
-                        NoRule ->
-                            Node { content | rule = rule } []
-
-                idx :: subPath ->
-                    Node content (children |> List.Extra.updateAt idx (setRule subPath rule))
+                NoRule ->
+                    Node { content | rule = rule } []
+        )
 
 
 updateTextAtPath : List Int -> TextKind -> String -> RuleTree -> RuleTree
-updateTextAtPath path kind text tree =
+updateTextAtPath path kind text =
     let
         preprocessed =
             Lambda.Parse.preprocess text
     in
-    case tree of
-        Node content children ->
-            case path of
-                [] ->
-                    case kind of
-                        CtxKind ->
-                            Node { content | ctx = preprocessed } children
+    Utils.Tree.mapContentAtPath path
+        (\content ->
+            case kind of
+                CtxKind ->
+                    { content | ctx = preprocessed }
 
-                        TermKind ->
-                            Node { content | term = preprocessed } children
+                TermKind ->
+                    { content | term = preprocessed }
 
-                        TyKind ->
-                            Node { content | ty = preprocessed } children
-
-                idx :: subPath ->
-                    let
-                        updatedChildren =
-                            List.indexedMap
-                                (\i t ->
-                                    if i == idx then
-                                        updateTextAtPath subPath kind text t
-
-                                    else
-                                        t
-                                )
-                                children
-                    in
-                    Node content updatedChildren
+                TyKind ->
+                    { content | ty = preprocessed }
+        )

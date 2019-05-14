@@ -12,7 +12,6 @@ type Msg
     | HintRuleSelectionMsg (List Int)
     | HintTreeMsg (List Int)
     | RemoveMsg (List Int)
-    | SelectRuleMsg (List Int)
     | RuleSelectedMsg (List Int) Rule
     | ClearTreeMsg
     | RuleDropdownMsg (List Int) Dropdown.State

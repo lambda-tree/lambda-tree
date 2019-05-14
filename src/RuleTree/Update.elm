@@ -44,9 +44,6 @@ update msg settings tree =
             emptyTree
                 |> Outcome.fine
 
-        SelectRuleMsg _ ->
-            Debug.todo "Update: SelectRuleMsg"
-
         RuleDropdownMsg path state ->
             mapContentAtPath path (\c -> { c | dropdown = state }) tree
                 |> Outcome.fine
@@ -179,55 +176,6 @@ hintWithMapperAtPath mapper typeSystem rootPath rootTree =
            )
         |> Outcome.fromResult (Outcome.fine rootTree)
         |> Outcome.join
-
-
-doHint : TypeSystem -> RuleTree -> RuleTree
-doHint typeSystem ((Node ({ ctx, term, ty } as content) _) as t1) =
-    let
-        maybeCtx =
-            parseCtx ctx
-                |> Result.toMaybe
-                |> Maybe.andThen (fromParseContext >> Result.toMaybe)
-
-        maybeTerm =
-            maybeCtx
-                |> Maybe.andThen
-                    (\justCtx ->
-                        parseTerm term
-                            |> Result.toMaybe
-                            |> Maybe.andThen (fromParseTerm justCtx >> Result.toMaybe)
-                    )
-
-        maybeTy =
-            maybeCtx
-                |> Maybe.andThen
-                    (\justCtx ->
-                        parseType ty
-                            |> Result.toMaybe
-                            |> Maybe.map (fromParseType justCtx)
-                    )
-    in
-    case ( maybeCtx, maybeTerm ) of
-        ( Just justCtx, Just justTerm ) ->
-            inferTree typeSystem Set.empty maybeTy justCtx justTerm
-                |> Outcome.toResult
-                |> Result.mapError (Debug.log "doHint: buildTree error:")
-                |> Result.toMaybe
-                |> Maybe.map
-                    (Utils.Tree.map
-                        (\inferredContent ->
-                            { emptyTreeContent
-                                | ctx = inferredContent.ctx |> Lambda.Show.Print.showCtx |> Lambda.Show.Text.show
-                                , term = inferredContent.term |> Lambda.Show.Print.showTerm inferredContent.ctx |> Lambda.Show.Text.show
-                                , ty = inferredContent.ty |> Lambda.Show.Print.showType inferredContent.ctx |> Lambda.Show.Text.show
-                                , rule = inferredContent.rule
-                            }
-                        )
-                    )
-                |> Maybe.withDefault t1
-
-        _ ->
-            t1
 
 
 substFtvRuleTree : SubstitutionFtv -> RuleTree -> RuleTree

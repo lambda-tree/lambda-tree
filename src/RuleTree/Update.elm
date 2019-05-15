@@ -62,7 +62,7 @@ update msg settings tree =
 
 hintRuleSelection : TypeSystem -> List Int -> RuleTree -> RuleTree
 hintRuleSelection typeSystem path tree =
-    hintWithMapperAtPath (\ruleTree (Node { rule } _) -> setRule [] rule ruleTree) typeSystem path tree
+    hintWithMapperAtPath (\ruleTree (Node { rule } _) -> setRule [] rule ruleTree) False typeSystem path tree
         |> Outcome.value
 
 
@@ -106,7 +106,7 @@ inferredTreeToRuleTree =
 
 hintBranch : TypeSystem -> List Int -> RuleTree -> Outcome String RuleTree
 hintBranch =
-    hintWithMapperAtPath (\_ -> inferredTreeToRuleTree)
+    hintWithMapperAtPath (\_ -> inferredTreeToRuleTree) True
 
 
 hintPremises : TypeSystem -> List Int -> RuleTree -> RuleTree
@@ -122,26 +122,27 @@ hintPremises typeSystem path tree =
                 -- Remove the rules of the children
                 |> (\(Node c children) -> Node c (List.map (setRule [] NoRule) children))
         )
+        True
         typeSystem
         path
         tree
         |> Outcome.value
 
 
-hintWithMapperAtPath : (RuleTree -> InferredTree -> RuleTree) -> TypeSystem -> List Int -> RuleTree -> Outcome String RuleTree
-hintWithMapperAtPath mapper typeSystem rootPath rootTree =
+hintWithMapperAtPath : (RuleTree -> InferredTree -> RuleTree) -> Bool -> TypeSystem -> List Int -> RuleTree -> Outcome String RuleTree
+hintWithMapperAtPath mapper applySubst typeSystem path tree =
     let
         exprTree =
-            getExprTree typeSystem rootTree
+            getExprTree typeSystem tree
 
         ftvs =
             exprTree
-                |> Utils.Tree.mapTreeAtPath rootPath (\(Node c _) -> Node c [])
+                |> Utils.Tree.mapTreeAtPath path (\(Node c _) -> Node c [])
                 |> collectFtvsForExprTree
 
         maybeInferredTree =
             exprTree
-                |> Utils.Tree.treeAtPath rootPath
+                |> Utils.Tree.treeAtPath path
                 |> Result.fromMaybe "Inconsistent state, no tree at path"
                 |> Result.andThen
                     (\(Node { ctx, term, ty } _) ->
@@ -157,12 +158,17 @@ hintWithMapperAtPath mapper typeSystem rootPath rootTree =
         |> (Result.map <|
                 Outcome.map
                     (\((Node { ss } _) as inferredTree) ->
-                        rootTree
-                            |> Utils.Tree.mapTreeAtPath rootPath (\ruleTreeAtPath -> mapper ruleTreeAtPath inferredTree)
-                            |> substFtvRuleTree ss
+                        tree
+                            |> Utils.Tree.mapTreeAtPath path (\ruleTreeAtPath -> mapper ruleTreeAtPath inferredTree)
+                            |> (if applySubst then
+                                    substFtvRuleTree ss
+
+                                else
+                                    identity
+                               )
                     )
            )
-        |> Outcome.fromResult (Outcome.fine rootTree)
+        |> Outcome.fromResult (Outcome.fine tree)
         |> Outcome.join
 
 

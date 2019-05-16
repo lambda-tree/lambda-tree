@@ -7,12 +7,11 @@ import ErrorReport.Utils exposing (showError)
 import File
 import File.Download
 import File.Select
-import Lambda.Show.LaTex
 import Message exposing (..)
 import Model exposing (..)
 import Ports exposing (cache)
+import RuleTree.ShowLaTex
 import RuleTree.Update exposing (doSubstitution)
-import RuleTree.ViewModel exposing (getExprTree)
 import Settings.Update
 import Settings.Utils exposing (getTypeSystem, setTypeSystem)
 import Substitutor.Init
@@ -98,17 +97,16 @@ update msg model =
 
         ExportJsonMsg ->
             ( model
-            , File.Download.string "tree.json" "application/json" (Encode.toString model)
+            , File.Download.string "tree.json" "application/json" <|
+                Encode.toString model
             )
 
         ExportLaTexMsg ->
             ( model
-            , File.Download.string "tree.tex"
-                "application/x-tex"
-                (getExprTree (getTypeSystem model.settings) model.ruleTree
-                    |> Lambda.Show.LaTex.showExprTree
-                    |> Lambda.Show.LaTex.wrapProofTreeForExport
-                )
+            , File.Download.string "tree.tex" "application/x-tex" <|
+                RuleTree.ShowLaTex.show
+                    (getTypeSystem model.settings)
+                    model.ruleTree
             )
 
 

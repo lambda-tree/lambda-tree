@@ -50,6 +50,7 @@ proofCell showPlaceholders checkErrors content msgCreator =
             [ lambdaExprInput <|
                 [ View.ExpressionInput.Value content.ctx.text
                 , View.ExpressionInput.OnInput (msgCreator CtxKind)
+                , View.ExpressionInput.ExpandLambdaShortcuts True
                 , View.ExpressionInput.Error <|
                     if checkErrors then
                         content.ctx.error
@@ -73,6 +74,7 @@ proofCell showPlaceholders checkErrors content msgCreator =
             [ lambdaExprInput <|
                 [ View.ExpressionInput.Value content.term.text
                 , View.ExpressionInput.OnInput (msgCreator TermKind)
+                , View.ExpressionInput.ExpandLambdaShortcuts True
                 , View.ExpressionInput.Error <|
                     if checkErrors then
                         content.term.error
@@ -96,6 +98,7 @@ proofCell showPlaceholders checkErrors content msgCreator =
             [ lambdaExprInput <|
                 [ View.ExpressionInput.Value content.ty.text
                 , View.ExpressionInput.OnInput (msgCreator TyKind)
+                , View.ExpressionInput.ExpandLambdaShortcuts True
                 , View.ExpressionInput.Error <|
                     if checkErrors then
                         content.ty.error

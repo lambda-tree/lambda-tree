@@ -42,6 +42,7 @@ view substitution =
             , View.ExpressionInput.Placeholder "e.g.   X2 → Bool"
             , View.ExpressionInput.Error (parsedType substitution |> extractError |> Maybe.map ParseError)
             , View.ExpressionInput.OnInput (SubstitutionMsg << Substitutor.Message.TyChangedMsg)
+            , View.ExpressionInput.ExpandLambdaShortcuts True
             , View.ExpressionInput.Size 14
             ]
         , spacer 20

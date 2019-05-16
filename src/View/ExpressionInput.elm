@@ -16,6 +16,7 @@ type LambdaExprInputOption msg
     | OnEnter (String -> msg)
     | Error (Maybe ExprError)
     | Placeholder String
+    | ExpandLambdaShortcuts Bool
     | Size Int
 
 
@@ -95,6 +96,18 @@ lambdaExprInput options =
         placeholder =
             List.map A.placeholder placeholderStrings
 
+        replaceSpecialCharsClass =
+            options
+                |> List.filterMap
+                    (\x ->
+                        case x of
+                            ExpandLambdaShortcuts True ->
+                                Just <| A.class "expand-lambda-shortcuts"
+
+                            _ ->
+                                Nothing
+                    )
+
         size =
             options
                 |> List.filterMap
@@ -150,7 +163,13 @@ lambdaExprInput options =
                 ]
             , borderRadius <| rem 0.5
             ]
-            (value ++ onInput ++ onEnter ++ placeholder ++ [ A.autocomplete False, A.spellcheck False, A.size size ])
+            (value
+                ++ onInput
+                ++ onEnter
+                ++ placeholder
+                ++ replaceSpecialCharsClass
+                ++ [ A.autocomplete False, A.spellcheck False, A.size size ]
+            )
             []
         , styled S.span
             [ commonStyles

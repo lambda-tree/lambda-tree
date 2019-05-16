@@ -8,7 +8,6 @@ import Lambda.ParseTransform exposing (fromParseContext, fromParseTerm, fromPars
 import Lambda.Rule exposing (ExprTree, ExprTreeContent, Rule(..))
 import Lambda.Show.Print
 import Lambda.Show.Text
-import List.Extra
 import RuleTree.Message exposing (..)
 import RuleTree.Model exposing (..)
 import RuleTree.ViewModel exposing (getExprTree)
@@ -314,19 +313,15 @@ setRule path rule =
 
 updateTextAtPath : List Int -> TextKind -> String -> RuleTree -> RuleTree
 updateTextAtPath path kind text =
-    let
-        preprocessed =
-            Lambda.Parse.preprocess text
-    in
     Utils.Tree.mapContentAtPath path
         (\content ->
             case kind of
                 CtxKind ->
-                    { content | ctx = preprocessed }
+                    { content | ctx = text }
 
                 TermKind ->
-                    { content | term = preprocessed }
+                    { content | term = text }
 
                 TyKind ->
-                    { content | ty = preprocessed }
+                    { content | ty = text }
         )

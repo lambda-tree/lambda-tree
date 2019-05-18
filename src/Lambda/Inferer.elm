@@ -98,7 +98,7 @@ unifyWithRootType typeSystem ftvs maybeTy ((Node c children) as tree) =
                             |> Result.toMaybe
 
                     _ ->
-                        (Debug.log "unif" <| unifyType (Debug.log "c.ty" c.ty) (degeneralizeType emptycontext <| Debug.log "ty" ty))
+                        (Debug.log "unif" <| unifyType (Debug.log "c.ty" c.ty) (Debug.log "ty" ty))
                             |> Result.map (\ss -> substFtvTree (Node { c | ss = ss ++ c.ss } children))
                             |> Result.toMaybe
             )

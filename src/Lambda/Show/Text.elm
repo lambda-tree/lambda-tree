@@ -94,6 +94,9 @@ show print =
                 |> List.map show
                 |> String.join ", "
 
+        SequenceSet p1 ->
+            g [ "{", show p1, "}" ]
+
         Gamma ->
             "Γ"
 

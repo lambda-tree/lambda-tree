@@ -102,6 +102,9 @@ show print =
                 |> List.intersperse (txt ", ")
                 |> g
 
+        SequenceSet p1 ->
+            g [ txt "{", show p1, txt "}" ]
+
         Gamma ->
             txt "Γ"
 

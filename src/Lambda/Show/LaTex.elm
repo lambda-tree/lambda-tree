@@ -1,8 +1,8 @@
 module Lambda.Show.LaTex exposing (..)
 
-import Lambda.Rule exposing (ExprTree, Rule(..), isTerminalRule)
+import Lambda.Rule exposing (ExprTree, ExprTreeContent, Rule(..), TypeStatement)
 import Lambda.Show.Print exposing (..)
-import Utils.Tree
+import Utils.Tree exposing (Tree(..))
 
 
 show : Print -> String
@@ -88,6 +88,9 @@ show print =
             p1
                 |> List.map show
                 |> String.join ", "
+
+        SequenceSet p1 ->
+            g [ "\\{", show p1, "\\}" ]
 
         Gamma ->
             const "Gamma"
@@ -208,39 +211,130 @@ showRule rule =
                 NoRule ->
                     "-"
     in
-    cmd "textsc" [ cmd "textbf" [ g [ "(", text, ")" ] ] ]
+    cmd "textsc" [ g [ "(", text, ")" ] ]
+
+
+type ShowTreeContent
+    = Judgement ExprTreeContent
+    | Element TypeStatement
+
+
+showTreeContent : ShowTreeContent -> String
+showTreeContent c =
+    case c of
+        Judgement content ->
+            case ( content.ctx, content.term, content.ty ) of
+                ( Ok ctx, Ok term, Ok ty ) ->
+                    Imply (showCtx ctx) (OfType (showTerm ctx term) (showType ctx ty))
+                        |> show
+
+                _ ->
+                    error "Error parsing context, term or type"
+
+        Element { ctx, term, ty } ->
+            ElemOf
+                (OfType (showTerm ctx term)
+                    (showType ctx ty)
+                )
+                (SequenceSet <| showCtx ctx)
+                |> show
+
+
+isTerminalRule : Rule -> Bool
+isTerminalRule rule =
+    case rule of
+        TTrue ->
+            True
+
+        TFalse ->
+            True
+
+        TVar ->
+            False
+
+        TVarInst ->
+            True
+
+        TAbs ->
+            False
+
+        TApp ->
+            False
+
+        TIf ->
+            False
+
+        TTAbs ->
+            False
+
+        TTApp ->
+            False
+
+        TLet ->
+            False
+
+        TLetGen ->
+            False
+
+        TGen ->
+            False
+
+        TInst ->
+            False
+
+        NoRule ->
+            False
 
 
 showExprTree : ExprTree -> String
 showExprTree tree =
     tree
-        |> Utils.Tree.foldTree
-            (\content subPrints ->
-                case ( content.ctx, content.term, content.ty ) of
-                    ( Ok ctx, Ok term, Ok ty ) ->
-                        Imply (showCtx ctx) (OfType (showTerm ctx term) (showType ctx ty))
-                            |> show
-                            |> (\x ->
-                                    if isTerminalRule content.rule then
-                                        x ++ (regular <| "~" ++ showRule content.rule)
+        |> Utils.Tree.mapTree
+            (\(Node content c) ->
+                case content.rule of
+                    TVar ->
+                        case ( content.ctx, content.term, content.ty ) of
+                            ( Ok ctx, Ok term, Ok ty ) ->
+                                Node (Judgement content)
+                                    [ Node (Element { ctx = ctx, term = term, ty = ty }) [] ]
 
-                                    else
-                                        x
-                               )
-                            |> cmdForSubTreeCount (List.length subPrints)
-                            |> (\x ->
-                                    if isTerminalRule content.rule then
-                                        x
-
-                                    else
-                                        cmd "RightLabel" [ showRule content.rule ]
-                                            ++ "\n"
-                                            ++ x
-                               )
-                            |> (\x -> String.join "\n" subPrints ++ x)
+                            _ ->
+                                Node (Judgement content) []
 
                     _ ->
-                        error "Error parsing context, term or type"
+                        Node (Judgement content) []
+            )
+        |> Utils.Tree.foldTree
+            (\content subPrints ->
+                showTreeContent content
+                    |> (\x ->
+                            case content of
+                                Judgement c ->
+                                    if isTerminalRule c.rule then
+                                        x ++ (regular <| "~" ++ showRule c.rule)
+
+                                    else
+                                        x
+
+                                _ ->
+                                    x
+                       )
+                    |> cmdForSubTreeCount (List.length subPrints)
+                    |> (\x ->
+                            case content of
+                                Judgement c ->
+                                    if isTerminalRule c.rule then
+                                        x
+
+                                    else
+                                        cmd "RightLabel" [ showRule c.rule ]
+                                            ++ "\n"
+                                            ++ x
+
+                                _ ->
+                                    x
+                       )
+                    |> (\x -> String.join "\n" subPrints ++ x)
             )
 
 
@@ -257,13 +351,13 @@ cmdForSubTreeCount subTreeCount text =
             cmd "BinaryInfC" [ math text ]
 
         3 ->
-            cmd "TrinaryInf" [ math text ]
+            cmd "TrinaryInfC" [ math text ]
 
         4 ->
-            cmd "QuaternaryInf" [ math text ]
+            cmd "QuaternaryInfC" [ math text ]
 
         5 ->
-            cmd "QuinaryInf" [ math text ]
+            cmd "QuinaryInfC" [ math text ]
 
         _ ->
             error "Too many proof children. Max supported count is 5"

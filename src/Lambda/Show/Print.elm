@@ -28,6 +28,7 @@ type Print
     | Let Print Print Print
     | AddToCtx Print Print
     | SubstType Print Print Print
+    | SequenceSet Print
     | TypeAppl Print Print
     | TypeAbs Print Print
     | Bracket Print

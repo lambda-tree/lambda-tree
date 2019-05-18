@@ -16,6 +16,15 @@ map f t =
             Node (f x) (List.map (map f) nodes)
 
 
+mapTree : (Tree a -> Tree b) -> Tree a -> Tree b
+mapTree f t =
+    case t of
+        Node _ nodes ->
+            case f t of
+                Node y newNodes ->
+                    Node y <| List.map (mapTree f) nodes ++ newNodes
+
+
 mapWithExtra : (a -> Tree a -> b) -> Tree a -> Tree b
 mapWithExtra f t =
     case t of

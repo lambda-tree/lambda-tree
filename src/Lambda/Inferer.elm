@@ -510,7 +510,7 @@ inferTree typeSystem rootFtvs rootType =
                                                                         { ctx = ctx
                                                                         , term = t
                                                                         , ty = substFtvTy sThenElse n3.ty
-                                                                        , rule = TTApp
+                                                                        , rule = TIf
                                                                         , ss = sThenElse ++ n3.ss ++ n2.ss ++ n1.ss
                                                                         , ftvs = ftvs |> Set.union n1.ftvs |> Set.union n2.ftvs |> Set.union n3.ftvs
                                                                         }
@@ -522,7 +522,7 @@ inferTree typeSystem rootFtvs rootType =
                                                                     { ctx = ctx
                                                                     , term = t
                                                                     , ty = n2.ty
-                                                                    , rule = TTApp
+                                                                    , rule = TIf
                                                                     , ss = n3.ss ++ n2.ss ++ n1.ss
                                                                     , ftvs = ftvs |> Set.union n1.ftvs |> Set.union n2.ftvs |> Set.union n3.ftvs
                                                                     }

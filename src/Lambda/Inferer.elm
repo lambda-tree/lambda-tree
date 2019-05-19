@@ -98,7 +98,16 @@ unifyWithRootType typeSystem ftvs maybeTy ((Node c children) as tree) =
                             |> Result.toMaybe
 
                     _ ->
-                        (Debug.log "unif" <| unifyType (Debug.log "c.ty" c.ty) (Debug.log "ty" ty))
+                        let
+                            unifyOriginalTy =
+                                case typeSystem of
+                                    HM _ ->
+                                        degeneralizeType emptycontext ty
+
+                                    _ ->
+                                        ty
+                        in
+                        (Debug.log "unif" <| unifyType (Debug.log "c.ty" c.ty) (Debug.log "ty" <| unifyOriginalTy))
                             |> Result.map (\ss -> substFtvTree (Node { c | ss = ss ++ c.ss } children))
                             |> Result.toMaybe
             )
@@ -494,43 +503,92 @@ inferTree typeSystem rootFtvs rootType =
                             )
 
                 TmIf _ t1 t2 t3 ->
-                    buildTree ftvs ctx t1
-                        |> Outcome.andThen
-                            (\((Node n1 _) as bt1) ->
-                                buildTree (ftvs |> Set.union n1.ftvs) (substFtvCtx n1.ss ctx) t2
-                                    |> Outcome.andThen
-                                        (\((Node n2 _) as bt2) ->
-                                            buildTree (ftvs |> Set.union n1.ftvs |> Set.union n2.ftvs) (substFtvCtx (n2.ss ++ n1.ss) ctx) t3
-                                                |> Outcome.andThen
-                                                    (\((Node n3 _) as bt3) ->
-                                                        unifyType n2.ty n3.ty
-                                                            |> Result.map
-                                                                (\sThenElse ->
-                                                                    Node
-                                                                        { ctx = ctx
-                                                                        , term = t
-                                                                        , ty = substFtvTy sThenElse n3.ty
-                                                                        , rule = TIf
-                                                                        , ss = sThenElse ++ n3.ss ++ n2.ss ++ n1.ss
-                                                                        , ftvs = ftvs |> Set.union n1.ftvs |> Set.union n2.ftvs |> Set.union n3.ftvs
-                                                                        }
-                                                                        [ bt1, bt2, bt3 ]
-                                                                )
-                                                            |> Result.mapError (\e -> "Types of 'Then' & 'Else' clauses can not be unified. " ++ e)
-                                                            |> Outcome.fromResult
-                                                                (Node
+                    case typeSystem of
+                        HM _ ->
+                            buildTree ftvs ctx t1
+                                |> Outcome.andThen
+                                    (\((Node n1 _) as bt1) ->
+                                        unifyType n1.ty (TyConst TyBool)
+                                            |> Outcome.fromResult []
+                                            |> Outcome.andThen
+                                                (\sIf ->
+                                                    buildTree (ftvs |> Set.union n1.ftvs) (substFtvCtx (sIf ++ n1.ss) ctx) t2
+                                                        |> Outcome.andThen
+                                                            (\((Node n2 _) as bt2) ->
+                                                                buildTree (ftvs |> Set.union n1.ftvs |> Set.union n2.ftvs)
+                                                                    (substFtvCtx (n2.ss ++ sIf ++ n1.ss) ctx)
+                                                                    t3
+                                                                    |> Outcome.andThen
+                                                                        (\((Node n3 _) as bt3) ->
+                                                                            unifyType n2.ty n3.ty
+                                                                                |> Result.map
+                                                                                    (\sThenElse ->
+                                                                                        Node
+                                                                                            { ctx = ctx
+                                                                                            , term = t
+                                                                                            , ty = substFtvTy sThenElse n3.ty
+                                                                                            , rule = TIf
+                                                                                            , ss =
+                                                                                                sThenElse
+                                                                                                    ++ n3.ss
+                                                                                                    ++ n2.ss
+                                                                                                    ++ sIf
+                                                                                                    ++ n1.ss
+                                                                                            , ftvs =
+                                                                                                n1.ftvs
+                                                                                                    |> Set.union n2.ftvs
+                                                                                                    |> Set.union n3.ftvs
+                                                                                            }
+                                                                                            [ bt1, bt2, bt3 ]
+                                                                                    )
+                                                                                |> Result.mapError (\e -> "Types of 'Then' & 'Else' clauses can not be unified. " ++ e)
+                                                                                |> Outcome.fromResult
+                                                                                    (Node
+                                                                                        { ctx = ctx
+                                                                                        , term = t
+                                                                                        , ty = n2.ty
+                                                                                        , rule = TIf
+                                                                                        , ss =
+                                                                                            n3.ss
+                                                                                                ++ n2.ss
+                                                                                                ++ sIf
+                                                                                                ++ n1.ss
+                                                                                        , ftvs =
+                                                                                            n1.ftvs
+                                                                                                |> Set.union n2.ftvs
+                                                                                                |> Set.union n3.ftvs
+                                                                                        }
+                                                                                        [ bt1, bt2, bt3 ]
+                                                                                    )
+                                                                        )
+                                                            )
+                                                )
+                                    )
+
+                        _ ->
+                            buildTree ftvs ctx t1
+                                |> Outcome.andThen
+                                    (\((Node _ _) as bt1) ->
+                                        buildTree ftvs ctx t2
+                                            |> Outcome.andThen
+                                                (\((Node n2 _) as bt2) ->
+                                                    buildTree ftvs
+                                                        ctx
+                                                        t3
+                                                        |> Outcome.map
+                                                            (\((Node _ _) as bt3) ->
+                                                                Node
                                                                     { ctx = ctx
                                                                     , term = t
                                                                     , ty = n2.ty
                                                                     , rule = TIf
-                                                                    , ss = n3.ss ++ n2.ss ++ n1.ss
-                                                                    , ftvs = ftvs |> Set.union n1.ftvs |> Set.union n2.ftvs |> Set.union n3.ftvs
+                                                                    , ss = []
+                                                                    , ftvs = Set.empty
                                                                     }
                                                                     [ bt1, bt2, bt3 ]
-                                                                )
-                                                    )
-                                        )
-                            )
+                                                            )
+                                                )
+                                    )
     in
     \rootCtx rootTerm ->
         let

@@ -68,13 +68,17 @@ ruleList rules =
                                     ]
                            )
                 )
-            |> List.intersperse
-                (styled S.div
-                    [ margin2 (px 15) (px 0) ]
-                    []
-                    [ styled S.div [ height <| px 1, minHeight <| px 1, backgroundColor <| theme.lightLine, flex auto, margin2 (px 0) (px 10) ] [] []
+            |> List.map
+                (\el ->
+                    [ el
+                    , styled S.div
+                        [ margin2 (px 15) (px 0) ]
+                        []
+                        [ styled S.div [ height <| px 1, minHeight <| px 1, backgroundColor <| theme.lightLine, flex auto, margin2 (px 0) (px 10) ] [] []
+                        ]
                     ]
                 )
+            |> List.concat
         )
 
 

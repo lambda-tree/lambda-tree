@@ -151,7 +151,7 @@ ruleLine { dropdown, statusPopover, showDropdown, showStatus, path, selectedRule
                         Nothing
 
                       else
-                        Just <| statusContainer []
+                        Just <| statusContainer [ hairLine ]
                     , Just <|
                         styled S.span
                             [ displayFlex

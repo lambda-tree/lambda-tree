@@ -77,7 +77,7 @@ unifyWithRootType typeSystem ftvs maybeTy ((Node c children) as tree) =
             (\ty ->
                 case ( ty, typeSystem ) of
                     ( TyAll _ _, HM NonDeterministic ) ->
-                        unifyType (Debug.log "c.ty" c.ty) (Debug.log "degenTy" (degeneralizeType emptycontext (Debug.log "ty" ty)))
+                        unifyType c.ty (degeneralizeType emptycontext ty)
                             |> Result.map
                                 (\ss ->
                                     let
@@ -107,7 +107,7 @@ unifyWithRootType typeSystem ftvs maybeTy ((Node c children) as tree) =
                                     _ ->
                                         ty
                         in
-                        (Debug.log "unif" <| unifyType (Debug.log "c.ty" c.ty) (Debug.log "ty" <| unifyOriginalTy))
+                        unifyType c.ty unifyOriginalTy
                             |> Result.map (\ss -> substFtvTree (Node { c | ss = ss ++ c.ss } children))
                             |> Result.toMaybe
             )
@@ -118,17 +118,9 @@ unifyWithRootType typeSystem ftvs maybeTy ((Node c children) as tree) =
 -}
 unifyToRootCtxTerm : Context -> Term -> InferredTree -> InferredTree
 unifyToRootCtxTerm ctx term ((Node c children) as tree) =
-    let
-        _ =
-            Debug.log "unifyToRootCtxTerm" ( c.ctx, ctx )
-    in
     unifyTypeCtx c.ctx ctx
         |> Result.andThen
             (\s1 ->
-                let
-                    _ =
-                        Debug.log "s11111" s1
-                in
                 unifyTypeTerm (substFtvTerm s1 c.term) (substFtvTerm s1 term)
                     |> Result.map (\s2 -> s2 ++ s1)
             )
@@ -609,10 +601,10 @@ inferTree typeSystem rootFtvs rootType =
                     rootTerm
 
             _ =
-                builtTree |> Outcome.map (\(Node c _) -> Debug.log "builtTree SS: " c.ss)
+                builtTree |> Outcome.map (\(Node c _) -> c.ss)
 
             _ =
-                builtTree |> Outcome.map (\(Node c _) -> Debug.log "builtTree ftvs: " c.ftvs)
+                builtTree |> Outcome.map (\(Node c _) -> c.ftvs)
         in
         builtTree
             |> Outcome.map substFtvTree

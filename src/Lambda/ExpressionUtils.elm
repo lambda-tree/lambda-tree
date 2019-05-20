@@ -8,6 +8,13 @@ import Set exposing (Set)
 import Utils.Tree
 
 
+
+-------------------------------------------------------------------------
+-- The following functions are reimplementations of functions provided by B. Pierce in TAPL
+-- https://www.cis.upenn.edu/~bcpierce/tapl/checkers/purefsub/
+-------------------------------------------------------------------------
+
+
 {-| Shift indices by `d` if idx is greater than `c` in term `t`
 -}
 termShiftAbove : Int -> Int -> Term -> Term
@@ -191,7 +198,9 @@ tymap onvar onname ctx typeT =
 
 
 
--- ---------------------------
+------------------------------
+-- End of the TAPL functions
+------------------------------
 
 
 {-| Return free variables of type (for H-M)
@@ -410,10 +419,6 @@ unifyTypeCtx ctx1 ctx2 =
             (\( ( _, b1 ), ( _, b2 ) ) ss ->
                 case ( b1, b2 ) of
                     ( VarBind ty1, VarBind ty2 ) ->
-                        let
-                            _ =
-                                Debug.log "unifyTypeCtx" ( ty1, ty2 )
-                        in
                         ss |> Result.andThen (\s1 -> unifyType (substFtvTy s1 ty1) (substFtvTy s1 ty2) |> Result.map (\s2 -> s2 ++ s1))
 
                     _ ->
@@ -453,7 +458,7 @@ unifyType ty1 ty2 =
                 Ok []
 
             else
-                Err <| "Type constants '" ++ Debug.toString c1 ++ "' & '" ++ Debug.toString c2 ++ "' are not compatible"
+                Err <| "Type constants '" ++ showType [] ty1 ++ "' & '" ++ showType [] ty2 ++ "' are not compatible"
 
         ( TyArr ty11 ty12, TyArr ty21 ty22 ) ->
             unifyType ty11 ty21

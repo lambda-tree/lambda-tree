@@ -76,21 +76,21 @@ ruleTemplateForRule rule =
             { tops =
                 [ Imply Gamma
                     (OfType (SubExpr "M") Sigma)
-                , NotElem Alpha (FV Gamma)
+                , NotElem (TypeVar "X") (FV Gamma)
                 ]
             , bottom =
                 Imply Gamma
-                    (OfType (TypeAbs Alpha (SubExpr "M")) (Forall Alpha Sigma))
+                    (OfType (TypeAbs (TypeVar "X") (SubExpr "M")) (Forall (TypeVar "X") Sigma))
             }
 
         TTApp ->
             { tops =
                 [ Imply Gamma
-                    (OfType (SubExpr "M") (Forall Alpha Sigma))
+                    (OfType (SubExpr "M") (Forall (TypeVar "X") Sigma))
                 ]
             , bottom =
                 Imply Gamma
-                    (OfType (TypeAppl (SubExpr "M") (Sigma |> Prime)) (SubstType (Sigma |> Prime) Alpha Sigma))
+                    (OfType (TypeAppl (SubExpr "M") (Sigma |> Prime)) (SubstType (Sigma |> Prime) (TypeVar "X") Sigma))
             }
 
         TLet ->
@@ -121,11 +121,11 @@ ruleTemplateForRule rule =
             { tops =
                 [ Imply Gamma
                     (OfType (SubExpr "M") Sigma)
-                , NotElem Alpha (FV Gamma)
+                , NotElem (TypeVar "X") (FV Gamma)
                 ]
             , bottom =
                 Imply Gamma
-                    (OfType (SubExpr "M") (Forall Alpha Sigma))
+                    (OfType (SubExpr "M") (Forall (TypeVar "X") Sigma))
             }
 
         TInst ->

@@ -56,13 +56,8 @@ const onExprInput = (e) => {
         .replace(/Lambda /g, symbols.capitalLambda)
         .replace(/\|/g, symbols.capitalLambda)
         .replace(/\^/g, symbols.capitalLambda)
-        .replace(/Let /i, "let ")
-        .replace(/In /i, "in ")
         .replace(/forall /i, symbols.forAll)
         .replace(/->/, symbols.arrow)
-        .replace(/If /i, "if ")
-        .replace(/Then /i, "then ")
-        .replace(/Else /i, "else ")
 
 
     if (replacedValue != originalValue) {
@@ -70,6 +65,8 @@ const onExprInput = (e) => {
         const newPosition = originalPosition + (el.value.length - originalValue.length)
         el.selectionStart = newPosition
         el.selectionEnd = newPosition
+
+        // Dispatch the onInput event to Elm
         el.dispatchEvent(new Event("input"));
     }
 }

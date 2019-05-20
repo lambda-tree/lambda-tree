@@ -38,4 +38,4 @@ wrongRuleType =
 
 
 topRuleParse =
-    "Top rule parse Error"
+    "Top rule parse error"

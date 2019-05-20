@@ -6,6 +6,13 @@ import List.Extra exposing (find, findIndex)
 import Maybe.Extra exposing (isJust)
 
 
+
+-------------------------------------------------------------------------
+-- The following functions are reimplementations of functions provided by B. Pierce in TAPL
+-- https://www.cis.upenn.edu/~bcpierce/tapl/checkers/purefsub/
+-------------------------------------------------------------------------
+
+
 emptycontext : Context
 emptycontext =
     []

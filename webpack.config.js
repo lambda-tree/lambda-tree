@@ -190,7 +190,7 @@ if (MODE === "production") {
                     use: {
                         loader: "elm-webpack-loader",
                         options: {
-                            optimize: false
+                            optimize: true
                         }
                     }
                 },

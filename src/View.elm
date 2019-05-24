@@ -258,7 +258,7 @@ ruleListContainer model =
         , overflow auto
         ]
         []
-        [ ruleList (getTypeSystem model.settings |> rulesForTypeSystem)
+        [ ruleList (model.settings |> getTypeSystem) (model.settings |> getTypeSystem |> rulesForTypeSystem)
         ]
 
 

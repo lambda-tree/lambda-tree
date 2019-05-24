@@ -1,5 +1,6 @@
 module Lambda.Show.RuleTemplate exposing (..)
 
+import Lambda.Expression exposing (TypeSystem(..))
 import Lambda.Rule exposing (Rule(..))
 import Lambda.Show.Print exposing (Print(..))
 
@@ -8,8 +9,8 @@ type alias RuleTemplate =
     { tops : List Print, bottom : Print }
 
 
-ruleTemplateForRule : Rule -> RuleTemplate
-ruleTemplateForRule rule =
+ruleTemplateForRule : TypeSystem -> Rule -> RuleTemplate
+ruleTemplateForRule typeSystem rule =
     case rule of
         TTrue ->
             { tops = [], bottom = Imply Gamma (OfType (Const "true") (Const "Bool")) }
@@ -42,8 +43,14 @@ ruleTemplateForRule rule =
                     (OfType (SubExpr "M") (Tau |> Prime))
                 ]
             , bottom =
-                Imply Gamma
-                    (OfType (Abs (Var "x") (SubExpr "M")) (Arrow Tau (Tau |> Prime)))
+                case typeSystem of
+                    HM _ ->
+                        Imply Gamma
+                            (OfType (Abs (Var "x") (SubExpr "M")) (Arrow Tau (Tau |> Prime)))
+
+                    _ ->
+                        Imply Gamma
+                            (OfType (Abs (OfType (Var "x") Sigma) (SubExpr "M")) (Arrow Tau (Tau |> Prime)))
             }
 
         TApp ->

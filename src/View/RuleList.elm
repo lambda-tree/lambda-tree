@@ -3,14 +3,15 @@ module View.RuleList exposing (..)
 import Css exposing (..)
 import Html.Styled as S exposing (Html, styled)
 import Html.Styled.Attributes as A
+import Lambda.Expression exposing (TypeSystem)
 import Lambda.Rule exposing (Rule(..), showRule)
 import Lambda.Show.Html exposing (show)
 import Lambda.Show.RuleTemplate exposing (ruleTemplateForRule)
 import View.Theme exposing (theme)
 
 
-ruleList : List Rule -> S.Html msg
-ruleList rules =
+ruleList : TypeSystem -> List Rule -> S.Html msg
+ruleList typeSystem rules =
     styled S.div
         [ displayFlex
         , flex auto
@@ -23,7 +24,7 @@ ruleList rules =
         (rules
             |> List.map
                 (\rule ->
-                    ruleTemplateForRule rule
+                    ruleTemplateForRule typeSystem rule
                         |> (\{ tops, bottom } ->
                                 styled S.div
                                     [ displayFlex, flexDirection column ]

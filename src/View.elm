@@ -14,12 +14,14 @@ import Model
 import RuleTree.View.Tree exposing (treeView)
 import RuleTree.View.TreeToolbar exposing (treeToolbar)
 import Settings.Message exposing (Msg(..))
+import Settings.Model exposing (SidebarSection(..))
 import Settings.Utils exposing (getTypeSystem)
 import Substitutor.View
 import View.ExportDropdown exposing (exportDropdown)
+import View.HelpSection exposing (helpSection)
 import View.ImportButton exposing (importButton)
 import View.RuleList exposing (ruleList)
-import View.SegmentedControl exposing (segmentedControl)
+import View.SegmentedControl exposing (SegmentedControlItem(..), SegmentedControlOption(..), segmentedControl)
 import View.Switch as Switch
 import View.Theme exposing (theme)
 
@@ -192,25 +194,36 @@ topBar model =
         ]
 
 
-ruleBar : S.Html msg
-ruleBar =
+ruleBar : Settings.Model.Model -> S.Html Message.Msg
+ruleBar settings =
     appBar
         [ styled
             S.div
             [ displayFlex
             , flex <| auto
             , alignItems center
-            , justifyContent stretch
+            , justifyContent center
             , padding2 (px 10) <| px 15
             ]
             []
-            [ styled S.span
-                [ theme.font, color theme.textOnDark, fontSize <| rem 1.3 ]
-                []
-                [ S.text
-                    "Rules"
+            [ segmentedControl [ SelectedIdx settings.sidebarSection ]
+                [ SegmentedControlItem
+                    RulesSection
+                    (SettingsMsg << Settings.Message.SidebarSectionChangedMsg)
+                    { text = Just "Rules"
+                    , image = Nothing
+                    , sup = Nothing
+                    , info = Just "List of rules"
+                    }
+                , SegmentedControlItem
+                    HelpSection
+                    (SettingsMsg << Settings.Message.SidebarSectionChangedMsg)
+                    { text = Just "Help"
+                    , image = Nothing
+                    , sup = Nothing
+                    , info = Just "Help"
+                    }
                 ]
-            , styled S.div [ flex <| int 1 ] [] []
             ]
         ]
 
@@ -243,8 +256,13 @@ rightColumn model =
         , backgroundColor theme.inputBackground
         ]
         []
-        [ ruleBar
-        , ruleListContainer model
+        [ ruleBar model.settings
+        , case model.settings.sidebarSection of
+            RulesSection ->
+                ruleListContainer model
+
+            HelpSection ->
+                helpSectionContainer
         ]
 
 
@@ -260,6 +278,19 @@ ruleListContainer model =
         []
         [ ruleList (model.settings |> getTypeSystem) (model.settings |> getTypeSystem |> rulesForTypeSystem)
         ]
+
+
+helpSectionContainer : S.Html msg
+helpSectionContainer =
+    styled S.div
+        [ displayFlex
+        , flexDirection column
+        , justifyContent stretch
+        , alignItems stretch
+        , overflow auto
+        ]
+        []
+        [ helpSection ]
 
 
 treeContainer : Model.Model -> S.Html Message.Msg

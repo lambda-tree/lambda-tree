@@ -16,3 +16,6 @@ update msg model =
 
         SidebarVisibilityChangedMsg value ->
             { model | showSidebar = value }
+
+        SidebarSectionChangedMsg section ->
+            { model | sidebarSection = section }
